@@ -31,6 +31,12 @@ This script will automatically do an in mission jump sequence to a selected wayp
 
 A sample mission is included
 
+# Mark Box
+
+This script will allow the mission designer to **highlight** certain ships, wings and subsystems. This script does not do targetting, only highlighting. For ships and wings, brackets will be drawn around the ships at all times. An optional text string will be drawn over a ship if it has been targetted. For subsystems, brackets will only be drawn if the parent ship is targetted. A simple health bar is also drawn next to the subsystem.
+
+A sample mission is included
+
 # Prompt Box v2
 
 Get a player response with the prompt box! This new version does away with ugly hud gauges and now draws bitmaps directly to the screen. The method to setting up the prompt box is now made much easier with a single lua sexp being able to initialize, set options, and populate the list of responses. Recalling player responses are now also much easier. Prompt Box v2 should be fully compatible with previous versions. See sexp documentation and the sample mission for more insight into how it all works.
