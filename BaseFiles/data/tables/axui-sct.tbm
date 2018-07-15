@@ -1,0 +1,1328 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+AXUI = {}
+
+function AXUI:Init()
+
+	ba.print("AXUI starting up...\n")
+
+	--Please don't mind the many commented debug lines!
+	self:ScreenInit()
+	self:SetupColors()		--Creates a table of FreeSpace UI colors
+	
+	if cf.fileExists("axui.cfg", "data/config", true) then
+		self.Defaults = axemParse:ReadJSON("axui.cfg")
+	else
+		self.Defaults = {}
+	end
+	
+	gr.CurrentOpacityType = ALPHABLEND_NONE
+	
+	self.Fonts = {}
+	self.Fonts.Large = self.Defaults.LargeFont or gr.Fonts[2]
+	self.Fonts.Medium = self.Defaults.MediumFont or gr.Fonts[3]
+	self.Fonts.Small = self.Defaults.SmallFont or gr.Fonts[1]
+	self.Fonts.Old = nil
+	
+	self.MouseButton = {false, false, false}
+	
+end
+
+function AXUI:ScreenInit(customW, customH, stretchOverride)
+
+	ba.print("AXUI Screen Intializing...\n")
+
+	local scaleOverride = false
+
+	self.Screen = {}  --w, h, origin_x, origin_y
+	
+	local baseX = customW or 1024
+	local baseY = customH or 768
+	
+	if customW and customH then
+		scaleOverride = true
+	end
+	
+	local unscaledScreenWidth = gr.getScreenWidth()
+	local unscaledScreenHeight = gr.getScreenHeight()
+	local aspectX = unscaledScreenWidth / baseX
+	local aspectY = unscaledScreenHeight / baseY
+	
+	local aspect = 1
+	
+	if (baseX < unscaledScreenWidth) or (baseY < unscaledScreenHeight) then
+		aspect = math.min(aspectX, aspectY)
+	else
+		aspect = math.max(aspectX, aspectY)
+	end
+	
+	--if true then
+	if (gr.isMenuStretched() or self.InGame) and (not stretchOverride)then
+		self.Screen.x_aspect = aspectX
+		self.Screen.y_aspect = aspectY
+		self.Screen.w = unscaledScreenWidth
+		self.Screen.h = unscaledScreenHeight
+		self.Screen.x = 0
+		self.Screen.y = 0
+	else
+		self.Screen.x_aspect = aspect
+		self.Screen.y_aspect = aspect
+		self.Screen.w = baseX * aspect
+		self.Screen.h = baseY * aspect
+		self.Screen.x = (unscaledScreenWidth - self.Screen.w) / 2
+		self.Screen.y = (unscaledScreenHeight - self.Screen.h) / 2
+	end	
+	
+	for k, v in pairs(self.Screen) do
+		ba.print(k .. ": " .. v .. "\n")
+	end
+	
+end
+
+--Font Functions
+
+function AXUI:SetupFont(t, dont_reset)
+
+	if t.Font then
+		self:ChangeFont(t.Font)
+	else
+
+		if t.Scaled then
+			t.Scaled = true
+			t.ScaleFont = true
+		else
+			t.Scaled = false
+			t.ScaleFont = false
+		end
+		
+		if t.Scaled == "font" then
+			t.Scaled = false
+			t.ScaleFont = true
+		end
+	
+		self:AutoFontScale(t.ScaleFont)
+		
+	end
+
+	t.FontHeight = gr.CurrentFont.Height
+	if t.Text then
+		t.TextWidth = gr.getStringWidth(t.Text)
+	end
+	
+	t.TextHeight = t.FontHeight
+	
+	if dont_reset then
+		self:ResetFont()
+	end
+
+end
+
+function AXUI:AutoFontScale(enable)
+
+	if not enable then
+		return
+	end
+		
+	if AXUI.Screen.h >= 850 then
+		self.Fonts.Old = gr.CurrentFont
+		gr.CurrentFont = self.Fonts.Medium
+	else
+		gr.CurrentFont = self.Fonts.Small
+	end
+
+end
+
+function AXUI:ChangeFont(font)
+
+	self.Fonts.Old = gr.CurrentFont
+	gr.CurrentFont = gr.Fonts[font]
+
+end
+
+function AXUI:ResetFont()
+
+	if self.Fonts.Old ~= nil then
+		gr.CurrentFont = self.Fonts.Old
+		self.Fonts.Old = nil
+	end
+
+end
+
+function AXUI:ScaleCoords(x, y)
+
+	if x == nil then
+		x = 0
+	end
+	
+	if y == nil then
+		y = 0
+	end
+	
+	x = x * self.Screen.x_aspect
+	y = y * self.Screen.y_aspect
+
+	return x, y
+
+end
+
+function AXUI:GetBitmapInfo(filename,x,y, originx, originy)
+
+	local t = {}
+	
+	t.file = filename
+	t.x = x or 0
+	t.x = y or 0
+	t.w = gr.getImageWidth(filename)
+	t.h = gr.getImageHeight(filename)
+	
+	if not originx then
+		t.x = self.Screen.x + (self.Screen.w/2) - (t.w/2)
+	else
+		t.x = t.x + self.Screen.x + (self.Screen.w * originx)
+	end
+	
+	if not originy then
+		t.y = self.Screen.y + (self.Screen.h/2) - (t.h/2)
+	else
+		t.y = t.y + self.Screen.y + (self.Screen.h * originy)
+	end
+	
+	t.x1 = t.x
+	t.x2 = t.x + t.w
+	t.y1 = t.y
+	t.y2 = t.y + t.h
+	
+	return t
+
+end
+
+function AXUI:SetupColors()
+
+	--Values taken from the FreeSpace code, there's probably a better way to do this, but this works.
+
+	self.Color = {}
+	
+	self.Color.blue = { 93, 93, 128, 255}
+	self.Color.bright_blue = { 185, 185, 255, 255}
+
+	self.Color.green = { 0, 120, 0, 255}
+	self.Color.bright_green = { 50, 190, 50, 255}
+
+	self.Color.invisible = {0, 0, 0, 0}
+	self.Color.black = { 0, 0, 0, 255}
+	self.Color.grey = { 105, 105, 105, 255}
+	self.Color.silver = { 200, 200, 200, 255}
+	self.Color.white = { 160, 160, 160, 255}
+	self.Color.bright_white = { 255, 255, 255, 255}
+
+	self.Color.violet_gray = { 160, 144, 160, 255}
+	self.Color.violet = { 192, 104, 192, 255}
+
+	self.Color.dim_red = { 80, 6, 6, 255}
+	self.Color.red = { 126, 6, 6, 255}
+	self.Color.bright_red = { 200, 0, 0, 255}
+
+	self.Color.pink = { 185, 150, 150, 255}
+	self.Color.light_pink = { 230, 190, 190, 255}
+
+	self.Color.yellow = { 255, 255, 122, 255}
+	self.Color.bright_yellow = { 255, 255, 0, 255}
+
+	self.Color.ui_light_green = { 161, 184, 161, 255}
+	self.Color.ui_green = { 190, 228, 190, 255}
+
+	self.Color.ui_light_pink = { 184, 161, 161, 255}
+	self.Color.ui_pink = { 228, 190, 190, 255}
+
+end
+
+function AXUI:SetColor(c)
+
+	--Basically gr.setColor with predefined colors so I don't need to keep remembering them
+
+	if c == nil then
+		return
+	end
+
+	local t = self.Color[c]
+
+	if t ~= nil then
+		gr.setColor(t[1], t[2], t[3], t[4])
+	end
+
+end
+--Create Element Functions
+function AXUI:CreateButton(text, x, y, text_x, text_y, color, color_h, color_c, bitmap, bmp_x, bmp_y, bitmap_h, bitmap_c, scaled, level, font)
+
+	--This will return a table with the necessary values that enable the use of a button
+	--Most fields self explanitory, text is text describing the button, color is text's color, bitmap is the button itself
+	--x, y are position
+	--text_x/y and bmp_x/y are offsets
+	--_h = hover color / bitmap
+	--_c = clicked color / bitmap
+	--scaled = if it needs to be scaled as the interface does
+	--level = What focus level this button may be pressed. Use AXUI:SetFocus(level) to set focus level
+
+	local t = {}
+		
+	t.X = x
+	t.Y = y
+		
+	t.Clickable = true				--Can we click it?
+	t.Hoverable = true				--Can we hover of it?
+	t.Active = false				--Active = Clicked bitmap used all the time
+	
+	t.Draw = self.Draw				--Button Drawing Function
+	t.Clicked = self.Clicked		--Notification if mouse clicks this
+	t.CalculateRegion = self.CalculateRegion	--Recalculate Region if we mess around with its coordinates later
+	
+	t.Hovered = false				--We're not hovering... yet
+	t.Scaled = scaled
+	
+	if text and text_x and text_y then
+		t.Text = text
+		t.TextX = t.X + text_x
+		t.TextY = t.Y + text_y
+	end
+	
+	t.Offset = 0					--Buttons don't use offset, but it might be expected
+	t.Lines = 1
+	
+	if font then
+		t.Font = font
+	end
+		
+	AXUI:SetupFont(t)
+
+	t.Level = level
+			
+	t.Color = color
+	t.Color_H = color_h
+	t.Color_C = color_c
+
+	t.Bitmap = bitmap				--Standard Button
+	t.Bitmap_H = bitmap_h			--Highlighted Button (mouse over)
+	t.Bitmap_C = bitmap_c			--Clicked Button (mouse click)
+	
+	if bmp_x ~= nil and bmp_y ~= nil then
+		t.BitmapX = t.X + bmp_x
+		t.BitmapY = t.Y + bmp_y
+	end
+	
+	--Only one of these is actually required...
+	if bitmap ~= nil then
+		t.BitmapWidth = gr.getImageWidth(bitmap)
+		t.BitmapHeight = gr.getImageHeight(bitmap)
+	elseif bitmap_h ~= nil then
+		t.BitmapWidth = gr.getImageWidth(bitmap_h)
+		t.BitmapHeight = gr.getImageHeight(bitmap_h)
+	elseif bitmap_c ~= nil then
+		t.BitmapWidth = gr.getImageWidth(bitmap_c)
+		t.BitmapHeight = gr.getImageHeight(bitmap_c)
+	end
+	
+	if scaled == true then			--Scale... if we must...
+	
+		t.TextX, t.TextY = self:ScaleCoords(t.TextX, t.TextY)
+		t.TextWidth, t.TextHeight = self:ScaleCoords(t.TextWidth, t.TextHeight)
+		
+		t.BitmapX, t.BitmapY = self:ScaleCoords(t.BitmapX, t.BitmapY)
+		t.BitmapWidth, t.BitmapHeight = self:ScaleCoords(t.BitmapWidth, t.BitmapHeight)
+	
+	end
+	
+	if text ~= nil and text_x ~= nil and text_y ~= nil then
+		t.TextX = t.TextX + AXUI.Screen.x
+		t.TextY = t.TextY + AXUI.Screen.y
+	end
+	
+	if bmp_x ~= nil and bmp_y ~= nil then
+		t.BitmapX = t.BitmapX + AXUI.Screen.x
+		t.BitmapY = t.BitmapY + AXUI.Screen.y
+	end
+	
+	t:CalculateRegion()
+	
+	ba.print("AXUI: Button created!\n")
+
+	return t
+
+end
+
+function AXUI:CreateDButton(host, text, text_x, text_y, color, color_h, color_c, bitmap, bmp_x, bmp_y, bitmap_h, bitmap_c, scaled, level, font)
+
+	local t = {}
+		
+	t.Clickable = true				--Can we click it?
+	t.Hoverable = true				--Can we hover of it?
+	t.Active = false				--Active = Clicked bitmap used all the time
+	
+	t.Draw = self.Draw
+	t.DDraw = self.DDraw				--Button Drawing Function
+	t.Clicked = self.Clicked		--Notification if mouse clicks this
+	t.CalculateRegion = self.CalculateRegion	--Recalculate Region if we mess around with its coordinates later
+	
+	t.Hovered = false				--We're not hovering... yet
+			
+	if mn.getObjectFromSignature(host):isValid() then
+		t.Host = host
+	end
+
+	t.Text = text
+	t.TextX_0 = text_x
+	t.TextY_0 = text_y
+	
+	t.Offset = 0					--Buttons don't use offset, but it might be expected
+	t.Lines = 1
+	
+	t.Scaled = scaled
+	
+	t.Level = level
+		
+	if font then
+		t.Font = font
+	end
+		
+	AXUI:SetupFont(t)
+
+	t.Color = color
+	t.Color_H = color_h
+	t.Color_C = color_c
+
+	t.Bitmap = bitmap				--Standard Button
+	t.Bitmap_H = bitmap_h			--Highlighted Button (mouse over)
+	t.Bitmap_C = bitmap_c			--Clicked Button (mouse click)
+	
+	t.BitmapX = bmp_x
+	t.BitmapY = bmp_y
+	
+	--Only one of these is actually required...
+	if bitmap ~= nil then
+		t.BitmapWidth = gr.getImageWidth(bitmap)
+		t.BitmapHeight = gr.getImageHeight(bitmap)
+	elseif bitmap_h ~= nil then
+		t.BitmapWidth = gr.getImageWidth(bitmap_h)
+		t.BitmapHeight = gr.getImageHeight(bitmap_h)
+	elseif bitmap_c ~= nil then
+		t.BitmapWidth = gr.getImageWidth(bitmap_c)
+		t.BitmapHeight = gr.getImageHeight(bitmap_c)
+	end
+	
+	if scaled == true then			--Scale... if we must...
+	
+		t.TextX, t.TextY = self:ScaleCoords(t.TextX, t.TextY)
+		t.TextWidth, t.TextHeight = self:ScaleCoords(t.TextWidth, t.TextHeight)
+		
+		t.BitmapX, t.BitmapY = self:ScaleCoords(t.BitmapX, t.BitmapY)
+		t.BitmapWidth, t.BitmapHeight = self:ScaleCoords(t.BitmapWidth, t.BitmapHeight)
+	
+	end
+	
+	t:CalculateRegion()
+
+	return t
+
+end
+
+function AXUI:CreateTextBox(text, text_x, text_y, width, height, color, scaled, font)
+
+	-- This creates a large scrollable text box for LOTS O' WORDS.
+	-- x, y are where it starts, goes for width wide by height high
+	-- text is colored as color, and scaled only affects the coordinate placing, not the text
+	-- text does not need to be valid at first, nil is fine if you need it blank
+
+	t = {}
+	
+	t.Clickable = false
+	t.Hoverable = false
+	
+	t.Draw = self.Draw				--Draws the text
+	t.ScrollText = self.ScrollText	--Scrolls the text
+	t.ChangeText = self.ChangeText	--Changes the text contents, text can be nil initially
+	
+	t.Text = text
+	t.TextX = text_x
+	t.TextY = text_y
+
+	t.Clipping = true	
+	t.Scaled = scaled
+			
+	if font then
+		t.Font = font
+	end
+		
+	AXUI:SetupFont(t)
+	
+	t.TextWidth = width
+	t.TextHeight = height
+
+	t.Color = color
+	t.Offset = 0
+	t.Lines = 0
+	
+	if scaled == true then
+	
+		t.TextX, t.TextY = self:ScaleCoords(t.TextX, t.TextY)
+		t.TextWidth, t.TextHeight = self:ScaleCoords(t.TextWidth, t.TextHeight)
+		
+	end
+	
+	t.TextX = t.TextX + AXUI.Screen.x
+	t.TextY = t.TextY + AXUI.Screen.y
+	
+	return t
+
+end
+
+function AXUI:CreateListBox(list, list_x, list_y, list_width, list_height, color, color_h, color_c, scaled, level, font)
+
+	--Automated system that creates a series of text-only buttons
+
+	local t = {}
+	
+	t.DrawList = self.DrawList
+	t.ChangeList = self.ChangeList
+	t.UpdateList = self.UpdateList
+	t.ScrollList = self.ScrollList
+	
+	t.List = list
+	t.ListX = list_x
+	t.ListY = list_y
+	t.ListWidth = list_width
+	t.ListHeight = list_height
+	t.Color = color
+	t.Color_H = color_h
+	t.Color_C = color_c
+	
+	t.Level = level
+	
+	t.SelectedItem = 1
+	
+	t.Scaled = scaled
+
+	if font then
+		t.Font = font
+	end
+		
+	--if t.Text then
+	AXUI:SetupFont(t)
+	--end
+
+	if scaled == true then
+	
+		t.ListX, t.ListY = self:ScaleCoords(t.ListX, t.ListY)
+		t.ListWidth, t.ListHeight = self:ScaleCoords(t.ListWidth, t.ListHeight)
+		
+	end
+	
+	ba.print("LIST HEIGHT :" .. t.ListHeight .. "\n")
+	ba.print("FONT HEIGHT :" .. t.FontHeight .. "\n")
+	t.MaxLines = math.floor(t.ListHeight / (t.FontHeight + 3))
+	t.ItemOffset = 0
+	
+	--t.Scaled = scaled
+	
+	--t.ListX = t.ListX + AXUI.Screen.x
+	--t.ListY = t.ListY + AXUI.Screen.y
+			
+	return t
+
+end
+
+function AXUI:CreateImageBox(bitmap, bmp_x, bmp_y, text, color, width, height, center_h, center_v, scaled, font, monochrome)
+
+	t = {}
+	
+	ba.print("Starting to create image box!\n")
+	
+	t.Draw = self.Draw
+	t.ChangeText = self.ChangeText
+	t.ChangeImage = self.ChangeImage
+	
+	t.Bitmap = bitmap
+	t.BitmapX_0 = bmp_x
+	t.BitmapY_0 = bmp_y
+	ba.print("1. t.BitmapX_0 = " .. t.BitmapX_0 .. "\n")
+	
+	t.Text = text
+	t.Color = color
+	t.Monochrome = monochrome
+	
+	t.TargetWidth_0 = width
+	t.TargetHeight_0 = height
+	
+	t.Center_H = center_h
+	t.Center_V = center_v
+	
+	t.Offset = 0
+	
+	t.Scaled = scaled
+	
+	if font then
+		t.Font = font
+	end
+		
+	AXUI:SetupFont(t)
+
+	
+	t.BitmapX_0 = t.BitmapX_0 + AXUI.Screen.x
+	ba.print("2. t.BitmapX_0 = " .. t.BitmapX_0 .. "\n")
+	t.BitmapY_0 = t.BitmapY_0 + AXUI.Screen.y
+	
+	if t.Bitmap ~= nil then
+		ba.print("Valid bitmap found!\n")
+		t:ChangeImage(t.Bitmap)
+	end
+
+	return t
+
+end
+
+function AXUI:CreateThumbnails(tt, x, y, width, height, th_w, th_h, pad_h, pad_v, scaled, level, font)
+
+	--Arrange a bunch of buttons in a grid, starting at x, y, being width x height, keeping padding_h px between them
+
+	local t = {}
+	
+	t.PlaceThumbnails = self.PlaceThumbnails
+	t.DrawThumbnails = self.DrawThumbnails
+	t.ChangeThumbnailList = self.ChangeThumbnailList
+	t.ScrollThumbnails = self.ScrollThumbnails
+	
+	t.Items = tt
+	t.X = x
+	t.Y = y
+	t.Width = width
+	t.Height = height
+	t.TWidth = th_w
+	t.THeight = th_h
+	t.PaddingH = pad_h
+	t.PaddingV = pad_v
+	
+	t.Scaled = scaled
+	
+	if font then
+		t.Font = font
+	end
+		
+	if t.Text then
+		AXUI:SetupFont(t)
+	end
+	
+	t.RowOffset = 0
+	
+	t.Level = level
+	
+	if scaled == true then
+	
+		t.X, t.Y = AXUI:ScaleCoords(t.X, t.Y)
+		t.Width, t.Height = AXUI:ScaleCoords(t.Width, t.Height)
+		t.TWidth, t.THeight = AXUI:ScaleCoords(t.TWidth, t.THeight)
+		t.PaddingH, t.PaddingV = AXUI:ScaleCoords(t.PaddingH, t.PaddingV)
+
+	end
+	
+	t.X = t.X + AXUI.Screen.x
+	t.Y = t.Y + AXUI.Screen.y
+	
+	t.ThumbnailsAcross = math.floor( t.Width / ((1 * t.PaddingH) +  (t.TWidth) ))
+	t.ThumbnailsHigh = math.floor( t.Height / ((1 * t.PaddingV) +  (t.THeight) ))
+	t.Offset = 0
+	
+	if t.Items then
+		t:PlaceThumbnails()
+	end
+
+	return t
+
+end
+
+function AXUI:CalculateRegion(clipping)
+
+	--BUTTON FUNCTION ONLY
+	--Calculates a bounding box for a bitmap button, text button, or hybrid text+bitmap button
+	--Debug print commands below list where region has been calculated too
+	
+	local clipX = 0
+	local clipY = 0
+	
+	if clipping then
+		clipX = AXUI.Screen.x
+		clipY = AXUI.Screen.y
+	end
+
+	self.Region = {}
+	
+	if self.Text then
+		if self.Font then
+			gr.CurrentFont = gr.Fonts[self.Font]
+		end
+		self.TextWidth = gr.getStringWidth(self.Text)
+		self.TextHeight = gr.CurrentFont.Height
+	end
+	
+	if self.Host then
+	
+		local thisObject = mn.getObjectFromSignature(self.Host)
+		self.Region.x1, self.Region.y1, self.Region.x2, self.Region.y2 = gr.drawTargetingBrackets(thisObject, false, 10)
+		gr.setLineWidth(1)
+			
+	else
+		if self.Text and self.BitmapX then
+			self.Region.x1 = math.min(self.TextX,self.BitmapX) + clipX
+			self.Region.x2 = math.max(self.TextX + self.TextWidth, self.BitmapX + self.BitmapWidth) + clipX
+			self.Region.y1 = math.min(self.TextY,self.BitmapY) + clipY
+			self.Region.y2 = math.max(self.TextY + self.TextHeight, self.BitmapY + self.BitmapHeight) + clipY
+			ba.print("Text + Bitmap Region Made\n")
+		elseif self.Text then
+			self.Region.x1 = self.TextX + clipX
+			self.Region.x2 = self.TextX + self.TextWidth + clipX
+			self.Region.y1 = self.TextY + clipY
+			self.Region.y2 = self.TextY + self.TextHeight + clipY
+			ba.print("Text Region Made\n")
+			ba.print("Text Coords: " .. math.floor(self.TextX) .. ", " .. math.floor(self.TextY) .. "\n")
+			ba.print("Text W/H: " .. math.floor(self.TextWidth) .. ", " .. math.floor(self.TextHeight) .. "\n")
+		elseif self.BitmapX then
+			self.Region.x1 = self.BitmapX + clipX
+			self.Region.x2 = self.BitmapX + self.BitmapWidth + clipX
+			self.Region.y1 = self.BitmapY + clipY
+			self.Region.y2 = self.BitmapY + self.BitmapHeight + clipY
+			ba.print("Bitmap Region Made\n")
+			ba.print("X1: " .. math.floor(self.Region.x1) .. ", Y1:" .. math.floor(self.Region.y1) .. "\n")
+			ba.print("X2: " .. math.floor(self.Region.x2) .. ", Y2:" .. math.floor(self.Region.y2) .. "\n")
+		else
+			self.Region = nil
+			ba.print("Problem making Region\n")
+		end
+	end
+end
+--Change Element Functions
+function AXUI:ChangeText(text)
+
+	--TEXTBOX FUNCTION ONLY
+	--Pretty simple anyway
+
+	self.Text = text
+	self.Offset = 0
+
+end
+
+function AXUI:ChangeImage(bitmap)
+
+	self.Bitmap = bitmap
+
+	if bitmap ~= nil then
+	
+	ba.print("Changing bitmap!\n")
+
+		self.BitmapWidth = gr.getImageWidth(bitmap)
+		self.BitmapHeight = gr.getImageHeight(bitmap)
+		
+		if self.Scaled == true then			--Scale... if we must...
+			self.BitmapX, self.BitmapY = AXUI:ScaleCoords(self.BitmapX_0, self.BitmapY_0)
+			self.TargetWidth, self.TargetHeight = AXUI:ScaleCoords(self.TargetWidth_0, self.TargetHeight_0)
+		else
+			self.BitmapX = self.BitmapX_0
+			self.BitmapY = self.BitmapY_0
+			self.TargetWidth = self.TargetWidth_0
+			self.TargetHeight = self.TargetHeight_0
+		end
+						
+		if self.BitmapWidth > self.TargetWidth or self.BitmapHeight > self.TargetHeight then
+			ba.print("We need to scale\n")
+			local scalingFactor = 1
+			
+			if (self.TargetWidth / self.BitmapWidth) < (self.TargetHeight / self.BitmapHeight) then
+				scalingFactor = self.TargetWidth / self.BitmapWidth
+			else
+				scalingFactor = self.TargetHeight / self.BitmapHeight
+			end
+			
+			self.BitmapWidth = self.BitmapWidth * scalingFactor
+			self.BitmapHeight = self.BitmapHeight * scalingFactor
+		else
+			ba.print("Didn't need to scale\n")
+		end
+		
+		if self.Center_H == true then
+			self.BitmapX = self.BitmapX_0 + (self.TargetWidth / 2) - (self.BitmapWidth / 2)
+		else
+			self.BitmapX = self.BitmapX
+		end
+				
+		if self.Center_V == true then
+			self.BitmapY = self.BitmapY_0 + (self.TargetHeight / 2) - (self.BitmapHeight / 2)
+		else
+			self.BitmapY = self.BitmapY
+		end
+		
+		if self.Text ~= nil then
+		
+			ba.print("There is text!\n")
+		
+			AXUI:AutoFontScale(self.Scaled)
+
+			self.TextX = self.BitmapX + (self.TargetWidth / 2) - (gr.getStringWidth(self.Text) / 2)
+			if self.Scaled == true then
+				self.TextX = self.BitmapX_0
+			else
+				self.TextX = self.BitmapX_0
+			end
+			self.TextY = AXUI.Screen.y + self.BitmapY + self.BitmapHeight + 25
+			self.TextWidth = self.TargetWidth
+			self.TextHeight = self.BitmapY + self.TargetHeight - self.TextY
+			
+			ba.print("TEXT HEIGHT: " .. self.TextHeight .. "\n")
+
+			AXUI:ResetFont()
+		else
+			ba.print("I can't find text!\n")
+		end
+			
+	end
+	
+	if self.Bitmap ~= nil then
+	
+		ba.print(self.Bitmap .. "\n")
+		ba.print("BitmapX: " .. self.BitmapX .. "\n")
+		ba.print("BitmapY: " .. self.BitmapY .. "\n")
+		ba.print("BitmapWIDTH: " .. self.BitmapWidth .. "\n")
+		ba.print("BitmapHEIGHT: " .. self.BitmapHeight .. "\n")
+	else
+		ba.print("WHAT!\n")
+	end
+		
+end
+
+function AXUI:PlaceThumbnails()
+
+	local btnX = 0
+	local btnY = 0
+	local rowNum = 0
+	
+	self.Buttons = {}
+	
+	for i = 1, #self.Items - self.Offset do
+
+		btnX = self.X + (((i-1) % self.ThumbnailsAcross) * (self.TWidth + self.PaddingH))
+		rowNum = math.floor((i-1) / self.ThumbnailsAcross)
+		btnY = self.Y + (rowNum * (self.THeight + self.PaddingV))
+		
+		if rowNum < self.ThumbnailsHigh then
+		
+			--Create button, throw everything at 0,0 for now since it WILL be changing later
+			self.Buttons[i] = AXUI:CreateButton(self.Items[i+self.Offset].Title, 0, 0, 0, 0, "silver", "blue", "light_blue", self.Items[i+self.Offset].Image, 0, 0, nil, nil, false, self.Level, self.Font)
+			
+			local thisButton = self.Buttons[i]
+			
+			--Resize button
+			if thisButton.BitmapWidth > self.TWidth or thisButton.BitmapHeight > self.THeight then
+			
+				--ba.print("********************\n")
+				ba.print(self.Items[i+self.Offset].Title .. " needs resizing!\n")
+				
+				local scalingFactor = 1
+			
+				if (self.TWidth / thisButton.BitmapWidth) < (self.THeight / thisButton.BitmapHeight) then
+					ba.print("It is wider\n")
+					scalingFactor = self.TWidth / thisButton.BitmapWidth
+				else
+					ba.print("It is taller\n")
+					scalingFactor = self.THeight / thisButton.BitmapHeight
+				end
+				
+				--ba.print("scaling factor = " .. math.floor(scalingFactor*100) .. "%\n")
+				
+				thisButton.BitmapWidth = thisButton.BitmapWidth * scalingFactor
+				thisButton.BitmapHeight = thisButton.BitmapHeight * scalingFactor
+				
+				--ba.print("Width/Height = " .. math.floor(thisButton.BitmapWidth) .. ", " .. math.floor(thisButton.BitmapHeight) .. "\n")
+				
+			else
+				ba.print("Didn't need to scale\n")
+			end
+			
+			thisButton.BitmapX = btnX + (self.TWidth/2) - (thisButton.BitmapWidth/2)
+			thisButton.BitmapY = btnY + (self.THeight/2) - (thisButton.BitmapHeight/2)
+			
+			AXUI:SetupFont(self, true)
+			
+			if thisButton.Text ~= nil then
+				thisButton.TextX = btnX + (self.TWidth /2) - (gr.getStringWidth(thisButton.Text)/2)
+				thisButton.TextY = btnY + self.THeight + 5
+			end
+				
+			--Recalculate region since we probably screwed with the dimensions
+			self.Buttons[i]:CalculateRegion()
+			
+			AXUI:ResetFont()
+						
+			--ba.print("Button " .. i .. " was made for thumbnails\n")
+		
+		end
+			
+	end
+
+end
+
+function AXUI:ChangeThumbnailList(t)
+
+	self.Items = t
+	self:PlaceThumbnails()
+
+end
+--Scroll Element Functions
+function AXUI:ScrollThumbnails(offset)
+
+	--first logical check, we shouldn't be able to scroll up when we're at the top
+	--second logical check, we shouldn't be able to scroll past the last image
+	--third logical check, we shouldn't be able to srcoll at all if there's not enough images
+	
+	if (self.RowOffset + offset) < 0 or (self.RowOffset + offset + 1) >= (#self.Items / self.ThumbnailsAcross) or #self.Items <= (self.ThumbnailsAcross * self.ThumbnailsHigh) then
+		return false
+	else
+		self.RowOffset = self.RowOffset+offset
+		self.Offset = self.RowOffset * self.ThumbnailsAcross		
+		self:PlaceThumbnails()
+		return true
+	end
+	
+end
+
+function AXUI:UpdateList(offset)
+
+	if self.List ~= nil then
+	
+	--ba.print("List is ok, checking if list is smaller than max lines\nMax Lines: " .. self.MaxLines .. "\n")
+
+		if #self.List < self.MaxLines then
+			--ba.print("List size is smaller than max lines\n")
+			self.ItemLines = #self.List
+			--ba.print("Item lines set to list size\n")
+		else
+			self.ItemLines = self.MaxLines
+			--ba.print("List size is larger than max lines\n")
+		end
+		
+		--ba.print("About to intialize item set\n")
+		self.Item = {}
+		self.Group = AXUI:CreateRadioGroup()
+		--ba.print("Item set intialized\n")
+		
+		--ba.print("Offset: " .. offset .. " ItemLines: " .. self.ItemLines .. "\n")
+		
+		for i = 1, self.ItemLines do
+			--ba.print("Going to make a button " .. i .. "\n")
+			self.Item[i] = AXUI:CreateButton(self.List[i + offset], self.ListX, (self.ListY + (i)*self.FontHeight), 0, 0, self.Color, self.Color_H, self.Color_C, nil, nil, nil, nil, nil, "font", self.Level, self.Font)
+			
+			self.Group:AddToGroup(self.Item[i])
+			
+			--ba.print("Coords:" .. self.ListX .. ", " .. (self.ListY + (i)*self.FontHeight) .. "\n")
+			--ba.print("Made button " .. i .. "\n")
+		end
+		
+		--ba.print("Done making buttons\n")
+		
+	end
+
+end
+
+function AXUI:ScrollList(offset)
+
+	local success = false
+
+	if #self.List > self.MaxLines then
+	
+		self.ItemOffset = self.ItemOffset + offset
+	
+		if self.ItemOffset < 0 then
+			self.ItemOffset = 0
+		elseif self.ItemOffset > (#self.List - self.MaxLines)  then
+			self.ItemOffset = #self.List - self.MaxLines
+		else
+			success = true
+			self:UpdateList(self.ItemOffset)
+		
+			local relativeSelectedPosition = self.SelectedItem - self.ItemOffset
+			
+			if relativeSelectedPosition > 0 and relativeSelectedPosition <= self.MaxLines then
+				self.Group:SwitchTo(self.SelectedItem - self.ItemOffset)
+			end
+		end			
+	end	
+
+	return success
+	
+end
+
+function AXUI:ChangeList(list)
+
+	ba.print("List was changed!\n")
+	self.List = list
+	self:UpdateList(0)
+	ba.print("Finished changing list!\n")
+	
+end
+
+function AXUI:ScrollText(x)
+
+	AXUI:AutoFontScale(scaling)
+	
+	local textBlockHeight = (self.Lines + 1 ) * self.FontHeight
+
+	local success = false
+	
+	if (textBlockHeight > self.TextHeight and self.Offset > (self.TextHeight - textBlockHeight)) or x > 0 then
+		self.Offset = self.Offset + x
+		success = true
+	end
+	
+	if self.Offset > 0 then
+		self.Offset = 0
+		success = false
+	end
+	
+	AXUI:ResetFont()
+	
+	return success
+
+
+end
+
+--Radio Group Functions
+function AXUI:CreateRadioGroup()
+
+	--Radio Groups tie together different buttons so that only one may become active at a time
+
+	t = {}
+				
+	t.SwitchTo = self.SwitchTo
+	t.AddToGroup = self.AddToGroup
+	
+	return t
+
+end
+
+function AXUI:AddToGroup(item)
+
+	--RADIO GROUP FUNCTION ONLY
+	--Adds a BUTTON to the radio group table
+
+	local newIndex = #self+1
+	
+	self[newIndex] = item
+	
+	return newIndex
+	
+
+end
+
+function AXUI:SwitchTo(number)
+
+	--RADIO GROUP FUNCTION ONLY
+	--Sets the selected radio group index to be active (and not clickable)
+
+	for i = 1, #self do
+		self[i].Active = false
+		self[i].Clickable = true
+	end
+	
+	if number ~= nil then
+		self[number].Active = true
+		self[number].Clickable = false
+	end
+		
+end
+
+--Drawing Functions
+function AXUI:Draw()
+
+	--Giant generic drawing function. Looks for a bunch of things common to the different AXUI elements and does its best to draw them if they are valid.
+
+	local color = self.Color
+	local bitmap = self.Bitmap
+	local hovering = false
+	
+	--If a button is hoverable, has a good region and we're at his focus level we will DO STUFF to it
+	if self.Hoverable == true and self.Region ~= nil and self.Level == AXUI.Focus then
+		if AXUI:IsMouseOver(self.Region) then
+		
+		hovering = true
+		
+		--gr.drawRectangle(self.Region.x1,self.Region.y1,self.Region.x2,self.Region.y2)	--DEBUG For checking hotspots
+		
+			--Is this good for clicking?
+			if io.isMouseButtonDown(MOUSE_LEFT_BUTTON) and self.Clickable == true then
+
+				if self.Color_C ~= nil then
+					color = self.Color_C
+				end
+				
+				if self.Bitmap_C ~= nil then
+					bitmap = self.Bitmap_C
+				elseif self.Bitmap ~= nil then
+					AXUI:SetColor("bright_blue")
+					--Draw a rectangle under the image to indicate it being highlighted
+					gr.setLineWidth(2)
+					gr.drawRectangle(self.BitmapX-2, self.BitmapY-2, self.BitmapX + self.BitmapWidth+2, self.BitmapY + self.BitmapHeight+2, false)
+					gr.setLineWidth(1)
+				end
+				
+			else --Or are we just hovering over it
+			
+				if self.Color_H ~= nil then
+					color = self.Color_H
+				end
+				
+				if self.Bitmap_H ~= nil then
+					bitmap = self.Bitmap_H
+				elseif self.Bitmap ~= nil then
+					AXUI:SetColor("blue")
+					--Draw a rectangle under the image to indicate it being highlighted
+					gr.setLineWidth(2)
+					gr.drawRectangle(self.BitmapX-2, self.BitmapY-2, self.BitmapX + self.BitmapWidth+2, self.BitmapY + self.BitmapHeight+2, false)
+					gr.setLineWidth(1)
+				end
+				
+				if self.Hovered == false then
+					self.Hovered = true
+					ad.playInterfaceSound(17)
+				end
+			
+			end
+			
+		else
+		
+			if self.Hovered == true then
+				self.Hovered = false
+			end
+			
+		end
+	end
+	
+	--Active buttons get the clicked button on all the time
+	if self.Active == true then
+	
+		if self.Color_C ~= nil then
+			color = self.Color_C
+		end
+		
+		if self.Bitmap_C ~= nil then
+			bitmap = self.Bitmap_C
+		elseif self.Bitmap then
+			AXUI:SetColor("blue")
+			gr.setLineWidth(2)
+			gr.drawRectangle(self.BitmapX-2, self.BitmapY-2, self.BitmapX + self.BitmapWidth+2, self.BitmapY + self.BitmapHeight+2, false)
+			gr.setLineWidth(1)
+		end
+
+	end
+	
+	if bitmap ~= nil then
+		if self.Monochrome then
+			AXUI:SetColor(color)
+			gr.drawMonochromeImage(bitmap, self.BitmapX, self.BitmapY, self.BitmapX + self.BitmapWidth, self.BitmapY + self.BitmapHeight)
+		else
+			gr.drawImage(bitmap, self.BitmapX, self.BitmapY, self.BitmapX + self.BitmapWidth, self.BitmapY + self.BitmapHeight) --Image gets drawn here
+		end
+		--gr.setColor(255,255,255,255)
+		--gr.drawString(bitmap .. ": X:" .. self.BitmapX .. ", Y:" .. self.BitmapY,  self.BitmapX, self.BitmapY)
+		--gr.drawString(bitmap .. ": X:" .. math.floor(self.BitmapX) .. ", Y:" .. self.BitmapY .. " W:" .. math.floor(self.BitmapWidth) .. " H:" .. math.floor(self.BitmapHeight),  self.BitmapX, self.BitmapY)
+	end
+	
+	if self.Host ~= nil then
+	
+		local thisObject = mn.getObjectFromSignature(self.Host)
+		AXUI:SetColor(color)
+		gr.setLineWidth(3)
+		gr.drawTargetingBrackets(thisObject, true, 10)
+		gr.setLineWidth(1)
+		
+	end
+	
+	if self.Text ~= nil then
+	
+		if (self.TextWidth + 10) > 0 and (self.TextHeight - self.Offset ) > 0 then
+		
+			AXUI:SetColor(color)
+			local scaling = false
+			
+			if self.Scaled or self.ScaleFont then
+				scaling = true
+			end
+				
+			--Do we need to increase our font size?
+			if self.Font then
+				AXUI:ChangeFont(self.Font)
+			else
+				AXUI:AutoFontScale(scaling)
+			end
+			
+			self.FontHeight = gr.CurrentFont.Height
+			
+			--local x1, x2, y1, y2 = 0, self.TextWidth + 10, self.Offset - self.FontHeight, self.TextHeight
+			local x1, x2, y1, y2 = 0, self.TextWidth + 10, self.Offset, self.TextHeight + 3
+			
+			if self.Clipping then
+				gr.setClip(self.TextX, self.TextY, self.TextWidth + 11, self.TextHeight)
+			else
+				x1 = x1 + self.TextX
+				x2 = x2 + self.TextX
+				y1 = y1 + self.TextY
+				y2 = y2 + self.TextY
+			end
+			
+			self.Lines = gr.drawString(self.Text, x1, y1, x2, y2) --Actual text drawing!!
+			
+			if self.Clipping then
+				gr.resetClip()
+			end
+
+			--gr.drawString(gr.CurrentFont.Filename,self.TextX - 100, self.TextY)
+			
+			if self.Lines > 2 then
+				local textBlockHeight = (self.Lines + 1 ) * self.FontHeight
+				
+				if textBlockHeight > self.TextHeight and self.Offset > (self.TextHeight - textBlockHeight) then
+					AXUI:SetColor("red")
+					gr.drawString("More", (self.TextX + (self.TextWidth) / 2) - (gr.getStringWidth("More") / 2), self.TextY + self.TextHeight + 20)
+				end
+			end
+		
+		end
+
+	end
+	
+	AXUI:ResetFont()
+	
+	return hovering	
+	
+end
+
+function AXUI:DrawList()
+
+	if self.List ~= nil then
+	
+	--[[gr.drawString("ITEM OFFSET: " .. self.ItemOffset, 100, 100)
+	gr.drawString("#SELF.LIST: " .. #self.List)
+	gr.drawString("MAX LINES: " .. self.MaxLines)
+	gr.drawString("SELECTED ITEM: " .. self.SelectedItem)]]--
+	
+		for k, v in pairs(self.Item) do
+			v:Draw()
+			--gr.setColor(255,255,255,255)
+			--gr.drawString(i, self.Item[i].TextX - 40, self.Item[i].TextY)
+		end
+		
+		if (#self.List > self.MaxLines) and (self.ItemOffset < (#self.List - self.MaxLines)) then
+				AXUI:SetColor("red")
+				gr.CurrentFont = gr.Fonts[3]
+				gr.drawString("More", AXUI.Screen.x + self.ListX + (self.ListWidth / 2) - (gr.getStringWidth("More") / 2), self.ListY + self.ListHeight)
+		end
+	
+	end
+
+end
+
+function AXUI:DrawThumbnails()
+
+	if self.Buttons ~= nil then	
+		for i = 1, #self.Buttons do
+			self.Buttons[i]:Draw()
+		end
+
+		if (self.Offset + (self.ThumbnailsAcross * self.ThumbnailsHigh)) < #self.Items and (#self.Items > (self.ThumbnailsAcross * self.ThumbnailsHigh)) then
+			AXUI:SetColor("red")
+			gr.drawString("More Images Available", AXUI.Screen.x + self.X + ((self.Width/2) - (gr.getStringWidth("More Images Available")/2)),self.Y + self.Height - 50)
+		end
+		
+	end
+	
+end
+
+function AXUI:DDraw()
+
+	local thisObject = mn.getObjectFromSignature(self.Host) 
+	local hovering = false
+	
+	if thisObject.Position:getScreenCoords() ~= false then
+		local x, y = thisObject.Position:getScreenCoords()
+		local boxwidth, boxheight = gr.getStringWidth(self.Text), gr.CurrentFont.Height
+		self.TextX = self.TextX_0 + x - (gr.getStringWidth(self.Text)/2)
+		self.TextY = self.TextY_0 + y + boxheight
+		--self.TextY = self.Region.y2 + boxheight
+		self.TextWidth = gr.getStringWidth(self.Text)
+		self.TextHeight = gr.CurrentFont.Height
+		gr.setColor(0,0,0,192)
+		gr.drawRectangle(x-(boxwidth/2)-3, self.TextY-5, x+(boxwidth/2)+3, self.TextY+boxheight+3)
+		--gr.drawRectangle(self.TextX-(boxwidth/2)-3, self.TextY+7, self.TextX+(boxwidth/2)+3, self.TextY+13+boxheight)
+		
+		self:CalculateRegion()
+		hovering = self:Draw()	
+		
+		return hovering
+	end
+
+end
+
+--Mouse Related Functions
+function AXUI:UpdateMouseCoords()
+	--Seriously?
+
+	self.MouseX = io.getMouseX()
+	self.MouseY = io.getMouseY()
+	
+end
+
+function AXUI:Clicked()
+
+	--Yousa clicken the buttan?! HOORAYS?!!!!
+	if self.Level == AXUI.Focus and self.Clickable == true then
+		if AXUI:IsMouseOver(self.Region) then
+			return true
+		else
+			return false
+		end
+	else
+		return false
+	end
+	
+end
+
+function AXUI:IsMouseOver(region)
+
+	if region and region.x1 and region.x2 and region.y1 and region.y2 then
+
+		if AXUI.MouseX > AXUI.Screen.x and AXUI.MouseX < (AXUI.Screen.x + AXUI.Screen.w) and AXUI.MouseY > AXUI.Screen.y and AXUI.MouseY < (AXUI.Screen.y + AXUI.Screen.h) then
+			if AXUI.MouseX > region.x1 and AXUI.MouseY > region.y1 and AXUI.MouseX < region.x2 and AXUI.MouseY < region.y2 then
+				return true
+			else
+				return false
+			end
+		end
+	
+	end
+
+end
+
+function AXUI:SetFocus(level)
+
+	self.Focus = level
+
+end
+
+
+AXUI:Init()
+
+]
+
+$On Mouse Moved:
+[
+	AXUI:UpdateMouseCoords()
+]
+
+#End

@@ -1,0 +1,21 @@
+#Lua SEXPs
+
+$Operator: lua-jump-to
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 3
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Initiates a subspace jump for a ship to arrive at a given waypoint. Implementation Notes: To use this with the default warp out key (eg: Alt-J), you should disable the player's subspace drive so it won't engage to warp you out of the mission (ideally through the no subspace drive ship flag). Transit time is the amount of time spent in the subspace tunnel. There are 7 stages to a subspace jump, their timing lengths are: 4s (subspace rev up) + 2s (portal opens) + 1s (fade to white) + Transit Time (subspace tunnel) + 2s (portal opens) + 1s (fade to white) + 0s (arrive at destination). So for a Transit Time of 3 seconds, the entire action will take 4+2+1+3+2+1+0 = 13 seconds. Note a transit time of 0 will skip the subspace tunnel and instantly land player at the destination after the first fade out. If mission designer wishes to change scenery (backgrounds, add/remove ships etc) it should be done during the subspace tunnel time. (Just chain an event to occur around 7-8 seconds after this one) The player is temporarily placed at a random location around X:50-60km, Y:50-60km, Z:0m, with orientation 0,0,0. Keep this in mind in case you have any objects that may be in that area.
+$Parameter:
+	+Description: Waypoint destination. The first point in the waypoint list will be where the ship appears, while the second will be what the ship points to. If there is no second point, orientation will be 0,0,0.
+	+Type: waypointpath
+$Parameter:
+	+Description: Subspace transit time in seconds
+	+Type: number
+$Repeat
+$Parameter:
+	+Description: Ship to jump
+	+Type: Ship
+
+#End

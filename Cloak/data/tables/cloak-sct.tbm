@@ -1,0 +1,421 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+CloakSys = {}
+
+function CloakSys:Init()
+
+	ba.print("*****Initializing Cloak System...\n")
+
+	self.Enabled = true
+	self.Paused = false
+	self.Ships = {}
+	self.Player = {}
+	self.Modes = axemParse:ReadJSON("cloak.cfg")
+	self.KillAllHumans = false
+
+end
+
+function CloakSys:GetEntryByName(name)
+
+	if not name then
+		name = hv.Player.Name
+	end
+	
+	for i, v in ipairs(self.Ships) do
+		if v.Name == name then
+			return v
+		end
+	end
+	
+	return nil
+
+end
+
+function CloakSys:Add(name, mode)
+
+	if not self.Enabled then
+		CloakSys:Init()
+	end
+	
+	if CloakSys:GetEntryByName(name) then return end
+
+	if not name then
+		name = hv.Player.Name
+	end
+	
+	if mn.Ships[name]:isValid() then
+		local ship = mn.Ships[name]
+		local class = ship.Class.Name
+		
+		ba.print("Adding " .. name .. " to cloak list\n")
+		
+		local t = {}
+	
+		if not mode and self.Modes[class] then
+			mode = class
+		else
+			mode = "default"
+		end
+		
+		ba.print("Cloaking mode chosen: " .. mode .. "\n")
+
+		t = DeepTableCopy(self.Modes[mode])
+		t.Allowed = true
+		t.Status = -1
+		t.Index = #self.Ships+1
+		t.Sig = ship:getSignature()
+		t.Name = ship.Name
+		t.AlterState = self.AlterState
+		t.Timer = 0
+		t.Timestamp = 0
+				
+		t.Energy = t.MaxEnergy
+		
+		if ship == hv.Player then
+			self.Player = {Sig = t.Sig, Name = t.Name, Index = t.Index}
+			mn.runSEXP("( hud-set-custom-gauge-active (true) !RightGaugeA! !RightGaugeB! !RightGaugeC! !RightGaugeD!)")
+			mn.runSEXP("( hud-set-text !RightGaugeA! !CLOAK! )")
+			mn.runSEXP("( hud-set-text !RightGaugeB! !STATUS: OFF! )")
+			mn.runSEXP("( hud-set-text !RightGaugeC! !!)")
+			mn.runSEXP("( hud-set-text !RightGaugeD! !ALT+Z to Toggle!)")
+		end
+		
+		if class == "GTF Iapetus" or class == "GTF Iapetus#Zen" then
+			mn.runSEXP("( turret-lock !" .. name .. "! !turret01a!)")
+			mn.runSEXP("( turret-change-weapon !" .. name .. "! !turret01a! !No Guns! 1 0)")
+			Berserk:UpdateUpgradePath()
+		end
+		
+		self.Ships[t.Index] = t
+
+	end
+
+end
+
+function CloakSys:AlterState(state)
+--local to self.Ships
+
+	local ship = mn.getObjectFromSignature(self.Sig)
+	local ctime = mn.getMissionTime()
+	local player = (self.Sig == CloakSys.Player.Sig)
+	
+	if ship:isValid() and self.Allowed then
+	
+		if (state == -1) and (self.Status ~= state) then --decloak
+					
+			ba.print(ship.Name .. ": DECLOAK\n")
+			self.Status = state
+			ship:addShipEffect("decloak", self.CloakTime * 250)
+			self.Timestamp = ctime + 0.5
+			
+			if player then
+			
+			mn.runSEXP("( hud-set-text !RightGaugeB! !STATUS: OFF! )")
+			mn.runSEXP("( fade-in 500 192 192 192 )")
+			gr.resetPostEffects()
+			end
+			
+			mn.runSEXP("( alter-ship-flag !stealth! (false) (false) !" .. ship.Name .. "!)")
+			mn.runSEXP("( alter-ship-flag !protect-ship! (false) (false) !" .. ship.Name .. "!)")
+			mn.runSEXP("( alter-ship-flag !beam-protect-ship! (false) (false) !" .. ship.Name .. "!)")
+			mn.runSEXP("( alter-ship-flag !hidden-from-sensors! (false) (false) !" .. ship.Name .. "!)")
+			mn.runSEXP("( turret-free-all !" .. ship.Name .. "!)")
+			
+			
+			if not self.Shields then
+				mn.runSEXP("( shields-on !" .. ship.Name .. "!)")
+			end
+			
+			local sound = ad.getSoundentry("Decloak")
+			ad.play3DSound(sound, ship.Position)
+		
+		elseif state == 1 and (self.Status ~= state) then --cloak
+			if (not self.MinEnergy) or (self.MinEnergy and (self.Energy >= self.MinEnergy)) then
+				ba.print(ship.Name .. ": CLOAK\n")
+				self.Status = state
+				ship:addShipEffect("cloak", self.CloakTime * 1000)
+				self.Timestamp = ctime + 0.5
+				
+				if player then
+				
+				mn.runSEXP("( hud-set-text !RightGaugeB! !STATUS: ON! )")
+				mn.runSEXP("( fade-in 5000 5 5 5 )")
+				gr.setPostEffect("saturation", 20)
+				end
+				
+				if not self.Shields then
+					mn.runSEXP("( shields-off !" .. ship.Name .. "!)")
+				end
+				
+				mn.runSEXP("( alter-ship-flag !stealth! (true) (false) !" .. ship.Name .. "!)")
+				mn.runSEXP("( alter-ship-flag !protect-ship! (true) (false) !" .. ship.Name .. "!)")
+				mn.runSEXP("( alter-ship-flag !beam-protect-ship! (true) (false) !" .. ship.Name .. "!)")
+				mn.runSEXP("( alter-ship-flag !hidden-from-sensors! (true) (false) !" .. ship.Name .. "!)")
+				mn.runSEXP("( turret-lock-all !" .. ship.Name .. "!)")
+				mn.runSEXP("( beam-lock-all !" .. ship.Name .. "!)")
+				
+				local sound = ad.getSoundentry("Cloak")
+				ad.play3DSound(sound, ship.Position)
+			elseif self.MinEnergy and (self.Energy < self.MinEnergy) then
+				if player then
+					ad.playGameSound(10)
+				end
+			end
+		end
+	end
+
+end
+
+function CloakSys:WatchTimer()
+
+	local mtime = mn.getMissionTime()
+
+	for i = 1, #self.Ships do
+		local data = self.Ships[i]
+		local ship = mn.Ships[data.Sig]
+		if data.Timer < mtime then
+								
+			--ba.print("BEFORE: " .. data.Status .. ": " .. data.Energy .. "\n")
+		
+			if not self.Paused then
+				if data.Status == 1 and ((data.Energy - data.Rate) >= 0) then
+					--ba.print("decrease by " .. data.Rate .. "!\n")
+					data.Energy = data.Energy - data.Rate
+				elseif data.Status == -1 and ((data.Energy + data.Rate) <= data.MaxEnergy) then
+					--ba.print("increase by " .. data.Rate .. "!\n")
+					data.Energy = data.Energy + data.Rate
+				end
+			end
+			
+			--ba.print("AFTER: " .. data.Status .. ": " .. data.Energy .. "\n\n")
+			
+			if data.Energy < 1 and data.Status == 1 then
+				data:AlterState(-1)
+			end
+			
+			if data.AI and (i ~= CloakSys.Player.Index) and (data.Status == -1) then
+			
+				if not data.AI.Timer then
+					data.AI.Timer = 0
+				end
+				
+				if (data.Energy > data.AI.MinCloak) and (data.AI.Timer < mtime) then
+					data:AlterState(1)
+				end
+				
+			end
+			
+			if data.Energy < 0 then
+				data.Energy = 0
+			end
+			
+			if data.Energy > data.MaxEnergy then
+				--ba.print("Capping at max energy!\n\n")
+				data.Energy = data.MaxEnergy
+			end
+			
+			CloakSys:UpdateHUD()
+			
+			data.Timer = mtime + 1
+			
+		end
+	end
+
+end
+
+function CloakSys:UpdateHUD()
+
+	if self.Player and self.Player.Sig and hv.Player:getSignature() == self.Player.Sig then
+	
+		local player = self.Ships[self.Player.Index]
+		--local energy = math.floor(player.Energy * 10 / player.MaxEnergy)
+		--local display = string.rep("=",energy)
+		local display = (player.Energy / player.MaxEnergy) * 100
+		
+		mn.runSEXP("(hud-set-text !RightGaugeC! !Energy Level: " .. string.format("%3d", display) .. "%!)")
+	
+	end
+
+end
+
+function CloakSys:CheckActions(ship, action)
+
+--ship = object signature
+--action = 1, fired weapons. 2, used afterburner
+
+	for i = 1, #self.Ships do
+	
+		local data = self.Ships[i]
+		if (data.Sig == ship) and (data.Status == 1) then
+			if data.WeaponsNull and (action == 1) then
+			
+				if data.AI and (i ~= CloakSys.Player.Index) then
+					data.AI.Timer = mn.getMissionTime() + data.AI.ActionTimeout
+				end
+			
+				data:AlterState(-1)
+							
+			end
+			
+			if data.AfterburnNull and (action == 2) then
+				data:AlterState(-1)
+			end
+		end
+		
+	end
+
+end
+
+function CloakSys:MaybeRemove(ship)
+
+	for i = 1, #self.Ships do
+		if self.Ships[i] and self.Ships[i].Sig == ship then
+			table.remove(self.Ships,i)
+		end
+	end
+
+end
+
+function CloakSys:Force(ship, onoff)
+	if self.Enabled then
+		CloakSys:GetEntryByName(ship):AlterState(onoff)
+	end
+end
+
+function CloakSys:Exit()
+
+	self.Enabled = nil
+	self.Ships = nil
+	self.Player = nil
+	self.Modes = nil
+	self.KillAllHumans = nil
+
+end
+
+function CloakSys:GlobalToggle()
+	if self.Paused then
+		self.Paused = false
+	elseif self.Paused == false then
+		self.Paused = true
+	end
+end
+
+--Misc Table Copy function
+function DeepTableCopy(orig)
+
+--From http://lua-users.org/wiki/CopyTable
+
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[DeepTableCopy(orig_key)] = DeepTableCopy(orig_value)
+        end
+        setmetatable(copy, DeepTableCopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
+;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-set-cloak-ability"].Action = function(onoff, mode, ...) 
+
+	for i,data in ipairs(arg) do
+		local entry = data[1]
+		
+		if onoff then
+			CloakSys:Add(entry.Name, mode)
+		else
+			CloakSys:MaybeRemove(entry:getSignature())
+		end
+	end
+
+end
+
+;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-force-cloak"].Action = function(onoff, ...) 
+
+	for i,data in ipairs(arg) do
+		local entry = data[1]
+		
+		if onoff then
+			CloakSys:Force(entry.Name, true)
+		else
+			CloakSys:Force(entry.Name, false)
+		end
+	end
+	
+end
+
+]
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	CloakSys.Ships = {}
+	CloakSys.Player = {}
+]
+
+$On Frame:
+[
+	if CloakSys.Enabled then
+		CloakSys:WatchTimer()		
+	end
+]
+
+$On Key Released:
+[
+	if CloakSys.Enabled and CloakSys.Player.Sig and CloakSys.Ships[CloakSys.Player.Index].Allowed then
+		if hv.Key == "Alt-Z" then
+			local player = CloakSys.Ships[CloakSys.Player.Index]
+			local newStatus = player.Status * -1
+			player:AlterState(newStatus)
+		end
+	end
+]
+
+$On Mission End:
+[
+	if CloakSys.Enabled then
+		CloakSys:Exit()
+	end
+]
+
+$On Death:
+[
+	if CloakSys.Enabled then
+		CloakSys:MaybeRemove(hv.Self:getSignature())		
+	end
+]
+
+$On Weapon Fired:
+[
+	if CloakSys.Enabled then
+		CloakSys:CheckActions(hv.User:getSignature(), 1)
+	end
+]
+
+$On Afterburner Engage:
+[
+	if CloakSys.Enabled then
+		CloakSys:CheckActions(hv.Ship:getSignature(), 2)
+	end
+]
+
+$Weapon class: Cloaking Device
+$On Weapon Equipped:
+[
+	if mn.getMissionTime() > 0.5 then
+		CloakSys:Add(hv.User.Name)
+	end
+]
+
+$On Weapon Selected:
+[
+	hv.User.SecondaryBanks[1].Armed = true
+]
+
+#End

@@ -1,0 +1,593 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+PromptBox = {}
+
+function PromptBox:Init(mode)
+
+	ba.print("*****Initializing PromptBox System...\n")
+	
+	self.Mode = mode or 1		--Mode 1 is the old default, mode 2 is the new way
+	
+	;;FSO 3.8.0;; self.SDL2 = true
+			
+	self.Config = axemParse:ReadJSON("probox.cfg")
+
+	self.Enabled = true
+	self.FreeMode = false
+	self.Visible = false
+	self.HideAXM = true
+	self.Result = 0
+	self.Locked = {}
+	self.Gauges = {"PromptBoxOpt1", "PromptBoxOpt2", "PromptBoxOpt3", "PromptBoxOpt4", "PromptBoxOpt5"}
+	self.List = {}
+	self.PromptData = {}
+	self.ActivePrompt = nil
+			
+	self:LoadMsgBox(self.Config.Graphic)
+		
+	AXUI.InGame = true
+	AXUI:ScreenInit()
+	AXUI:SetFocus(0)
+	
+	self.PlayerMouse = io.MouseControlStatus
+	self.Actions = {"afterburners-locked", "primaries-locked", "secondaries-locked"}
+	if not self.Flags then
+		self.Flags = {}
+	end
+		
+end
+
+function PromptBox:Activate(mode)
+
+	ba.print("PromptBox Activated!\n")
+	
+	if not PromptBox.Enabled then
+		PromptBox:Init(mode)
+	end
+	
+	if PromptBox.HideAXM and AXMessage and AXMessage.Enabled then
+		AXMessage.Enabled = false
+		if Berserk then Berserk.CanDraw = false end
+		PromptBox.AXMessage = true
+	end
+	
+	--[[if PromptBox.HideAXM and AxHUD and AxHUD.Visible then
+		AxHUD.Visible = false
+		PromptBox.AxHUD = true
+	end]]--
+	
+	if self.Mode == 1 then
+		PromptBox:MakeList()
+	end
+	
+	PromptBox:SetMsgGaugeVisible(true)
+
+end
+
+function PromptBox:Deactivate()
+
+	if PromptBox.HideAXM and AXMessage and PromptBox.AXMessage then
+		AXMessage.Enabled = true
+		if Berserk then Berserk.CanDraw = true end
+		PromptBox.AXMessage = nil
+	end
+	
+	--[[if PromptBox.HideAXM and AxHUD and PromptBox.AxHUD then
+		AxHUD.Visible = true
+		PromptBox.AxHUD = nil
+	end]]--
+	
+end
+
+function PromptBox:PopulateLine(message, valid)
+
+	local line = " "
+	
+	if message and message:isValid() and (valid ~= false) then
+		line = message:getMessage(true)
+	end
+	
+	return line
+
+end
+
+function PromptBox:SEXPCall(reference, text, pause, choiceA, choiceB, choiceC, choiceD, choiceE, Acond, Bcond, Ccond, Dcond, Econd, variable)
+
+	if not reference or not text:isValid() or not choiceA:isValid() then
+		ba.print("PromptBox: SEXPCall problem. Not enough parameters!\n")
+		return
+	end
+	
+	self.AllowPause = pause
+	
+	self:Activate(2)
+	--self.Mode = 2
+	
+	self.TitleText = text:getMessage(true)
+	
+	self.List = {}
+	self.List[1] = self:PopulateLine(choiceA, Acond)
+	self.List[2] = self:PopulateLine(choiceB, Bcond)
+	self.List[3] = self:PopulateLine(choiceC, Ccond)
+	self.List[4] = self:PopulateLine(choiceD, Dcond)
+	self.List[5] = self:PopulateLine(choiceE, Econd)
+		
+	self.Locked = {}
+	self.Locked[1] = not Acond
+	if choiceB then self.Locked[2] = not choiceB:isValid() or not Bcond end
+	if choiceC then self.Locked[3] = not choiceC:isValid() or not Ccond end
+	if choiceD then self.Locked[4] = not choiceD:isValid() or not Dcond end
+	if choiceE then self.Locked[5] = not choiceE:isValid() or not Econd end
+	
+	self:MakeList()
+	
+	if not self.PromptData[reference] then
+		local t = {}
+		
+		t.LastResult = 0				--Last result given
+		t.Bitfield = 0					--Bitfield of chosen responses
+		if variable and variable:isValid() then
+			t.Variable = variable		--SEXP Variable to store the bitfield
+			t.Variable.Value = 0
+		end			
+		
+		self.PromptData[reference] = t
+	else
+		if variable and variable:isValid() and variable ~= self.PromptData[reference].Variable then
+			self.PromptData.LastResult = 0
+			self.PromptData[reference].Variable = variable
+		end
+	end
+	
+	self.ActivePrompt = reference
+	
+end
+
+;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-call-prompt"].Action = function(reference, text, pause, choiceA, Acond, choiceB, Bcond, choiceC, Ccond, choiceD, Dcond, choiceE, Econd, variable) PromptBox:SEXPCall(reference, text, pause, choiceA, choiceB, choiceC, choiceD, choiceE, Acond, Bcond, Ccond, Dcond, Econd, variable) end
+
+function PromptBox:ReturnLastValue(reference)
+
+	if self.PromptData and self.PromptData[reference] then
+		return self.PromptData[reference].LastResult
+	else
+		return 0
+	end
+
+end
+
+;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-get-prompt-response"].Action = function(reference) return PromptBox:ReturnLastValue(reference) end
+
+function PromptBox:ResetRef(reference)
+
+	self.PromptData[reference] = nil
+
+end
+
+function PromptBox:LoadMsgBox(filename)
+
+	ba.print("LoadMsgBox called\n")
+
+	if filename then
+		self.Image = {file = filename, w = gr.getImageWidth(filename), h = gr.getImageHeight(filename)}
+	end
+	self.Position = {}
+	
+	self.Position.x = (gr.getScreenWidth() * (self.Config.Origin[1]) - (self.Image.w/2))
+	self.Position.y = (gr.getScreenHeight() * ( self.Config.Origin[2] ))
+
+end
+
+function PromptBox:MakeList()
+	
+	self:UpdateText()
+	
+	local x, y = self.Config.List.Offset[1], self.Config.List.Offset[2]
+			
+	self.Menu = AXUI:CreateListBox(self.List, self.Position.x + x, self.Position.y + y, self.Image.w - x, self.Image.h - y, "white", "silver", "bright_white", false, 0, self.Config.List.Font)
+	self.Menu.FontHeight = self.Menu.FontHeight + 2
+	self.Menu:UpdateList(0)
+
+end
+
+function PromptBox:UpdateText()
+
+	if self.Mode == 1 then
+		self.List = self:GetTextFromGauges()
+		self.TitleText = hu.getHUDGaugeHandle("PromptBox").Text
+	end
+		
+	if self.List and self.Menu then
+		for i, v in pairs(self.Menu.Item) do
+			if self.List[i]:gsub("%s+", "") ~= "" and not self.Locked[i] then
+				v.Text = ">> " .. self.List[i]
+			else
+				v.Text = ""
+			end
+				gr.CurrentFont = gr.Fonts[2]
+				v:CalculateRegion()
+		end
+	end
+
+
+end
+
+function PromptBox:GetTextFromGauges()
+	
+	local t = {}
+	for i, v in pairs(self.Gauges) do
+		local gauge = hu.getHUDGaugeHandle(v).Text
+			if gauge:gsub("%s+", "") ~= "" and not self.Locked[i] then
+				t[i] = gauge
+			else
+				t[i] = ""
+			end
+	end
+	
+	return t
+
+end
+
+function PromptBox:SetMsgGaugeVisible(visible)
+
+	--ba.print("SetMsgGaugeVisible called\n")
+	
+	local retailGauges
+	local customGauges
+	
+	--self.Enabled = visible
+
+	if visible then -- turn on
+		retailGauges = "false"
+		self.Visible = true
+		if AxHUD then AxHUD.Visible = false end
+		ad.playGameSound(29) --The sound that plays when you bring up the PromptBox
+		io.setCursorHidden(false)
+	else -- turn off
+		retailGauges = "true"
+		self.Visible = false
+		if AxHUD then AxHUD.Visible = true end
+		--self.Menu = nil
+		self.Locked = {}
+		self.Result = 0
+		io.setCursorHidden(true)
+	end
+
+	mn.runSEXP("(hud-activate-gauge-type !Center reticle! (".. retailGauges.."))")
+	mn.runSEXP("(hud-activate-gauge-type !Lock indicator! (".. retailGauges.."))")
+	mn.runSEXP("(hud-activate-gauge-type !Threat indicator! (".. retailGauges.."))")
+	mn.runSEXP("(hud-activate-gauge-type !Throttle! (".. retailGauges.."))")
+	mn.runSEXP("(hud-activate-gauge-type !Weapon energy! (".. retailGauges.."))")
+	mn.runSEXP("(hud-activate-gauge-type !Afterburner energy! (".. retailGauges.."))")
+	mn.runSEXP("(hud-activate-gauge-type !Mini shield! (".. retailGauges.."))")
+	mn.runSEXP("(hud-activate-gauge-type !Radar! (".. retailGauges.."))")
+	mn.runSEXP("(hud-activate-gauge-type !Player shield! (".. retailGauges.."))")
+	mn.runSEXP("(hud-activate-gauge-type !Target shield! (".. retailGauges.."))")
+		
+	if gr.getScreenWidth() == 1024 then
+	
+		mn.runSEXP("(hud-activate-gauge-type !Ets retail! (".. retailGauges.."))")
+		mn.runSEXP("(hud-activate-gauge-type !Kills! (".. retailGauges.."))")
+		mn.runSEXP("(hud-activate-gauge-type !Target monitor! (".. retailGauges.."))")
+		mn.runSEXP("(hud-activate-gauge-type !Weapons! (".. retailGauges.."))")
+		mn.runSEXP("(hud-activate-gauge-type !Mission time! (".. retailGauges.."))")
+		mn.runSEXP("(hud-activate-gauge-type !Countermeasures! (".. retailGauges.."))")
+		mn.runSEXP("(hud-activate-gauge-type !Auto speed! (".. retailGauges.."))")
+		mn.runSEXP("(hud-activate-gauge-type !Auto target! (".. retailGauges.."))")
+		mn.runSEXP("(hud-activate-gauge-type !Extra target data! (".. retailGauges.."))")
+		
+	end
+	
+	if PromptBox.AllowPause == true then
+		if visible then
+			mn.runSEXP("(set-time-compression !1!)")
+		else
+			mn.runSEXP("(reset-time-compression)")
+		end
+	end
+
+end
+
+function proBoxInit()
+
+	PromptBox:Init()
+
+end
+
+function proBoxOn()
+
+	PromptBox:Activate()
+
+end
+
+function proBoxOff()
+
+	PromptBox:Deactivate()
+
+	ba.print("proBoxOff called\n")
+	PromptBox:SetMsgGaugeVisible(false)
+	PromptBox.UnlockTimer = mn.getMissionTime() + 0.15
+	
+end
+
+function proBoxAllowPause()
+
+	PromptBox.AllowPause = true
+	
+end
+
+function proBoxDisallowPause()
+
+	PromptBox.AllowPause = false
+	
+end
+
+function proBoxModeFree()
+
+	PromptBox.FreeMode = true
+
+end
+
+function proBoxModeLock()
+
+	PromptBox.FreeMode = false
+
+end
+
+function proBoxInFreeMode()
+
+	local result = 0
+	
+	if PromptBox.FreeMode == true then
+		result = 1
+	end
+	
+	return result
+	
+end
+
+function proBoxSet(num)
+	
+	PromptBox.Locked = {}
+	
+	for i = num+1, 5 do
+		proBoxLock(i)
+	end
+
+end
+
+function proBoxHead(filename)
+
+	PromptBox:SetHead(filename)
+
+end
+
+function proBoxLock(num)
+	
+	PromptBox.Locked[num] = true
+
+end
+
+function proBoxClear()
+
+	mn.runSEXP("(hud-set-text !PromptBox! ! !)")
+	mn.runSEXP("(hud-set-text !PromptBoxOpt1! ! !)")
+	mn.runSEXP("(hud-set-text !PromptBoxOpt2! ! !)")
+	mn.runSEXP("(hud-set-text !PromptBoxOpt3! ! !)")
+	mn.runSEXP("(hud-set-text !PromptBoxOpt4! ! !)")
+	mn.runSEXP("(hud-set-text !PromptBoxOpt5! ! !)")
+
+end
+
+function proBoxValue()
+
+	local result = 0
+	
+	if PromptBox.Enabled and PromptBox.Visible then
+		result = PromptBox.Result
+	end
+	
+	return result
+	
+end
+
+function PromptBox:LockPlayer()
+
+	if hv.Player:isValid() and not self.PlayerLocked then
+	
+		self.PlayerLocked = true
+	
+		local playerName = hv.Player.Name
+
+			if self.PlayerMouse then
+				io.MouseControlStatus = false
+			end
+			
+			self.Flags = {}
+						
+			for __,v in pairs(self.Actions) do
+				if not mn.evaluateSEXP("(are-ship-flags-set !" .. playerName .. "! !" .. v .. "!)") then
+					mn.runSEXP("(alter-ship-flag !" .. v .. "! ( true ) ( false ) !" .. playerName .. "!)")
+					self.Flags[#self.Flags+1] = v
+				end
+			end
+			
+			mn.runSEXP("(ignore-key !-1! !C!)")
+	
+	end
+
+end
+
+function PromptBox:UnlockPlayer()
+
+	if hv.Player:isValid() and self.PlayerLocked then
+	
+		self.PlayerLocked = nil
+		self.UnlockTimer = nil
+
+		local playerName = hv.Player.Name
+
+		if self.PlayerMouse then
+			io.MouseControlStatus = true
+		end
+					
+		for __,v in pairs(self.Flags) do
+			mn.runSEXP("(alter-ship-flag !" .. v .. "! ( false ) ( false ) !" .. playerName .. "!)")
+		end
+		
+		self.Flags = {}
+		
+		mn.runSEXP("(ignore-key !0! !C!)")
+	
+	end
+
+end
+
+function PromptBox:Draw()
+
+	gr.drawImage(self.Image.file, self.Position.x, self.Position.y)
+
+	self:UpdateText()
+		
+	gr.CurrentFont = gr.Fonts[self.Config.Title.Font]
+	AXUI:SetColor("white")
+	
+	local x,y = self.Config.Title.Offset[1], self.Config.Title.Offset[2]
+	
+	gr.drawString(self.TitleText, self.Position.x + x, self.Position.y + y)
+	
+	self.Menu:DrawList()
+		
+end
+
+function PromptBox:MonitorActions()
+
+	local line = 0
+
+	if self.Menu and self.Visible then
+		for i, v in ipairs(self.Menu.Item) do
+			if v:Clicked() then
+				ad.playInterfaceSound(0)
+				if self.Mode == 1 then
+					line = i
+				elseif self.Mode == 2 then
+					self:Respond(i)
+					proBoxOff()
+				end
+			end
+		end
+	end
+	
+	return line
+	
+end
+
+function PromptBox:Respond(value)
+
+	local data = self.PromptData[self.ActivePrompt]
+	
+	data.LastResult = value
+	data.Bitfield = bit.addBit(data.Bitfield, value)
+	if data.Variable then data.Variable.Value = data.Bitfield end
+
+end
+
+function PromptBox:Exit()
+
+	self.Enabled = nil
+	self.AllowPause = nil
+	self.FreeMode = nil
+	self.Visible = nil
+	self.HideAXM = nil
+	self.Result = nil
+	self.Locked = nil
+	self.Gauges = nil
+	self.Image = nil
+	self.PlayerMouse = nil
+	self.Actions = nil
+	self.Flags = nil
+	
+	self.PromptData = nil
+	self.ActivePrompt = nil
+
+end
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	--PromptBox:Init()
+
+]
+
+$On State Start:
+[
+	if PromptBox.Enabled and PromptBox.Visible then
+		io.setCursorHidden(false)
+	end	
+]
+
+$On State End:
+[
+	PromptBox.Enabled = false
+]
+
+$On HUD Draw:
+[
+	if PromptBox.Enabled then
+		if PromptBox.Visible then
+			PromptBox:UpdateText()
+			PromptBox:Draw()
+			PromptBox:LockPlayer()
+			
+			if not PromptBox.SDL2 then
+				io.setCursorHidden(false)
+			end
+			
+		end
+	end
+	
+
+	
+	if PromptBox.UnlockTimer and PromptBox.UnlockTimer < mn.getMissionTime() then
+		PromptBox:UnlockPlayer()
+	end		
+]
+
+$On Mouse Released:
+[
+	if PromptBox.Enabled then
+		PromptBox.Result = PromptBox:MonitorActions()
+	end
+]
+
+$On Key Released:
+[
+	if hv.Key == "Alt-C" then
+		if PromptBox.FreeMode then
+			if PromptBox.Visible then
+				proBoxOff()
+			else
+				proBoxOn()
+			end
+		end
+	end
+]
+
+$On Mission End:
+[
+	if PromptBox.Enabled then -- Give mouse controls back if we didn't yet
+		PromptBox.Enabled = nil
+		PromptBox.FreeMode = nil
+		if PromptBox.PlayerMouse == true and io.MouseControlStatus == false then
+			io.MouseControlStatus = true
+		end
+		proBoxOff()
+		PromptBox:Exit()
+		
+	end
+]
+
+#End

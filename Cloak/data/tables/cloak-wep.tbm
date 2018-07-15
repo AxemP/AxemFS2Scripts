@@ -1,0 +1,28 @@
+#Secondary Weapons
+
+$Name:                                 		Cloaking Device
+$Model File:								blip.pof
+$Mass:										0.1
+$Velocity:									1.0
+$Fire Wait:									1.0
+$Damage:									0.0 
+$Blast Force:								0.0
+$Inner Radius:								0.0
+$Outer Radius:								0.0
+$Shockwave Speed:							0
+$Armor Factor:								0.0
+$Shield Factor:								0.0
+$Subsystem Factor:							0.0
+$Lifetime:									0.0
+$Energy Consumed:							0.0
+$Cargo Size:								10
+$Homing:									NO
+$LaunchSnd:									-1
+$ImpactSnd:									-1
+$FlyBySnd:									-1
+$Rearm Rate:								1.0
+$Flags:										( "player allowed" )                   
+$Impact Explosion:							Exp05
+$Impact Explosion Radius:					0.0
+
+#End

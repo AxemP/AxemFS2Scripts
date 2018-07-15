@@ -1,0 +1,458 @@
+#Conditional Hooks
+$Application: FS2_Open
+$On Game Init:
+[
+
+	DebugTools = {}
+		
+function DebugTools:Init()
+
+	self.SexpVars = {}
+	self.SexpVars.Enabled = false
+	self.SexpVars.Type = false
+	self.SexpVars.Binary = false
+	self.SexpVars.Pos = {15,100}
+	
+	self.ShipInfo = {}
+	self.ShipInfo.Enabled = false
+	self.ShipInfo.Verbose = false
+	self.ShipInfo.Pos = {gr.getScreenWidth()-500,100}
+	
+	self.SelfInfo = {}
+	self.SelfInfo.Enabled = false
+	
+end
+
+function DebugTools:DrawTargetInfo()
+
+	local player = hv.Player
+	
+	if player.Target and player.Target:isValid() then
+		self:DrawShipInfo(player.Target)
+	end
+		
+
+end
+
+function DebugTools:DrawSelfInfo()
+	
+	self:DrawShipInfo(hv.Player)
+	
+end
+
+function DebugTools:DrawShipInfo(ship)
+
+	gr.setColor(255,255,255)
+	gr.CurrentFont = gr.Fonts[1]
+	gr.drawString("Ship Info:", self.ShipInfo.Pos[1], self.ShipInfo.Pos[2])
+	if ship:getBreedName() == "Ship" then
+		if ship:getCallsign() ~= "" then
+			gr.drawString("Name: " .. ship.Name .. ", Callsign: " .. ship:getCallsign())
+		end
+	end
+	gr.drawString("Obj Sig: " .. ship:getSignature() .. ", Breed: " .. ship:getBreedName())
+	if ship:getBreedName() == "Ship" or ship:getBreedName() == "Weapon" then
+		gr.drawString("Mass: " .. string.format("%6d",ship.Physics.Mass) .. ", Radius: " .. string.format("%6d",ship.Class.Model.Radius))
+		gr.drawString("Team: " .. ship.Team.Name)
+	else
+		gr.drawString("Mass: " .. string.format("%6d",ship.Physics.Mass))
+	end
+	gr.drawString("Pos (x,y,z):\t\t\t" .. string.format("%6d", ship.Position.x) .. ", " .. string.format("%6d", ship.Position.y) .. ", " .. string.format("%6d", ship.Position.z))
+	gr.drawString("Vel (x,y,z):\t\t\t" .. string.format("%6d", ship.Physics.Velocity.x) .. ", " .. string.format("%6d", ship.Physics.Velocity.y) .. ", " .. string.format("%6d", ship.Physics.Velocity.z))
+	gr.drawString("Ori (p,b,h):\t\t\t" .. string.format("%6d", ship.Orientation.p * (180/math.pi)) .. ", " .. string.format("%6d", ship.Orientation.b * (180/math.pi)) .. ", " .. string.format("%6d", ship.Orientation.h * (180/math.pi)))
+	
+	if ship:getBreedName() == "Ship" then
+		gr.drawString("Aburn Active? " .. tostring(ship.Physics.AfterburnerActive) .. ", Gliding? " .. tostring(ship.Physics:isGliding()))
+	gr.drawString("-------")
+		gr.drawString("Class: " .. ship.Class.Name .. ", Model: " .. ship.Class.Model.Filename)
+		gr.drawString("Species: " .. ship.Class.Species.Name)
+		gr.drawString("HP: " .. string.format("%d", ship.HitpointsLeft) .. "/" .. ship.HitpointsMax)
+		gr.drawString("Shields: Fr:" .. string.format("%d", ship.Shields[2]) .. "/" .. string.format("%d",ship.Shields.CombinedMax/4) .. ", Re:" .. string.format("%d", ship.Shields[3]) .. "/" .. string.format("%d",ship.Shields.CombinedMax/4) ..  ", Le:" .. string.format("%d", ship.Shields[4]) .. "/" .. string.format("%d",ship.Shields.CombinedMax/4) .. ", Ri:" .. string.format("%d", ship.Shields[1]) .. "/" .. string.format("%d",ship.Shields.CombinedMax/4) )
+		
+		local armor = "None"
+		local sArmor = "None"
+		
+		if ship.ArmorClass ~= "" then
+			armor = ship.ArmorClass
+		end
+		
+		if ship.ShieldArmorClass ~= "" then
+			sArmor = ship.ShieldArmorClass
+		end
+		
+		gr.drawString("Armor: " .. armor .. ", Shield Armor:" .. sArmor)
+		gr.drawString("Afterburner Fuel: " .. string.format("%d",ship.AfterburnerFuelLeft) .. "/" .. string.format("%d",ship.AfterburnerFuelMax))
+		gr.drawString("Weapon Energy: " .. string.format("%d",ship.WeaponEnergyLeft) .. "/" .. string.format("%d",ship.WeaponEnergyMax))
+		gr.drawString("Countermeasures: " .. ship.CountermeasureClass.Name .. " // " .. ship.CountermeasuresLeft .. " left")
+		
+		if ship.Target:isValid() then
+			local target = ship.Target
+			if ship.Target:getBreedName() == "Ship" then
+				target = ship.Target.Name
+			elseif ship.Target:getBreedName() == "Weapon" then
+				target = ship.Target.Class.Name
+			else
+				target = ship.Target:getBreedName()
+			end
+			gr.drawString("Target: " .. target)
+		else
+			gr.drawString("Target: None")
+		end
+		gr.drawString("Orders:")
+		if #ship.Orders > 0 then
+			for i = 1, #ship.Orders do
+				local orderEnum = ship.Orders[i]:getType()
+				local order = ""
+				if orderEnum == ORDER_ATTACK then
+					order = "Attack " .. ship.Orders[i].Target.Name
+				elseif orderEnum == ORDER_ATTACK then
+					order = "Attack Any"
+				elseif orderEnum == ORDER_DEPART then
+					order = "Depart"
+				elseif orderEnum == ORDER_DISABLE then
+					order = "Disable " .. ship.Orders[i].Target.Name
+				elseif orderEnum == ORDER_DISARM then
+					order = "Disarm " .. ship.Orders[i].Target.Name
+				elseif orderEnum == ORDER_DOCK then
+					order = "Dock with " .. ship.Orders[i].Target.Name
+				elseif orderEnum == ORDER_EVADE then
+					order = "Evade"
+				elseif orderEnum == ORDER_FLY_TO then
+					order = "Fly to"
+				elseif orderEnum == ORDER_FORM_ON_WING then
+					order = "Form on Wing"
+				elseif orderEnum == ORDER_GUARD then
+					order = "Guard " .. ship.Orders[i].Target.Name
+				elseif orderEnum == ORDER_IGNORE_SHIP then
+					order = "Ignore " .. ship.Orders[i].Target.Name
+				elseif orderEnum == ORDER_KEEP_SAFE_DISTANCE then
+					order = "Keep Safe Distance"
+				elseif orderEnum == ORDER_PLAY_DEAD then
+					order = "Play Dead"
+				elseif orderEnum == ORDER_REARM then
+					order = "Rearm"
+				elseif orderEnum == ORDER_STAY_NEAR then
+					order = "Stay Near " .. ship.Orders[i].Target.Name
+				elseif orderEnum == ORDER_STAY_STILL then
+					order = "Stay Still"
+				elseif orderEnum == ORDER_UNDOCK then
+					order = "Undock"
+				elseif orderEnum == ORDER_WAYPOINTS then
+					order = "Waypoints: " .. ship.Orders[i].Target:getList().Name
+				elseif orderEnum == ORDER_WAYPOINTS_ONCE then
+					order = "Waypoints Once: " .. ship.Orders[i].Target:getList().Name
+				elseif orderEnum == ORDER_ATTACK_WING then
+					order = "Attack Wing " .. ship.Orders[i].Target.Name
+				elseif orderEnum == ORDER_GUARD_WING then
+					order = "Guard Wing " .. ship.Orders[i].Target.Name
+				else
+					order = "None"
+				end
+				gr.drawString(i .. ": " .. order)
+			end
+		else
+			gr.drawString("0: None")
+		end
+		
+		gr.drawString("Weapons:")
+		if #ship.PrimaryBanks > 0 then
+			gr.drawString("\t\tPrimary:")
+			
+			for i = 1, #ship.PrimaryBanks do
+				local bank = ship.PrimaryBanks[i]
+				local display = "\t\t\t\t" .. i .. ": "
+				
+				display = display .. bank.WeaponClass.Name
+				
+				if bank.AmmoMax > 0 then
+					display = display .. "  Ammo: " .. bank.AmmoLeft .. "/" .. bank.AmmoMax
+				end
+				
+				if bank.Armed then
+					display = display .. "  <<ARMED>>"
+				end
+				
+				gr.drawString(display)
+			end
+		end
+		
+		if #ship.SecondaryBanks > 0 then
+			gr.drawString("\t\tSecondary:")
+			for i = 1, #ship.SecondaryBanks do
+				local bank = ship.SecondaryBanks[i]
+				local display = "\t\t\t\t" .. i .. ": "
+				
+				display = display .. bank.WeaponClass.Name
+				
+				if bank.AmmoMax > 0 then
+					display = display .. "  Ammo: " .. bank.AmmoLeft .. "/" .. bank.AmmoMax
+				end
+				
+				if bank.Armed then
+					display = display .. "  <<ARMED>>"
+				end
+				
+				gr.drawString(display)
+			end
+		end
+		
+		if #ship.PrimaryBanks == 0 and #ship.SecondaryBanks == 0 then
+			gr.drawString("\t\tNone")
+		end
+		
+		gr.drawString("Subsystems/Turrets:")
+		for i=1, #ship do
+			local subsys = ship[i]
+			gr.drawString("\t" .. subsys:getModelName() .. " // " .. subsys.Name)
+			gr.drawString("\t\t\t\tHP: " .. string.format("%d", subsys.HitpointsLeft) .. "/" .. string.format("%d", subsys.HitpointsMax))
+			local armor = "None"
+			if subsys.ArmorClass ~= "" then armor = subsys.ArmorClass end
+			gr.drawString("\t\t\t\tArmor: " .. armor)
+			
+			if subsys:isTurret() then
+				gr.drawString("\t\t\t\tTurret:")
+				
+				local target = "None"
+				local locked = "No"
+									
+				if subsys.Target:isValid() then
+					local subsysTarget = subsys.Target
+					if subsysTarget and subsysTarget:isValid() then
+						if subsysTarget:getBreedName() == "Ship" then
+							target = subsysTarget.Name
+						elseif subsysTarget:getBreedName() == "Weapon" then
+							target = subsysTarget.Class.Name
+						else
+							target = subsysTarget:getBreedName()
+						end
+					end
+					if subsys:isTargetInFOV(subsys.Target) then target = target .. "  <<IN VIEW>>" end
+				end
+				
+				if subsys.TurretLocked then locked = "Yes" end
+				
+				gr.drawString("\t\t\t\t\tTarget: " .. tostring(target))
+				gr.drawString("\t\t\t\t\ttLocked? " .. locked)
+				
+				if #subsys.PrimaryBanks > 0 then
+					gr.drawString("\t\t\t\t\tPrimary:")
+					
+					for i = 1, #subsys.PrimaryBanks do
+						local bank = subsys.PrimaryBanks[i]
+						local display = "\t\t\t\t\t\t\t\t" .. i .. ": "
+						
+						display = display .. bank.WeaponClass.Name
+						
+						if bank.AmmoMax > 0 then
+							display = display .. "  Ammo: " .. bank.AmmoLeft .. "/" .. bank.AmmoMax
+						end
+						
+						gr.drawString(display)
+					end
+				end
+				
+				if #subsys.SecondaryBanks > 0 then
+					gr.drawString("\t\t\t\t\t\tSecondary:")
+					for i = 1, #subsys.SecondaryBanks do
+						local bank = subsys.SecondaryBanks[i]
+						local display = "\t\t\t\t\t\t\t\t" .. i .. ": "
+						
+						display = display .. bank.WeaponClass.Name
+						
+						if bank.AmmoMax > 0 then
+							display = display .. "  Ammo: " .. bank.AmmoLeft .. "/" .. bank.AmmoMax
+						end
+
+						gr.drawString(display)
+					end
+				end
+			end
+			
+		end
+		
+	end
+		
+end
+
+function DebugTools:DrawSEXPVars()
+
+	gr.setColor(255,255,255)
+	gr.CurrentFont = gr.Fonts[1]
+	local display = "Name: Value"
+	
+	if self.SexpVars.Type then
+		display = display .. ", Type"
+	end
+	
+	if self.SexpVars.Binary then
+		display = display .. ", [Binary]"
+	end
+	
+	gr.drawString(display, self.SexpVars.Pos[1], self.SexpVars.Pos[2])
+	
+	for i = 1, #mn.SEXPVariables do
+		local var = mn.SEXPVariables[i]
+		if var:isValid() then
+			local varstring = tostring(var)..": "..tostring(var.Value)
+			
+			if self.SexpVars.Type then
+				if var.Type == SEXPVAR_TYPE_NUMBER then
+					varstring = varstring .. ", Num"
+				end
+				
+				if var.Type == SEXPVAR_TYPE_STRING then
+					varstring = varstring .. ", Str"
+				end
+			
+				if var.Persistence == SEXPVAR_CAMPAIGN_PERSISTENT then
+					varstring = varstring .. ", CP"
+				end
+				
+				if var.Persistence == SEXPVAR_PLAYER_PERSISTENT then
+					varstring = varstring .. ", PP"
+				end
+			end
+			
+			if self.SexpVars.Binary and (var.Type == SEXPVAR_TYPE_NUMBER) then
+				local binaryString = self:DEC_HEX(tonumber(var.Value))
+				varstring = varstring .. ", ["..binaryString.."]"
+			end
+			
+			gr.drawString(varstring)
+			
+		end
+	end
+
+end
+
+function DebugTools:DEC_HEX(IN)
+--http://lua-users.org/lists/lua-l/2004-09/msg00054.html
+    local B,K,OUT,I,D=2,"0123456789ABCDEF","",0
+    while IN>0 do
+        I=I+1
+        IN,D=math.floor(IN/B),math.mod(IN,B)+1
+        OUT=string.sub(K,D,D)..OUT
+    end
+    return OUT
+end
+
+function DebugTools:KeyPress(key)
+
+--ba.print(key .. "\n")
+
+	if key == "5" then
+		if self.SexpVars.Enabled then
+			ba.print("Disabled!!\n")
+			self.SexpVars.Enabled = false
+		else
+			ba.print("Enabled!!\n")
+			self.SexpVars.Enabled = true
+		end
+	end
+	
+	if key == "6" then
+		if self.SexpVars.Type then
+			self.SexpVars.Type = false
+		else
+			self.SexpVars.Type = true
+		end
+	end
+	
+	if key == "7" then
+		if self.SexpVars.Binary then
+			self.SexpVars.Binary = false
+		else
+			self.SexpVars.Binary = true
+		end
+	end
+	
+	if key == "8" then
+		if self.ShipInfo.Enabled then
+			self.ShipInfo.Enabled = false
+		else
+			self.ShipInfo.Enabled = true
+			self.SelfInfo.Enabled = false
+		end
+	end
+	
+	if key == "9" then
+		if self.SelfInfo.Enabled then
+			self.SelfInfo.Enabled = false
+		else
+			self.SelfInfo.Enabled = true
+			self.ShipInfo.Enabled = false
+		end
+	end
+	
+	if key == "Down Arrow" then
+		self.SexpVars.Pos[2] = self.SexpVars.Pos[2]+100
+		self.ShipInfo.Pos[2] = self.ShipInfo.Pos[2]+100
+	end
+	
+	if key == "Up Arrow" then
+		self.SexpVars.Pos[2] = self.SexpVars.Pos[2]-100
+		self.ShipInfo.Pos[2] = self.ShipInfo.Pos[2]-100
+	end
+
+end
+
+function PrintDebug (tbl, indent, draw )
+
+  if not tbl then return end
+
+  if not draw then
+  
+	draw = gr.drawString
+	
+		if not indent then
+		gr.setColor(255,255,255,255)
+		gr.CurrentFont = gr.Fonts[1]
+		gr.drawString("DEBUG OUTPUT:",50,0)
+		end
+	
+  end
+
+  if not indent then indent = 0 end
+  for k, v in pairs(tbl) do
+    formatting = string.rep("  ", indent) .. k .. ": "
+    if type(v) == "table" then
+      draw(formatting)
+      PrintDebug(v, indent+1)
+    elseif type(v) == "boolean" then
+      draw(formatting .. tostring(v))      
+    elseif type(v) ~= "function" then
+      draw(formatting .. tostring(v))
+    end
+  end
+end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start: 
+[
+	DebugTools:Init()
+]
+
+$On Key Pressed:
+[
+	DebugTools:KeyPress(hv.Key)
+]
+
+$On Frame:
+[
+	if DebugTools.SexpVars.Enabled then
+		DebugTools:DrawSEXPVars()
+	end
+	
+	if DebugTools.ShipInfo.Enabled then
+		DebugTools:DrawTargetInfo()
+	end
+	
+	if DebugTools.SelfInfo.Enabled then
+		DebugTools:DrawSelfInfo()
+	end
+	
+]
+
+#End

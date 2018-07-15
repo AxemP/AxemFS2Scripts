@@ -1,0 +1,35 @@
+#Lua SEXPs
+
+$Operator: lua-set-cloak-ability
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 3
+$Return Type: Nothing
+$Description: Gives a ship the ability to cloak. If the AI is given this ability, they will use it as well. Firing weapons will force the ship to decloak.
+$Parameter:
+	+Description: Set cloak status. True for giving cloak, false for taking it away.
+	+Type: boolean
+$Parameter:
+	+Description: Cloaking mode. Leave blank for default mode or enter a string to use the cloaking mode as specified in cloak.cfg.
+	+Type: string
+$Repeat
+$Parameter:
+	+Description: Ship to alter cloak ability on
+	+Type: ship
+	
+$Operator: lua-force-cloak
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+$Return Type: Nothing
+$Description: Forces a ship to cloak or uncloak (given they have the cloaking ability set).
+$Parameter:
+	+Description: Set cloak status. True for giving cloak, false for taking it away.
+	+Type: boolean
+$Repeat
+$Parameter:
+	+Description: Ship to alter cloak ability on
+	+Type: ship
+
+
+#End

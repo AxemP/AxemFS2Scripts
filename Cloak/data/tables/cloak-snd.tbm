@@ -1,0 +1,19 @@
+#Game Sounds Start
+
+$Name:  Cloak
+	+Filename: 	cloak.ogg
+	+Preload: 	no
+	+Volume:	1.00
+	+3D Sound:
+		+Attenuation start:	200
+		+Attenuation end: 750
+		
+$Name:  Decloak
+	+Filename: 	decloak.ogg
+	+Preload: 	no
+	+Volume:	1.00
+	+3D Sound:
+		+Attenuation start:	200
+		+Attenuation end: 750
+	
+#Game Sounds End

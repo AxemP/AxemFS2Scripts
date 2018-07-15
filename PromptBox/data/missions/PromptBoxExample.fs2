@@ -1,0 +1,1175 @@
+#Mission Info
+
+$Version: 0.10
+$Name:  XSTR("Prompt Box Example", -1)
+$Author: Axem
+$Created: 01/07/18 at 10:06:49
+$Modified: 07/14/18 at 22:01:03
+$Notes:
+This is a FRED2_OPEN created mission.
+$End Notes:
+
+$Mission Desc:
+ XSTR("Put mission description here
+", -1)
+$end_multi_text
++Game Type Flags: 1
++Flags: 128
++Fog Near Mult: 1.000000
+
++Fog Far Mult: 1.000000
+
++Disallow Support: 0
++Hull Repair Ceiling: 0.000000
++Subsystem Repair Ceiling: 100.000000
+
++Viewer pos: 1343.112793, 275.869934, 4838.722656
++Viewer orient:
+	-0.877763, 0.000001, 0.479095,
+	0.017592, 0.999326, 0.032228,
+	-0.478772, 0.036717, -0.877171
+
+
+$Skybox Model: starfield.pof
+
+$AI Profile: FS2 RETAIL
+
+#Sexp_variables
+
+$Variables:
+(
+		0		"bombers"		"0"		"number"
+		1		"cruisers"		"0"		"number"
+		2		"enemy"		"0"		"number"
+		3		"response"		"-1"		"number"
+)
+
+#Command Briefing
+
+#Briefing
+$start_briefing
+$num_stages: 0
+$end_briefing
+
+#Debriefing_info
+
+$Num stages: 8
+
+$Formula: ( = @cruisers[0] 1 ) 
+$Multi text
+    XSTR("You like the GTC Aeolus!", -1)
+$end_multi_text
+$Voice: none.wav
+$Recommendation text:
+    XSTR("", -1)
+$end_multi_text
+
+$Formula: ( = @cruisers[0] 2 ) 
+$Multi text
+    XSTR("You like the PVC Mentu!", -1)
+$end_multi_text
+$Voice: none.wav
+$Recommendation text:
+    XSTR("", -1)
+$end_multi_text
+
+$Formula: ( = @cruisers[0] 3 ) 
+$Multi text
+    XSTR("You like the SC Rakshasa!", -1)
+$end_multi_text
+$Voice: none.wav
+$Recommendation text:
+    XSTR("", -1)
+$end_multi_text
+
+$Formula: ( = @enemy[0] 1 ) 
+$Multi text
+    XSTR("You made it fight an Aeolus!", -1)
+$end_multi_text
+$Voice: none.wav
+$Recommendation text:
+    XSTR("", -1)
+$end_multi_text
+
+$Formula: ( = @enemy[0] 2 ) 
+$Multi text
+    XSTR("You made it fight a Mentu!", -1)
+$end_multi_text
+$Voice: none.wav
+$Recommendation text:
+    XSTR("", -1)
+$end_multi_text
+
+$Formula: ( = @enemy[0] 3 ) 
+$Multi text
+    XSTR("You made it fight a Rakshasa!", -1)
+$end_multi_text
+$Voice: none.wav
+$Recommendation text:
+    XSTR("", -1)
+$end_multi_text
+
+$Formula: ( = @bombers[0] 1 ) 
+$Multi text
+    XSTR("And you brought in bombers!", -1)
+$end_multi_text
+$Voice: none.wav
+$Recommendation text:
+    XSTR("", -1)
+$end_multi_text
+
+$Formula: ( = @bombers[0] 2 ) 
+$Multi text
+    XSTR("But you didn't want bombers!", -1)
+$end_multi_text
+$Voice: none.wav
+$Recommendation text:
+    XSTR("", -1)
+$end_multi_text
+
+#Players		;! 1 total
+
+$Starting Shipname: Alpha 1
+$Ship Choices: (
+	"GTF Ulysses"	5
+	"GTF Hercules"	5
+	"GTF Hercules Mark II"	5
+	"GTF Ares"	5
+	"GTF Erinyes"	5
+	"GTF Loki"	5
+	"GTF Pegasus"	5
+	"GTF Perseus"	5
+	"GTF Myrmidon"	5
+	"SF Mara (terrans)"	5
+	"GTB Artemis"	5
+	"GTB Artemis D.H."	5
+	"GTB Medusa"	5
+	"GTB Ursa"	5
+	"GTB Zeus"	5
+	"GTB Boanerges"	5
+	"GVF Ptah"	5
+)
+
++Weaponry Pool: (
+	"Subach HL-7"	17
+	"Subach HL-D"	16
+	"Mekhu HL-7"	16
+	"Mekhu HL-7D"	16
+	"Akheton SDG"	16
+	"Morning Star"	16
+	"MorningStar D"	16
+	"Prometheus R"	17
+	"Prometheus S"	16
+	"Prometheus D"	16
+	"Maxim"	16
+	"Maxim D"	16
+	"UD-8 Kayser"	16
+	"UD-D Kayser"	16
+	"Circe"	16
+	"Lamprey"	16
+	"Rockeye"	505
+	"Rockeye D"	500
+	"Tempest"	660
+	"Tempest D"	500
+	"Hornet"	500
+	"Hornet D"	500
+	"Hornet#Weak"	500
+	"Tornado"	516
+	"Tornado D"	500
+	"Harpoon"	500
+	"Harpoon D"	500
+	"Harpoon#Weak"	500
+	"Trebuchet"	500
+	"TAG-A"	500
+	"TAG-B"	500
+	"TAG-C"	500
+	"Piranha"	500
+	"Stiletto II"	500
+	"Infyrno"	500
+	"Infyrno D"	500
+	"Cyclops"	500
+	"Cyclops#short"	500
+	"Helios"	500
+	"EMP Adv."	500
+	"Rockeye#Shivan"	500
+	"Rockeye D#Shivan"	500
+	"Tempest#Shivan"	500
+	"Tempest D#Shivan"	500
+	"Hornet#Shivan"	500
+	"Hornet D#Shivan"	500
+	"Hornet#Weak#Shivan"	500
+	"Tornado#Shivan"	500
+	"Tornado D#Shivan"	500
+	"Harpoon#Shivan"	500
+	"Harpoon D#Shivan"	500
+	"Harpoon#Weak#Shivan"	500
+	"Trebuchet#Shivan"	500
+	"Piranha#Shivan"	500
+	"Shivan Disruptor"	500
+	"Shivan Area Bomb"	500
+	"Shivan Bomb"	500
+	"Shivan Bomb#Short"	500
+	"Shivan Megabomb"	500
+	"EMP Adv.#Shivan"	500
+)
+
+#Objects		;! 16 total
+
+$Name: Alpha 1		;! Object #0
+$Class: GTF Myrmidon
+$Team: Friendly
+$Location: 733.695313, 0.000000, 1750.486450
+$Orientation:
+	-0.009998, 0.000000, 0.999950,
+	-0.000000, 1.000000, -0.000000,
+	-0.999950, -0.000000, -0.009998
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" "player-start" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Score: 8
+
+$Name: Aeolus#Friendly		;! Object #1
+$Class: GTC Aeolus
+$Team: Friendly
+$Location: -854.733215, 0.000000, -60.373657
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Initial Shields: 100
++Subsystem: Pilot
++Subsystem: turret01
++Subsystem: turret02
++Subsystem: turret03
++Subsystem: turret04
++Subsystem: turret05
++Subsystem: turret06
++Subsystem: turret07
++Subsystem: turret08
++Subsystem: turret09
++Subsystem: turret10
++Subsystem: turret11
++Subsystem: turret12
+$Arrival Location: Hyperspace
+$Arrival Cue: ( is-event-true-delay 
+   "Chose Friend Aeolus" 
+   0 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" "no-shields" )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 1		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 500
+
+$Name: Mentu#Friendly		;! Object #2
+$Class: GVC Mentu
+$Team: Friendly
+$Location: -576.196411, 0.000000, -107.118896
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Initial Shields: 100
++Subsystem: Pilot
++Subsystem: Turret01
++Subsystem: Turret02
++Subsystem: Turret03
++Subsystem: Turret04
++Subsystem: Turret05
++Subsystem: Turret06
++Subsystem: Turret07
++Subsystem: Turret08
++Subsystem: Turret09
++Subsystem: Turret10
++Subsystem: Turret11
++Subsystem: Turret12
++Subsystem: Turret13
++Subsystem: Turret14
++Subsystem: Turret15
++Subsystem: Turret16
+$Arrival Location: Hyperspace
+$Arrival Cue: ( is-event-true-delay 
+   "Chose Friend Mentu" 
+   0 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" "no-shields" )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 1		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 100
+
+$Name: Rakshasa#Friendly		;! Object #3
+$Class: SC Rakshasa
+$Team: Friendly
+$Location: -178.946777, 0.000000, -189.576294
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Initial Shields: 100
++Subsystem: Pilot
++Subsystem: turret01
++Subsystem: turret02
++Subsystem: turret03
++Subsystem: turret04
++Subsystem: turret05
++Subsystem: turret06
++Subsystem: turret07
++Subsystem: turret08
++Subsystem: turret09
++Subsystem: turret10
++Subsystem: turret11
++Subsystem: turret12
++Subsystem: turret13
++Subsystem: turret14
+$Arrival Location: Hyperspace
+$Arrival Cue: ( is-event-true-delay 
+   "Chose Friend Rakshasa" 
+   0 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "no-shields" )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 0		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 300
+
+$Name: Aeolus#Hostile		;! Object #4
+$Class: GTC Aeolus
+$Team: Hostile
+$Location: -279.904968, 0.000000, 3142.594727
+$Orientation:
+	-0.999767, 0.000000, 0.021591,
+	0.000000, 1.000000, 0.000000,
+	-0.021591, 0.000000, -0.999767
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Initial Shields: 100
++Subsystem: Pilot
++Subsystem: turret01
++Subsystem: turret02
++Subsystem: turret03
++Subsystem: turret04
++Subsystem: turret05
++Subsystem: turret06
++Subsystem: turret07
++Subsystem: turret08
++Subsystem: turret09
++Subsystem: turret10
++Subsystem: turret11
++Subsystem: turret12
+$Arrival Location: Hyperspace
+$Arrival Cue: ( is-event-true-delay 
+   "Chose Enemy Aeolus" 
+   0 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" "no-shields" )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 1		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 500
+
+$Name: Mentu#Hostile		;! Object #5
+$Class: GVC Mentu
+$Team: Hostile
+$Location: -557.369141, 0.000000, 3195.343262
+$Orientation:
+	-0.999767, 0.000000, 0.021591,
+	0.000000, 1.000000, 0.000000,
+	-0.021591, 0.000000, -0.999767
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Initial Shields: 100
++Subsystem: Pilot
++Subsystem: Turret01
++Subsystem: Turret02
++Subsystem: Turret03
++Subsystem: Turret04
++Subsystem: Turret05
++Subsystem: Turret06
++Subsystem: Turret07
++Subsystem: Turret08
++Subsystem: Turret09
++Subsystem: Turret10
++Subsystem: Turret11
++Subsystem: Turret12
++Subsystem: Turret13
++Subsystem: Turret14
++Subsystem: Turret15
++Subsystem: Turret16
+$Arrival Location: Hyperspace
+$Arrival Cue: ( is-event-true-delay 
+   "Chose Enemy Mentu" 
+   0 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" "no-shields" )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 1		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 100
+
+$Name: Rakshasa#Hostile		;! Object #6
+$Class: SC Rakshasa
+$Team: Hostile
+$Location: -952.748047, 0.000000, 3286.359131
+$Orientation:
+	-0.999767, 0.000000, 0.021591,
+	0.000000, 1.000000, 0.000000,
+	-0.021591, 0.000000, -0.999767
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Initial Shields: 100
++Subsystem: Pilot
++Subsystem: turret01
++Subsystem: turret02
++Subsystem: turret03
++Subsystem: turret04
++Subsystem: turret05
++Subsystem: turret06
++Subsystem: turret07
++Subsystem: turret08
++Subsystem: turret09
++Subsystem: turret10
++Subsystem: turret11
++Subsystem: turret12
++Subsystem: turret13
++Subsystem: turret14
+$Arrival Location: Hyperspace
+$Arrival Cue: ( is-event-true-delay 
+   "Chose Enemy Rakshasa" 
+   0 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "no-shields" )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 0		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 300
+
+$Name: Bomber 1		;! Object #7
+$Class: GTB Medusa
+$Team: Friendly
+$Location: -748.844727, 682.951172, 1018.083252
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
++Subsystem: turret01a
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 10
+
+$Name: Bomber 2		;! Object #8
+$Class: GTB Medusa
+$Team: Friendly
+$Location: -785.527649, 682.951172, 932.125977
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
++Subsystem: turret01a
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 10
+
+$Name: Bomber 3		;! Object #9
+$Class: GTB Medusa
+$Team: Friendly
+$Location: -689.478821, 682.951172, 901.604492
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
++Subsystem: turret01a
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 10
+
+$Name: Bombbomb 1		;! Object #10
+$Class: GVB Osiris
+$Team: Friendly
+$Location: -280.012878, 682.951172, 1029.323608
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
++Subsystem: Turret01
++Subsystem: Turret02
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 8
+
+$Name: Bombbomb 2		;! Object #11
+$Class: GVB Osiris
+$Team: Friendly
+$Location: -340.546326, 682.951172, 911.679565
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
++Subsystem: Turret01
++Subsystem: Turret02
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 8
+
+$Name: Bombbomb 3		;! Object #12
+$Class: GVB Osiris
+$Team: Friendly
+$Location: -249.465057, 682.951172, 911.679321
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
++Subsystem: Turret01
++Subsystem: Turret02
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 8
+
+$Name: Bombest 1		;! Object #13
+$Class: SB Taurvi
+$Team: Friendly
+$Location: 296.951050, 682.951172, 1015.849121
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 0		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 10
+
+$Name: Bombest 2		;! Object #14
+$Class: SB Taurvi
+$Team: Friendly
+$Location: 213.911743, 682.951172, 925.950073
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 0		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 10
+
+$Name: Bombest 3		;! Object #15
+$Class: SB Taurvi
+$Team: Friendly
+$Location: 342.079102, 682.951172, 915.737061
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 0		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 10
+
+#Wings		;! 4 total
+
+$Name: Alpha
+$Waves: 1
+$Wave Threshold: 0
+$Special Ship: 0		;! Alpha 1
+
+$Arrival Location: Hyperspace
+$Arrival Cue: ( true ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Ships: (		;! 1 total
+	"Alpha 1"
+)
++Hotkey: 0
++Flags: ( )
+
+$Name: Bomber
+$Waves: 1
+$Wave Threshold: 0
+$Special Ship: 0		;! Bomber 1
+
+$Arrival Location: Hyperspace
+$Arrival Cue: ( and 
+   ( is-event-true-delay 
+      "Chose Friend Aeolus" 
+      0 
+   )
+   ( is-event-true-delay "Bombers Yas" 0 ) 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Ships: (		;! 3 total
+	"Bomber 1"
+	"Bomber 2"
+	"Bomber 3"
+)
+$AI Goals: ( goals ( ai-chase-any 50 ) )
++Flags: ( )
+
+$Name: Bombbomb
+$Waves: 1
+$Wave Threshold: 0
+$Special Ship: 0		;! Bombbomb 1
+
+$Arrival Location: Hyperspace
+$Arrival Cue: ( and 
+   ( is-event-true-delay 
+      "Chose Friend Mentu" 
+      0 
+   )
+   ( is-event-true-delay "Bombers Yas" 0 ) 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Ships: (		;! 3 total
+	"Bombbomb 1"
+	"Bombbomb 2"
+	"Bombbomb 3"
+)
+$AI Goals: ( goals ( ai-chase-any 50 ) )
++Flags: ( )
+
+$Name: Bombest
+$Waves: 1
+$Wave Threshold: 0
+$Special Ship: 0		;! Bombest 1
+
+$Arrival Location: Hyperspace
+$Arrival Cue: ( and 
+   ( is-event-true-delay 
+      "Chose Friend Rakshasa" 
+      0 
+   )
+   ( is-event-true-delay "Bombers Yas" 0 ) 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Ships: (		;! 3 total
+	"Bombest 1"
+	"Bombest 2"
+	"Bombest 3"
+)
+$AI Goals: ( goals ( ai-chase-any 50 ) )
++Flags: ( )
+
+#Events		;! 14 total
+
+$Formula: ( when 
+   ( has-time-elapsed 1 ) 
+   ( lua-call-prompt 
+      "CruiserFriend" 
+      "What is your favorite cruiser" 
+      ( true ) 
+      "Aeolus" 
+      ( true ) 
+      "PVC Mentu" 
+      ( true ) 
+      "SC Rak" 
+      ( true ) 
+   )
+)
++Name: Cruiser Friend
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( true ) 
+   ( modify-variable 
+      @cruisers[0] 
+      ( lua-get-prompt-response 
+         "CruiserFriend" 
+      )
+   )
+)
++Name: Record Cruiser Response
++Repeat Count: 1
++Interval: 1
++Chained: 2
+
+$Formula: ( when 
+   ( = 
+      ( lua-get-prompt-response 
+         "CruiserFriend" 
+      )
+      1 
+   )
+   ( do-nothing ) 
+)
++Name: Chose Friend Aeolus
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( = 
+      ( lua-get-prompt-response 
+         "CruiserFriend" 
+      )
+      2 
+   )
+   ( do-nothing ) 
+)
++Name: Chose Friend Mentu
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( = 
+      ( lua-get-prompt-response 
+         "CruiserFriend" 
+      )
+      3 
+   )
+   ( do-nothing ) 
+)
++Name: Chose Friend Rakshasa
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( or 
+      ( is-event-true-delay 
+         "Chose Friend Aeolus" 
+         10 
+      )
+      ( is-event-true-delay 
+         "Chose Friend Mentu" 
+         10 
+      )
+      ( is-event-true-delay 
+         "Chose Friend Rakshasa" 
+         10 
+      )
+   )
+   ( lua-call-prompt 
+      "CruiserEnemy" 
+      "Opponent?" 
+      ( true ) 
+      "Aeolus" 
+      ( not 
+         ( is-event-true-delay 
+            "Chose Friend Aeolus" 
+            0 
+         )
+      )
+      "PVC Mentu" 
+      ( not 
+         ( is-event-true-delay 
+            "Chose Friend Mentu" 
+            0 
+         )
+      )
+      "SC Rak" 
+      ( not 
+         ( is-event-true-delay 
+            "Chose Friend Rakshasa" 
+            0 
+         )
+      )
+   )
+)
++Name: Opponent?
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( true ) 
+   ( modify-variable 
+      @enemy[0] 
+      ( lua-get-prompt-response 
+         "CruiserEnemy" 
+      )
+   )
+)
++Name: Record Enemy Response
++Repeat Count: 1
++Interval: 1
++Chained: 2
+
+$Formula: ( when 
+   ( = 
+      ( lua-get-prompt-response 
+         "CruiserEnemy" 
+      )
+      1 
+   )
+   ( do-nothing ) 
+)
++Name: Chose Enemy Aeolus
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( = 
+      ( lua-get-prompt-response 
+         "CruiserEnemy" 
+      )
+      2 
+   )
+   ( do-nothing ) 
+)
++Name: Chose Enemy Mentu
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( = 
+      ( lua-get-prompt-response 
+         "CruiserEnemy" 
+      )
+      3 
+   )
+   ( do-nothing ) 
+)
++Name: Chose Enemy Rakshasa
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( or 
+      ( is-event-true-delay 
+         "Chose Enemy Aeolus" 
+         10 
+      )
+      ( is-event-true-delay 
+         "Chose Enemy Mentu" 
+         10 
+      )
+      ( is-event-true-delay 
+         "Chose Enemy Rakshasa" 
+         10 
+      )
+   )
+   ( lua-call-prompt 
+      "BomberTime" 
+      "Some bomberes too?" 
+      ( true ) 
+      "Yep!" 
+      ( true ) 
+      "No!" 
+      ( true ) 
+   )
+)
++Name: Maybe some bombers?
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( true ) 
+   ( modify-variable 
+      @bombers[0] 
+      ( lua-get-prompt-response 
+         "BomberTime" 
+      )
+   )
+)
++Name: Record Bomber Response
++Repeat Count: 1
++Interval: 1
++Chained: 2
+
+$Formula: ( when 
+   ( = 
+      ( lua-get-prompt-response 
+         "BomberTime" 
+      )
+      1 
+   )
+   ( do-nothing ) 
+)
++Name: Bombers Yas
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( = 
+      ( lua-get-prompt-response 
+         "BomberTime" 
+      )
+      2 
+   )
+   ( do-nothing ) 
+)
++Name: Bombas Nu
++Repeat Count: 1
++Interval: 1
+
+#Goals		;! 0 total
+
+
+#Waypoints		;! 0 lists total
+
+
+#Messages		;! 8 total
+
+
+$Name: What is your favorite cruiser
+$Team: -1
+$MessageNew:  XSTR("What is your favorite cruiser?", -1)
+$end_multi_text
+
+$Name: Aeolus
+$Team: -1
+$MessageNew:  XSTR("GTC Aeolus", -1)
+$end_multi_text
+
+$Name: PVC Mentu
+$Team: -1
+$MessageNew:  XSTR("PVC Mentu", -1)
+$end_multi_text
+
+$Name: SC Rak
+$Team: -1
+$MessageNew:  XSTR("SC Rakshasa", -1)
+$end_multi_text
+
+$Name: Opponent?
+$Team: -1
+$MessageNew:  XSTR("Who would you like to see it fight?", -1)
+$end_multi_text
+
+$Name: Some bomberes too?
+$Team: -1
+$MessageNew:  XSTR("Add some friendly bombers?", -1)
+$end_multi_text
+
+$Name: Yep!
+$Team: -1
+$MessageNew:  XSTR("Yes please", -1)
+$end_multi_text
+
+$Name: No!
+$Team: -1
+$MessageNew:  XSTR("No thanks", -1)
+$end_multi_text
+
+#Reinforcements		;! 0 total
+
+
+#Background bitmaps		;! 6 total
+
+$Num stars: 500
+$Ambient light level: 7895160
+
+$Bitmap List:
+$Sun: SunWhite
++Angles: 0.000000 0.000000 0.802851
++Scale: 1.000000
+$Starbitmap: dneb02
++Angles: 0.052360 0.000000 0.000000
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 2
+$Starbitmap: dneb01
++Angles: 0.628318 0.610865 0.000000
++ScaleX: 4.000000
++ScaleY: 6.000000
++DivX: 1
++DivY: 3
+$Starbitmap: dneb03
++Angles: 6.021381 5.759582 0.052360
++ScaleX: 4.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 2
+$Starbitmap: dneb09
++Angles: 2.181660 0.000000 0.802851
++ScaleX: 5.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 2
+$Starbitmap: dneb13
++Angles: 2.670352 0.366519 0.872664
++ScaleX: 3.000000
++ScaleY: 6.000000
++DivX: 1
++DivY: 2
+$Starbitmap: dneb03
++Angles: 3.001964 0.802851 0.366519
++ScaleX: 4.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 2
+
+#Asteroid Fields
+
+#Music
+
+$Event Music: None
+$Briefing Music: None
+
+#End
+

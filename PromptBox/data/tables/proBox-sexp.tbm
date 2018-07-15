@@ -1,0 +1,66 @@
+#Lua SEXPs
+
+$Operator: lua-call-prompt
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 4
+$Maximum Arguments: 14
+$Return Type: Nothing
+$Description: Calls for a prompt to allow the player to make a choice. Last choice can be retrieved with the 'lua-get-prompt-response' scripted sexp. Up to 5 choices can be given to the player. Conditions can be given to enable or disable certain choices if the mission designer chooses. Responses can be stored in a variable, responses will be stored as a bitfield.
+$Parameter:
+	+Description: Prompt reference. The response for this call-prompt will be stored under this reference. Using this string again with 'lua-get-prompt-response' will return the player's last choice.
+	+Type: string
+$Parameter:
+	+Description: Instruction message. This is the instruction that will appear above the choices. Be mindful of the length of these messages!
+	+Type: message
+$Parameter:
+	+Description: Pause while active. This will pause action (actually just slow time down to 1%) to allow the player to make a choice in peace. You usually want this on unless you're doing some time specific stuff in a cutscene.
+	+Type: boolean
+$Parameter:
+	+Description: Choice 1 message
+	+Type: message
+$Parameter:
+	+Description: Choice 1 show condition. If true the message will appear as a choice. If false, it will not appear. You can use sexps here as a way to disable/enable a specific choice.
+	+Type: boolean
+$Parameter:
+	+Description: Choice 2 message
+	+Type: message
+$Parameter:
+	+Description: Choice 2 show condition.
+	+Type: boolean
+$Parameter:
+	+Description: Choice 3 message
+	+Type: message
+	$Parameter:
+	+Description: Choice 3 show condition.
+	+Type: boolean
+$Parameter:
+	+Description: Choice 4 message
+	+Type: message
+$Parameter:
+	+Description: Choice 4 show condition.
+	+Type: boolean
+$Parameter:
+	+Description: Choice 5 message
+	+Type: message
+$Parameter:
+	+Description: Choice 5 show condition.
+	+Type: boolean
+$Parameter:
+	+Description: Variable to store responses. This will store all valid responses as a bitfield. Use is-bit-set to check responses. You don't need to use this way to get responses, it's just here in case you need some advanced method of checking the status of responses.
+	+Type: variable
+
+
+$Operator: lua-get-prompt-response
+$Category: Status
+$Subcategory: Player
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: number
+$Description: Highlights all ships in a wing to draw player attention to them. Text will be displayed by a ship when targetted. This will return 0 when uninitialized or waiting for a response, or 1-5 based on the last response.
+$Parameter:
+	+Description: Prompt Reference to use
+	+Type: string
+
+
+#End

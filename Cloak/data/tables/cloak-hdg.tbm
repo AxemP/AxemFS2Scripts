@@ -1,0 +1,130 @@
+$Font: 3
+
+#Gauge Config
+ $Base: (1440, 900)
+ $Min: (1440, 900)
+	$Gauges:
+		+Custom:
+			Scale Gauge: 			NO
+			Origin:					(1, 1)
+			Offset:					(-259, -470)
+			Font:					2
+			Name:					RightGaugeA
+			Text:					
+			X Offset:				6
+			Y Offset:				4
+			Gauge Type: 			CENTER_RETICLE
+			Slew: 					NO
+			Active by default: 		NO
+			Filename: 				2_escort1
+		+Custom:
+			Scale Gauge: 			NO
+			Origin:					(1, 1)
+			Offset:					(-259, -449)
+			Font:					2
+			Name:					RightGaugeB
+			Text:					
+			X Offset:				6
+			Y Offset:				1
+			Gauge Type: 			CENTER_RETICLE
+			Slew: 					NO
+			Active by default: 		NO
+			Filename: 				2_escort2
+		+Custom:
+			Scale Gauge: 			NO
+			Origin:					(1, 1)
+			Offset:					(-259, -430)
+			Font:					2
+			Name:					RightGaugeC
+			Text:					
+			X Offset:				6
+			Y Offset:				1
+			Gauge Type: 			CENTER_RETICLE
+			Slew: 					NO
+			Active by default: 		NO
+			Filename: 				2_escort2
+		+Custom:
+			Scale Gauge: 			NO
+			Origin:					(1, 1)
+			Offset:					(-259, -430)
+			Font:					2
+			Name:					RightGaugeC2
+			Text:					
+			X Offset:				6
+			Y Offset:				1
+			Gauge Type: 			CENTER_RETICLE
+			Slew: 					NO
+			Active by default: 		NO
+			Filename: 				2_escort3
+		+Custom:
+			Scale Gauge: 			NO
+			Origin:					(1, 1)
+			Offset:					(-259, -411)
+			Font:					2
+			Name:					RightGaugeD
+			Text:					
+			X Offset:				6
+			Y Offset:				1
+			Gauge Type: 			CENTER_RETICLE
+			Slew: 					NO
+			Active by default: 		NO
+			Filename: 				2_escort3
+    $End Gauges
+#End
+
+#Gauge Config
+ $Base: (1024, 768)
+ $Scale Gauges: YES
+ $Min: (1024, 600)
+ $Max:	(1439, 899)
+	$Gauges:
+		+Custom:
+			Scale Gauge: 			NO
+			Origin:					(1, 1)
+			Offset:					(-159, -325)
+			Name:					RightGaugeA
+			Text:					
+			X Offset:				6
+			Y Offset:				3
+			Gauge Type: 			CENTER_RETICLE
+			Slew: 					NO
+			Active by default: 		NO
+			Filename: 				escort1
+		+Custom:
+			Scale Gauge: 			NO
+			Origin:					(1, 1)
+			Offset:					(-159, -312)
+			Name:					RightGaugeB
+			Text:					
+			X Offset:				6
+			Y Offset:				1
+			Gauge Type: 			CENTER_RETICLE
+			Slew: 					NO
+			Active by default: 		NO
+			Filename: 				escort2
+		+Custom:
+			Scale Gauge: 			NO
+			Origin:					(1, 1)
+			Offset:					(-159, -301)
+			Name:					RightGaugeC
+			Text:					
+			X Offset:				6
+			Y Offset:				1
+			Gauge Type: 			CENTER_RETICLE
+			Slew: 					NO
+			Active by default: 		NO
+			Filename: 				escort2
+		+Custom:
+			Scale Gauge: 			NO
+			Origin:					(1, 1)
+			Offset:					(-159, -290)
+			Name:					RightGaugeD
+			Text:					
+			X Offset:				6
+			Y Offset:				1
+			Gauge Type: 			CENTER_RETICLE
+			Slew: 					NO
+			Active by default: 		NO
+			Filename: 				escort3
+    $End Gauges
+#End

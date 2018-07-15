@@ -1,0 +1,269 @@
+#Conditional Hooks
+$Application: FS2_Open
+$On Game Init:
+[
+
+IMJump = {}
+
+function IMJump:Init()
+
+	self.Enabled = true
+	self.Ships = {}
+	self.Speed = 0.33		-- % of throttle
+	self.TransitTime = 3  	-- seconds
+	self.Shields = false	-- shields on during subspace?
+	
+	self.SeqTimer = {0, 4, 2, 1, self.TransitTime, 2, 1}
+
+end
+
+function IMJump:To(ship, dest, transittime)
+
+	if type(ship) == "string" then
+		ship = mn.Ships[ship]
+	end
+	
+	if type(dest) == "string" then
+		dest = mn.WaypointLists[dest]
+	end
+
+	local t = {}
+	
+	if ship:isValid() and dest:isValid() then
+	
+		if not self.Enabled then IMJump:Init() end
+	
+		t.DoStage1 = IMJump.Stage1
+		t.DoStage2 = IMJump.Stage2
+		t.DoStage3 = IMJump.Stage3
+		t.DoStage4 = IMJump.Stage4
+		t.DoStage5 = IMJump.Stage5
+		t.DoStage6 = IMJump.Stage6
+		t.DoStage7 = IMJump.Stage7
+		
+		t.Stage = 1
+		t.Sig = ship:getSignature()
+		t.Dest = dest[1]:getSignature()
+		
+		if not transittime then transittime = 3 end
+
+		if transittime and (transittime < 0) then transittime = 0 end
+		
+		t.AltTime = {nil, nil, nil, nil, transittime, nil, nil}
+		t.Timer = mn.getMissionTime() + self.SeqTimer[1]
+		
+	end
+	
+	self.Ships[#self.Ships+1] = t
+
+end
+
+;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-jump-to"].Action = function(dest, transittime, ...)
+
+;;FSO 3.8.1.20180119;; 	for _, data in ipairs(arg) do
+;;FSO 3.8.1.20180119;; 		IMJump:To(data[1], dest, transittime)
+;;FSO 3.8.1.20180119;; 	end
+
+;;FSO 3.8.1.20180119;; end
+
+function IMJump:Monitor()
+
+	local numShips = #self.Ships
+	
+	if numShips > 0 then
+	
+		local mtime = mn.getMissionTime()
+		
+		for i = 1, numShips do
+			
+			local entry = self.Ships[i]
+			
+			if mtime > entry.Timer then
+			
+				if entry.Stage == 5 and entry.AltTime[5] and entry.AltTime[5] == 0 then --If transit time is zero then let's not bother with the subspace stuff
+					entry.Stage = 7
+				end
+			
+				if entry.Stage == 1 then
+					entry:DoStage1()
+				elseif entry.Stage == 2 then
+					entry:DoStage2()
+				elseif entry.Stage == 3 then
+					entry:DoStage3()
+				elseif entry.Stage == 4 then
+					entry:DoStage4()
+				elseif entry.Stage == 5 then
+					entry:DoStage5()
+				elseif entry.Stage == 6 then
+					entry:DoStage6()
+				elseif entry.Stage == 7 then
+					entry:DoStage7()
+				end
+							
+				if entry.Stage < 7 then
+					entry.Stage = entry.Stage + 1
+					entry.Timer = mtime + (entry.AltTime[entry.Stage] or self.SeqTimer[entry.Stage])
+				else
+					table.remove(self.Ships, i)
+					if #self.Ships == 0 then self.Enabled = false end
+				end
+			end
+		end
+	end
+
+end
+
+function IMJump:Stage1() --Rev warmup
+
+	local me = mn.getObjectFromSignature(self.Sig)
+	local name = me.Name
+	
+	if me == hv.Player then
+		mn.runSEXP("( player-use-ai )")
+		mn.runSEXP("( hud-display-gauge 4000 !warpout! )")
+		ad.playGameSound(50)
+	end
+	
+	mn.runSEXP("( clear-goals !" .. name .. "! )")
+	mn.runSEXP("( add-goal !" .. name .. "! ( ai-play-dead 101 ) )")
+	mn.runSEXP("( lock-primary-weapon !" .. name .. "!)")
+	mn.runSEXP("( lock-secondary-weapon !" .. name .. "!)")
+	mn.runSEXP("( lock-afterburner !" .. name .. "!)")
+	mn.runSEXP("( ship-lat-maneuver !" .. name .. "! 60000 0 0 " .. IMJump.Speed * 100 .. "( true ) )")
+
+end
+
+function IMJump:Stage2() --Open warp flash
+
+	local me = mn.getObjectFromSignature(self.Sig)
+	local name = me.Name
+	local distance = me.Physics.VelocityMax.z * IMJump.Speed * (IMJump.SeqTimer[2] + 0.5)
+	local lvector = ba.createVector(0,0,distance)
+	local wvector = me.Position + me.Orientation:unrotateVector(lvector)
+	
+	mn.runSEXP("( warp-effect " .. wvector.x .. " " .. wvector.y .. " " .. wvector.z .. " " .. me.Position.x .. " " .. me.Position.y .. " " .. me.Position.z .. " " .. me.Class.Model.Radius * 2 .. " 10 45 46 0 0 )")
+
+end
+
+function IMJump:Stage3() --Fadeout
+
+	local me = mn.getObjectFromSignature(self.Sig)
+
+	if me == hv.Player then
+		mn.runSEXP("( fade-out 1000 255 255 255 )")
+	else
+		mn.runSEXP("( ship-stealthy !" .. me.Name .. "!)")
+		mn.runSEXP("( friendly-stealth-invisible !" .. me.Name .. "!)")
+	end
+
+end
+
+function IMJump:Stage4() --Go to subspace
+
+	local me = mn.getObjectFromSignature(self.Sig)
+	
+	if me == hv.Player then
+		mn.runSEXP("( fade-in 1000 )")
+		mn.runSEXP("( mission-set-subspace 1 )")
+		mn.runSEXP("( hud-set-max-targeting-range 1 )")
+	else
+		me:addShipEffect("Cloak", 1)
+	end
+	
+	if not IMJump.Shields then mn.runSEXP("( shields-off !" .. me.Name .. "!)" ) end
+	
+	local pos = ba.createVector(50000 + math.random(1,10) * 1000, 50000 + math.random(1,10) * 1000, 0)
+	local ori = ba.createOrientation(0,0,0)
+	
+	me.Position = pos
+	me.Orientation = ori
+
+end
+
+function IMJump:Stage5() --Open warp flash
+
+	local me = mn.getObjectFromSignature(self.Sig)
+	local name = me.Name
+	local distance = me.Physics.VelocityMax.z * IMJump.Speed * (IMJump.SeqTimer[5] + 1)
+	local lvector = ba.createVector(0,0,distance)
+	local wvector = me.Position + me.Orientation:unrotateVector(lvector)
+	
+	mn.runSEXP("( warp-effect " .. wvector.x .. " " .. wvector.y .. " " .. wvector.z .. " " .. me.Position.x .. " " .. me.Position.y .. " " .. me.Position.z .. " " .. me.Class.Model.Radius * 2 .. " 10 45 46 0 0 )")
+
+end
+
+function IMJump:Stage6() --Fadeout
+
+	local me = mn.getObjectFromSignature(self.Sig)
+
+	if me == hv.Player then mn.runSEXP("( fade-out 1000 255 255 255 )") end
+
+end
+
+function IMJump:Stage7() --Go to destination
+
+	local me = mn.getObjectFromSignature(self.Sig)
+	local name = me.Name
+	local destList = mn.getObjectFromSignature(self.Dest):getList()
+	
+	if me == hv.Player then
+		mn.runSEXP("( fade-in 1000 255 255 255 )")
+		mn.runSEXP("( mission-set-subspace 0 )")
+		mn.runSEXP("( hud-set-max-targeting-range 0 )")
+		mn.runSEXP("( player-not-use-ai )")
+	else
+		me:addShipEffect("Decloak", 1)
+		mn.runSEXP("( ship-unstealthy !" .. me.Name .. "!)")
+		mn.runSEXP("( friendly-stealth-visible !" .. me.Name .. "!)")
+	end
+	
+	mn.runSEXP("( shields-on !" .. me.Name .. "!)" )
+	
+	me.Position = destList[1].Position
+	
+	local destPos
+	
+	if destList[2]:isValid() then
+		destPos = destList[2].Position
+	else
+		destPos = destList[1].Position + ba.createVector(0,0,100)
+	end
+	
+	me.Orientation = (destPos - me.Position):getOrientation()
+	
+	local lvector = ba.createVector(0,0,-10)
+	local wvector = me.Position + me.Orientation:unrotateVector(lvector)
+	
+	if me == hv.Player then
+		mn.runSEXP("( warp-effect " .. wvector.x .. " " .. wvector.y .. " " .. wvector.z .. " " .. me.Position.x .. " " .. me.Position.y .. " " .. me.Position.z .. " " .. me.Class.Model.Radius * 2 .. " 4 0 70 0 0 )")
+	else
+		me:warpIn()
+	end
+	
+	mn.runSEXP("( unlock-primary-weapon !" .. name .. "!)")
+	mn.runSEXP("( unlock-secondary-weapon !" .. name .. "!)")
+	mn.runSEXP("( unlock-afterburner !" .. name .. "!)")
+
+
+end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	IMJump.Enabled = false
+	IMJump.Ships = {}
+]
+
+$On Frame:
+[
+
+	if IMJump.Enabled then
+		IMJump:Monitor()
+	end
+
+]
+
+
+#End
