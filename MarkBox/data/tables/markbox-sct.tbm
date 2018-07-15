@@ -1,0 +1,315 @@
+#Conditional Hooks
+$Application: FS2_Open
+$On Game Init:
+[
+
+MarkBox = {}
+
+function MarkBox:Init()
+
+	self.Enabled = false
+	self.List = {}
+
+end
+
+function MarkBox:AddSubsys(ship, text, ...)
+
+	if type(ship) == "string" then	--Backwards compat FTW...
+		ship = mn.Ships[ship]
+	end
+
+	if ship:isValid() and (#arg > 0) then
+	
+		if not self.Enabled then self.Enabled = true end
+		
+		for i,subsys in ipairs(arg) do
+			if ship[subsys[1]]:isValid() then
+				local t = {}
+		
+				t.Key = ship:getSignature()
+				t.Text = text
+				t.Type = 1
+				t.Target = subsys[1]
+
+				self.List[self:DoesEntryExist(t) or #self.List+1] = t
+
+			end
+		end
+	end
+		
+end
+
+function MarkBox:AddShip(text, ...)
+
+	if not self.Enabled then self.Enabled = true end
+
+	for i, data in ipairs(arg) do
+		local thisShip = data[1]
+		
+		if thisShip and thisShip:isValid() then
+		
+			local t = {}
+			
+			t.Key = thisShip:getSignature()
+			t.Text = text
+			t.Type = 2
+			
+			self.List[self:DoesEntryExist(t) or #self.List+1] = t
+
+		end
+	end
+
+end
+
+function MarkBox:AddWing(text, ...)
+
+	if not self.Enabled then self.Enabled = true end
+
+	for i, data in ipairs(arg) do
+		local thisWing = mn.Wings[data[1]]	--Comment once Wing Parameters are added
+		--local thisWing = data[1]		--Uncomment once Wing Parameters are added
+				
+		if thisWing and thisWing:isValid() then
+		
+			local t = {}
+			
+			t.Key = thisWing.Name
+			t.Text = text
+			t.Type = 3
+			
+			self.List[self:DoesEntryExist(t) or #self.List+1] = t
+		
+		end
+	end
+
+end
+
+function MarkBox:DoesEntryExist(data)
+
+	local exists = false
+	local index
+	
+	for i, entry in ipairs(self.List) do
+		if data.Type == entry.Type and data.Key == entry.Key then
+			if (not data.Target and not entry.Target) or data.Target == entry.Target then
+				exists = true
+				index = i
+				break
+			end
+		end
+	end
+
+	return index
+	
+end
+
+
+function MarkBox:ClearList()
+
+	MarkBox:Init()
+
+end
+
+function MarkBox:Draw()
+
+	if #self.List > 0 then
+
+		local player = hv.Player
+				
+		for i=1, #self.List do
+		
+		local thisEntry = self.List[i]
+		
+			if thisEntry then
+				if thisEntry.Type == 1 and player.Target and player.Target:isValid() and player.Target:getSignature() == thisEntry.Key then	--Subsystem
+				
+					local targetSS = mn.getObjectFromSignature(thisEntry.Key)[thisEntry.Target]
+					
+					if targetSS:isValid() and targetSS.HitpointsLeft > 0 then
+						self:DrawSubsystemBracket(targetSS, thisEntry)	
+					else
+						table.remove(self.List,i)
+					end
+					
+				elseif thisEntry.Type == 2 then	--Ship
+				
+					local targetShip = mn.getObjectFromSignature(thisEntry.Key)
+					
+					if targetShip:isValid() then
+						self:DrawShipBracket(targetShip, thisEntry)
+					else
+						table.remove(self.List,i)
+					end
+					
+				elseif thisEntry.Type == 3 then --Wing
+				
+					self:DrawWingBracket(thisEntry)
+				
+				end
+			end
+		end
+	end
+	
+end
+
+function MarkBox:DrawSubsystemBracket(subsys, data)
+
+	local player = hv.Player
+	
+	--[[gr.setColor(255,255,255,255)
+	gr.CurrentFont = gr.Fonts[1]
+	gr.drawString("Target Data:",100*i,100)
+	gr.drawString("Ship: " .. player.Target.Name)
+	gr.drawString("Actual: " .. player.TargetSubsystem:getModelName())
+	gr.drawString("Entry: " .. data.Target)]]--
+	
+	local focus
+	
+	if data.Target == player.TargetSubsystem:getModelName() then
+		local r,g,b = player.Target.Team:getColor()
+		gr.setColor(r,g,b,255)
+		focus = true
+	else
+		gr.setColor(255,255,255,255)
+	end
+	
+	local x1,y1,x2,y2 = gr.drawSubsystemTargetingBrackets(subsys, false)
+	
+	if x1 and y1 and x2 and y2 then
+		
+			local oldsize = math.max(x2-x1,y2-y1)
+			local newsize = oldsize * 0.5
+			local hsize = newsize/8
+			
+			if focus then hsize = newsize/4 end
+			
+			local lineLength = math.max(hsize/5,3)
+		
+			local midX = (x1+x2) / 2
+			local midY = (y1+y2) / 2
+			
+			local nx1 = midX - hsize
+			local nx2 = midX + hsize
+			local ny1 = midY - hsize
+			local ny2 = midY + hsize
+			
+			gr.setLineWidth(2)
+			
+			gr.drawLine(nx1+1, ny1+1, nx1+lineLength, ny1)
+			gr.drawLine(nx1+1, ny1+1, nx1, ny1+lineLength)
+			
+			gr.drawLine(nx1+1, ny2-1, nx1+lineLength, ny2)
+			gr.drawLine(nx1+1, ny2-1, nx1, ny2-lineLength)
+	
+			gr.drawLine(nx2-1, ny1+1, nx2-lineLength, ny1)
+			gr.drawLine(nx2-1, ny1+1, nx2, ny1+lineLength)
+			
+			gr.drawLine(nx2-1, ny2-1, nx2-lineLength, ny2)
+			gr.drawLine(nx2-1, ny2-1, nx2, ny2-lineLength)
+	
+			gr.CurrentFont = gr.Fonts[3]
+			
+			local hpPct = subsys.HitpointsLeft / subsys.HitpointsMax
+			local hpWidth = 100
+	
+			if focus then
+				gr.drawLine(x1, y1, nx1, ny1)
+				gr.drawLine(x1, y2, nx1, ny2)
+				
+				gr.drawLine(x2, y1, nx2, ny1)
+				gr.drawLine(x2, y2, nx2, ny2)
+				
+				--gr.drawString(data.Text,x2+5,y2-20)
+				--gr.drawRectangle(x2+5,y2-5,x2+5+(hpWidth*hpPct), y2+0)
+			else
+				
+			end
+			
+			if data.Text then
+				gr.drawString(data.Text,nx2+5,ny2-20)
+			end
+			gr.drawRectangle(nx2+5,ny2-5,nx2+5+(hpWidth*hpPct), ny2+0)
+			gr.setLineWidth(1)
+	
+		end
+	
+	if not x1 then gr.drawSubsystemTargetingBrackets(subsys) end
+
+end
+
+function MarkBox:DrawShipBracket(ship, data)
+
+	local player = hv.Player
+	local focus
+						
+	local r,g,b = ship.Team:getColor()
+	gr.setColor(r,g,b,192)
+	
+	if player.Target == ship then
+		focus = true
+	end
+
+	if not focus then
+		gr.setLineWidth(2)
+		local x1,y1,x2,y2 = gr.drawTargetingBrackets(ship, true)
+		gr.setLineWidth(1)
+	else
+		if data.Text then
+			gr.CurrentFont = gr.Fonts[3]
+			local x1,y1,x2,y2 = gr.drawTargetingBrackets(ship, false)
+			if x1 and y1 then
+				gr.drawString(data.Text,x1-5,y1-16)
+			end
+			gr.CurrentFont = gr.Fonts[1]
+		end
+	end
+			
+end
+
+function MarkBox:DrawWingBracket(data)
+	
+	local thisWing = mn.Wings[data.Key]
+	
+	if thisWing:isValid() then
+	
+		for i=1, #thisWing do
+			local thisShip = thisWing[i]
+			
+			if thisShip:isValid() then
+				self:DrawShipBracket(thisShip, data)
+			end
+		end
+	end
+
+end
+
+--[[ LUA SEXP DEFS ]] --
+
+mn.LuaSEXPs["lua-mark-subsystem"].Action = function(ship, text, ...) MarkBox:AddSubsys(ship, text, ...) end
+mn.LuaSEXPs["lua-mark-ship"].Action = function(text, ...) MarkBox:AddShip(text, ...) end
+mn.LuaSEXPs["lua-mark-wing"].Action = function(text, ...) MarkBox:AddWing(text, ...) end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	MarkBox:Init()
+]
+
+$On State End:
+[
+	MarkBox.Enabled = false
+]
+
+$On Frame:
+[
+	if MarkBox.Enabled and hu.HUDDrawn and not hu.HUDDisabledExceptMessages and (gr.hasViewmode(VM_INTERNAL) or gr.hasViewmode(VM_CHASE)) then
+		if mn.getMissionTime() > 1 then
+			--PrintDebug(MarkBox.List)
+			MarkBox:Draw()
+		end
+	end
+]
+
+#End

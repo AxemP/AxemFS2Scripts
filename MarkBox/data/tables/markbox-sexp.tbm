@@ -1,0 +1,51 @@
+#Lua SEXPs
+
+$Operator: lua-mark-ship
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Highlights a ship to draw player attention to it. Text will be displayed by the ship when targetted.
+$Parameter:
+	+Description: Text to display
+	+Type: string
+$Repeat
+$Parameter:
+	+Description: Ship to highlight
+	+Type: Ship
+
+$Operator: lua-mark-wing
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Highlights all ships in a wing to draw player attention to them. Text will be displayed by a ship when targetted.
+$Parameter:
+	+Description: Text to display
+	+Type: string
+$Repeat
+$Parameter:
+	+Description: Wing to highlight
+	+Type: string
+
+$Operator: lua-mark-subsystem
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 3
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Highlights subsystems on a ship to assist the player in targetting specific subsystems. Text will be displayed by the subsystem when targetted.
+$Parameter:
+	+Description: Ship that has the subsystem to highlight
+	+Type: Ship
+$Parameter:
+	+Description: Text to display
+	+Type: string
+$Repeat
+$Parameter:
+	+Description: Subsystem to highlight
+	+Type: string
+
+#End
