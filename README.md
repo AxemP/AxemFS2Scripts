@@ -5,6 +5,8 @@ Some Lua scripts to make FreeSpace missions more fun and exciting by expanding t
 
 A lot of the scripts use a JSON formatted config file. It's highly recommended you use a JSON editor (like this one: https://jsoneditoronline.org/) to edit the files. Subtle syntax errors are a giant pain!
 
+These scripts have been tested to work with a minimum version of FreeSpace Open 3.8.0. But it is recommended to use a newer build (anything past January 19, 2018) so that Lua SEXP functionality is available, making things *much* **much** ***much*** easier for the modder.
+
 # Base Files
 
 These scripts contain some generic functions and libraries that are used in a number of the scripts. It's a good idea to have these installed if you're going to use any of the scripts here. (Otherwise they won't work!)
