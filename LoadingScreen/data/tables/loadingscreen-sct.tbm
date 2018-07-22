@@ -1,0 +1,600 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+;;THIS SCRIPT NEEDS THE PARSE SCRIPTING LIBRARY, ADDED TO FSO JULY 23, 2018;;
+
+$On Game Init:
+[
+
+XLoadingScreen = {}
+
+function XLoadingScreen:Init()
+
+	self.LoadingBars = {}
+	self.LoadingText = {}
+	self.LoadingScreens = {}
+	self.MissionScreens = {}
+
+	--load lua-loadscreen.tbl
+	self:Parse("lua-loadscreen.tbl")
+	
+	--load *-lls.tbm
+	local files = cf.listFiles("data/tables", "*-lls.tbm")
+	
+	for _, file in ipairs(files) do
+		self:Parse(file)
+	end
+	
+	--check validity of certain defined parts
+	
+	self:Validate()
+
+end
+
+function XLoadingScreen:Parse(file)
+
+	if not parse.readFileText(file, "data/tables") then
+		return
+	end
+	
+	--Loading Bar Load
+	
+	 if parse.optionalString("#Loading Bars") then
+				
+		while parse.optionalString("$Name:") do
+		
+			local t = {}
+			local name = parse.getString()
+			
+			parse.requiredString("$File:")
+			t.File = parse.getString()
+			
+			if parse.optionalString("$Origin:") then
+				t.Origin = self:GetCSV(parse.getString())
+			else
+				t.Origin = {0.5, 0.5}
+			end
+			
+			if parse.optionalString("$Offset:") then
+				t.Offset = self:GetCSV(parse.getString())
+			else
+				t.Offset = {0,0}
+				t.AutoCenter = true
+			end
+						
+			self.LoadingBars[name] = t
+		end
+		
+		parse.requiredString("#End")
+		
+	end
+	
+	--Loading Text Load
+	
+	if parse.optionalString("#Loading Text") then
+
+		while parse.optionalString("$Name:") do
+		
+			local t = {}
+			local name = parse.getString()
+			
+			parse.requiredString("$Text:")
+			t.Text = parse.getString()
+			
+			if parse.optionalString("$Font:") then
+				t.Font = parse.getString()
+			else
+				t.Font = 1
+			end
+			
+			if parse.optionalString("$Image:") then
+				t.Image = parse.getString()
+			end
+						
+			self.LoadingText[name] = t
+		
+		end
+		
+		parse.requiredString("#End")
+	
+	end
+	
+	--Loading Screen Load
+	
+	if parse.optionalString("#Loading Screens") then
+	
+		while parse.optionalString("$Name:") do
+		
+			local t = {}
+			local name = parse.getString()
+			
+			parse.requiredString("$Loading Bar:")
+			t.Bar = parse.getString()
+			
+			parse.requiredString("$Loading Image:")
+			t.Image = parse.getString()
+			
+			if parse.optionalString("+Scaling:") then
+				t.Scaling = parse.getBoolean()
+			else
+				t.Scaling = false
+			end
+						
+			while parse.optionalString("+Image:") do
+				if not t.RandomList then t.RandomList = {} end
+				
+				t.RandomList[#t.RandomList+1] = parse.getString()
+				
+			end
+						
+			if parse.optionalString("$Text Color:") then
+				t.TextColor = self:GetCSV(parse.getString())
+			else
+				t.TextColor = {192,192,192,255}
+			end
+			
+			if parse.optionalString("$Text Origin:") then
+				t.TextOrigin = self:GetCSV(parse.getString())
+				
+				if parse.optionalString("+Center") then
+					t.TextCenter = true
+				end
+				
+				if parse.optionalString("+Offset:") then
+					t.TextOffset = self:GetCSV(parse.getString())
+				else
+					t.TextOffset = {0,0}
+				end
+				
+				if parse.optionalString("+Width:") then
+					t.Width = parse.getString()
+				end
+				
+			else
+				t.NoText = true
+			end
+			
+			if parse.optionalString("$Image Origin:") then
+				t.ImageOrigin = self:GetCSV(parse.getString())
+				
+				if parse.optionalString("+Center") then
+					t.ImageCenter = true
+				end
+				
+				if parse.optionalString("+Offset:") then
+					t.ImageOffset = self:GetCSV(parse.getString())
+				else
+					t.ImageOffset = {0,0}
+				end
+			else
+				t.NoImage = true
+			end
+			
+			if parse.optionalString("$Draw Mission Name:") then
+			
+				t.DrawMissionName = parse.getBoolean()
+				
+				t.MissionName = {}
+				
+				if parse.optionalString("+Font:") then
+					t.MissionName.Font = parse.getInt()
+				else
+					t.MissionName.Font = 1
+				end
+				
+				if parse.optionalString("+Origin:") then
+					t.MissionName.Origin = self:GetCSV(parse.getString())
+				else
+					t.MissionName.Origin = {0,0}
+				end
+				
+				if parse.optionalString("+Offset:") then
+					t.MissionName.Offset = self:GetCSV(parse.getString())
+				else
+					t.MissionName.Offset = {0,0}
+				end
+				
+				if parse.optionalString("+Justify:") then
+					t.MissionName.Justify = parse.getString()
+					
+					local justify = string.lower(t.MissionName.Justify)
+					
+					if justify ~= "left" and justify ~= "center" and justify ~= "right" then
+						ba.warning("Load Screen Script: Mission Name Justify in " .. name .. " is '" .. t.MissionName.Justify .. "'. Should be 'left', 'center', or 'right'. Setting to 'left'...")
+						
+						t.MissionName.Justify = "left"
+					end
+					
+				else
+					t.MissionName.Justify = "left"
+				end
+			
+			end
+
+			t.Texts = {}
+			
+			while parse.optionalString("$Loading Text:") do
+				t.Texts[#t.Texts+1] = parse.getString()		
+			end
+						
+			self.LoadingScreens[name] = t
+		
+		end
+		
+		parse.requiredString("#End")
+	
+	end
+	
+	--Mission Screen Load
+	
+	if parse.optionalString("#Mission Screens") then
+	
+		while parse.optionalString("$Filename:") do
+		
+			local t = {}
+			local name = parse.getString()
+			
+			--strip off .fs2 extension if it exists
+			
+			local pos = name:find(".fs2", -4, true)
+			
+			if pos then
+				name = name:sub(1,pos-1)
+			end
+			
+			parse.requiredString("$Loading Screen:")
+			t.LoadingScreen = parse.getString()
+			
+			self.MissionScreens[name] = t
+		
+		end
+		
+		parse.requiredString("#End")
+	
+	end
+
+end
+
+--http://lua-users.org/wiki/LuaCsv
+function XLoadingScreen:GetCSV(line,sep)
+
+	local res = {}
+	local pos = 1
+	sep = sep or ','
+	while true do 
+		local c = string.sub(line,pos,pos)
+		if (c == "") then break end
+		if (c == '"') then
+			-- quoted value (ignore separator within)
+			local txt = ""
+			repeat
+				local startp,endp = string.find(line,'^%b""',pos)
+				txt = txt..string.sub(line,startp+1,endp-1)
+				pos = endp + 1
+				c = string.sub(line,pos,pos) 
+				if (c == '"') then txt = txt..'"' end 
+				-- check first char AFTER quoted string, if it is another
+				-- quoted string without separator, then append it
+				-- this is the way to "escape" the quote char in a quote. example:
+				--   value1,"blub""blip""boing",value3  will result in blub"blip"boing  for the middle
+			until (c ~= '"')
+			table.insert(res,txt)
+			assert(c == sep or c == "")
+			pos = pos + 1
+		else	
+			-- no quotes used, just look for the first separator
+			local startp,endp = string.find(line,sep,pos)
+			if (startp) then 
+				table.insert(res,string.sub(line,pos,startp-1))
+				pos = endp + 1
+			else
+				-- no separator found -> use rest of string and terminate
+				table.insert(res,string.sub(line,pos))
+				break
+			end 
+		end
+	end
+	
+	return res
+	
+end
+
+function XLoadingScreen:Validate()
+
+	--Every mission screen must have a valid loading screen
+	
+	for k, v in pairs(self.MissionScreens) do
+	
+		local loadscreen = v.LoadingScreen
+		
+		if not self.LoadingScreens[loadscreen] then
+			ba.warning("Load Screen Script: " .. loadscreen .. " does not have an entry in #Loading Screens!")
+		end
+	
+	end
+	
+	--Every load screen must have a valid progress bar and text entries must be valid
+	
+	for k, v in pairs(self.LoadingScreens) do
+	
+		local bar = v.Bar
+		
+		if not self.LoadingBars[bar] then
+			ba.warning("Load Screen Script: " .. bar .. " does not have an entry in #Loading Bars!")
+		end
+		
+		local text = v.Texts
+		
+		if text and #text > 0 then
+		
+			for i=1, #text do
+				if not self.LoadingText[text[i]] then
+					ba.warning("Load Screen Script: " .. text[i] .. " does not have an entry in #Loading Text!")
+				end
+			end
+		
+		end
+	
+	end
+
+end
+
+function XLoadingScreen:GetBGInfo(image, scaling)
+
+	local screenWidth = gr.getScreenWidth()
+	local screenHeight = gr.getScreenHeight()
+	
+	local imageWidth = gr.getImageWidth(image)
+	local imageHeight = gr.getImageHeight(image)
+	
+	if imageWidth > 0 then
+	
+		if scaling then
+
+			local scalingFactor = 1
+
+			if (screenWidth / imageWidth) > (screenHeight / imageHeight) then
+				scalingFactor = screenWidth / imageWidth
+			else
+				scalingFactor = screenHeight / imageHeight
+			end
+						
+			local new_width = imageWidth * scalingFactor
+			local new_height = imageHeight * scalingFactor
+			local x_offset = (screenWidth - new_width)/2
+			local y_offset = (screenHeight - new_height)/2
+			
+			local bg_x = x_offset + screenWidth/2 - new_width/2
+			local bg_y = y_offset + screenHeight/2 - new_height/2
+			
+			return bg_x, bg_y, new_width, new_height
+
+		else
+		
+			local bg_x = screenWidth/2 - imageWidth/2
+			local bg_y = screenHeight/2 - imageHeight/2
+			
+			return bg_x, bg_y, imageWidth, imageHeight
+		
+		end
+		
+	end
+
+end
+
+function XLoadingScreen:InitDraw(mission)
+	
+	local this = self.LoadingScreens[self.MissionScreens[mission].LoadingScreen]
+	
+	if this then
+		self.Drawing = true
+		self.MissionFilename = mission
+		
+		--get image info ready
+		
+		if string.lower(this.Image) == "random" then
+			self.UsedImage = this.RandomList[math.random(1,#this.RandomList)]
+		else
+			self.UsedImage = this.Image
+		end
+		
+		this.BG = {}
+		this.BG.X, this.BG.Y, this.BG.W, this.BG.H = self:GetBGInfo(self.UsedImage, this.Scaling)
+		
+		--load the loading bar animation
+		
+		if self.LoadingBars[this.Bar] then
+			self.LoadAnimation = gr.loadTexture(self.LoadingBars[this.Bar].File, true)
+			self.AnimFrames = self.LoadAnimation:getFramesLeft()
+		end
+		
+		--let's see if we have any text to draw
+		
+		if (not this.NoText) and this.Texts and #this.Texts > 0 then
+			self.ActiveText = this.Texts[math.random(1,#this.Texts)]
+		end
+		
+	else
+		return
+	end
+
+end
+
+function XLoadingScreen:Draw(progress)
+
+	local this = self.LoadingScreens[self.MissionScreens[self.MissionFilename].LoadingScreen]
+	
+	local screenWidth = gr.getScreenWidth()
+	local screenHeight = gr.getScreenHeight()
+
+	--Blank the screen
+	gr.setColor(0,0,0,255)
+	gr.drawRectangle(0,0,screenWidth, screenHeight)
+	
+	--first draw the background
+	
+	local x1 = this.BG.X
+	local x2 = x1 + this.BG.W
+	local y1 = this.BG.Y
+	local y2 = y1 + this.BG.H
+	
+	gr.drawImage(self.UsedImage, x1, y1, x2, y2)
+	
+	--find out which frame to draw
+	--progress is between 0 and 1
+
+	local index = 1
+		
+	if self.AnimFrames then
+		index = math.floor(progress * self.AnimFrames)
+	end
+	
+	--then draw the loading bar
+	
+	if self.LoadAnimation and self.LoadAnimation:isValid() then
+		local loadingbar = self.LoadingBars[this.Bar]
+		
+		x1 = (loadingbar.Origin[1] * screenWidth) + loadingbar.Offset[1]
+		y1 = (loadingbar.Origin[2] * screenHeight) + loadingbar.Offset[2]	
+		
+		if loadingbar.AutoCenter then
+			x1 = x1 - self.LoadAnimation:getWidth()/2
+			y1 = y1 - self.LoadAnimation:getHeight()/2
+		end
+		
+		gr.drawImage(self.LoadAnimation[index], x1, y1)
+	end
+	
+	--then draw any text we might want
+		
+	if (not this.NoText) and self.ActiveText then
+
+		local text = self.LoadingText[self.ActiveText]
+		
+		if text then
+			gr.CurrentFont = gr.Fonts[text.Font]
+				
+			x1 = (this.TextOrigin[1] * screenWidth) + this.TextOffset[1]
+			y1 = (this.TextOrigin[2] * screenHeight) + this.TextOffset[2]
+			x2 = screenWidth
+			y2 = screenHeight
+			
+			if this.TextCenter then
+				local str_width = gr.getStringWidth(text.Text)
+				x1 = x1 - str_width/2
+			end
+			
+			if this.Width then
+				x2 = math.min(x1 + this.Width, x2)
+			end
+			
+			local color = this.TextColor
+			gr.setColor(color[1],color[2],color[3],color[4] or 255)
+			
+			gr.drawString(text.Text, x1, y1, x2, y2)
+					
+			--then draw the image
+			
+			if (text.Image) and (not this.NoImage) then
+					
+				x1 = (this.ImageOrigin[1] * screenWidth) + this.ImageOffset[1]
+				y1 = (this.ImageOrigin[2] * screenHeight) + this.ImageOffset[2]
+				
+				if this.ImageCenter then
+					x1 = x1 - gr.getImageWidth(text.Image)/2
+					y1 = y1 - gr.getImageHeight(text.Image)/2
+				end
+				
+				gr.drawImage(text.Image, x1, y1)
+			
+			end
+		
+		end
+	
+	end
+	
+	-- Draw Mission Name?
+	
+	if this.DrawMissionName then
+	
+		local text = mn.getMissionTitle()
+		
+		gr.CurrentFont = gr.Fonts[this.MissionName.Font]
+		local stringwidth = gr.getStringWidth(text)
+		
+		local color = this.TextColor
+		gr.setColor(color[1],color[2],color[3],color[4] or 255)
+		
+		x1 = (this.MissionName.Origin[1] * screenWidth) + this.MissionName.Offset[1]
+		y1 = (this.MissionName.Origin[2] * screenHeight) + this.MissionName.Offset[2]
+		
+		if string.lower(this.MissionName.Justify) == "center" then
+			x1 = x1 - (stringwidth/2)
+		elseif string.lower(this.MissionName.Justify) == "right" then
+			x1 = x1 - stringwidth
+		end
+		
+		gr.drawString(text, x1, y1)
+	
+	end
+
+end
+
+function XLoadingScreen:Exit()
+	
+	if self.Drawing then
+		self.Drawing = nil
+		if self.LoadAnimation then self.LoadAnimation:unload() end
+		self.ActiveText = nil
+		self.AnimFrames = nil
+		self.UsedImage = nil
+	end
+
+end
+
+XLoadingScreen:Init()
+
+]
+
+$On Load Screen:
+[
+	if not XLoadingScreen.Drawing then
+		XLoadingScreen:InitDraw(mn.getMissionFilename())
+	end
+	
+	if XLoadingScreen.Drawing then
+		XLoadingScreen:Draw(hv.Progress)
+	end
+]
+
+$State: GS_STATE_MAIN_MENU
+$On State Start:
+[
+	XLoadingScreen:Exit()
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	XLoadingScreen:Exit()
+]
+
+$State: GS_STATE_BRIEFING
+$On State Start:
+[
+	XLoadingScreen:Exit()
+]
+
+$State: GS_STATE_CMD_BRIEF
+$On State Start:
+[
+	XLoadingScreen:Exit()
+]
+
+$State: GS_STATE_LOOP_BRIEF
+$On State Start:
+[
+	XLoadingScreen:Exit()
+]
+
+#End

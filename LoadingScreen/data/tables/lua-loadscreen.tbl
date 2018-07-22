@@ -1,0 +1,132 @@
+;Axem's Extended Loading Screen Script
+;lua-loadscreen.tbl
+;Modular table suffix: "*-lls.tbm"
+
+#Loading Bars
+
+;All loading Bars have...
+;$Name:		Name of loading bar within the table
+;$File: 	This should be an animation, can be any length. For reference FS2's loading animation is 14 frames long
+;$Origin	(optional) x,y Origins are based off of % of the screen's size. Loading bars will NOT scale up or down. Default is 0.5, 0.5
+;$Offset	(optional) x,y Pixel offset from the origin, comment out or remove Offset and the graphic will center itself automatically
+
+$Name: heat
+$File: loadingbar2	
+$Origin: 0.5, 0.5
+
+$Name: rainbow
+$File: loadingbar3	
+$Origin: 0.5, 0.5
+
+#End
+
+#Loading Text
+
+;All Loading Texts have...
+;$Name: 	Name of text
+;$Text: 	The actual text. XSTRs can be used for localization support.
+;$Font: 	(optional) Font to use. Default is font 1.
+;$Image:	(optional) Associated image to go with the text
+
+$Name: Tip 1
+$Text: XSTR("Avoid the beams so you won't get hit!", -1)
+$Font: 2
+
+$Name: Tip 2
+$Text: XSTR("Get rid of the Prometheus R as fast as you can!", -1)
+$Font: 2
+
+$Name: Tip 3
+$Text: XSTR("Why fly anything other than a Perseus?", -1)
+$Font: 2
+
+$Name: Lore 1
+$Text: XSTR("The GTVA stands for Galactic Terran Vasudan Alliance", -1)
+$Font: 2
+$Image: load_gtva
+
+$Name: Lore 2
+$Text: XSTR("Admiral Bosch was laughed at for his ideas about ETAK. Who's laughing now???", -1)
+$Font: 2
+$Image: load_bosch
+
+#End
+
+#Loading Screens
+
+;All Loading Screens have...
+;$Name:				Name of loading screen within the table
+;$Loading Bar:		Name of loading bar as defined in #Loading Bars
+;$Loading Image:	Name of image to use as the background. If you use the name 'random', it will randomly select from a list of +Images below
+;	+Scaling:		(Optional) Boolean, if the script should attempt to scale the image to best fit the screen. Regardless of scaling, the script will place the image to be centered in the screen
+;	+Image:			(Optional) A possible image that can be selected if Loading Image is set to random. You can have as many +Image entries as you like
+;$Text Color:		(Optional) R,G,B,A, color of text to be drawn. Default is 192,192,192,255. If A is not specified it will be 255.
+;$Text Origin:		(Optional) x,y Origin for the top left corner of the text in terms of screen percent.  If Text Origin is not specified, no text will be drawn even if one is specified.
+;	+Center			(Optional) Having this present will make the origin become the top MIDDLE of the text
+;	+Offset			(Optional) x,y Pixel offset for the text
+;	+Width			(Optional) Text width before word wrapping occurs
+;$Image Origin:		(Optional) x,y Origin for the top left corner of the image in terms of screen percent. If Image Origin is not specified, no image will be drawn even if one is specified.
+;	+Center			(Optional) 
+;	+Offset			(Optional) 
+;$Draw Mission Name:(Optional) Boolean, if true will draw the mission's name as part of the loading screen
+;	+Font			(Optional) Font to use for the mission name, defaults to 1
+;	+Origin			(Optional)
+;	+Offset			(Optional)
+;	+Justify		(Optional) Specifies if mission name should be "left", "center", or "right" justified. Default is left.
+;$Loading Text:		(Optional) Name of a loading text entry as specified in the table. You can have as many entries as you want
+
+$Name: Test1
+$Loading Bar: heat
+$Loading Image: random
+	+Scaling: true
+	+Image:	darius1
+	+Image: darius2
+	+Image: load_gtva
+	+Image: load_bosch
+$Text Color: 255,255,255,255
+$Text Origin: 0.5, 0.9
+	+Center
+$Image Origin: 0.1, 0.9
+	+Center
+	+Offset: 0,0
+$Draw Mission Name:	true
+	+Font:		2
+	+Origin:	1,0
+	+Offset:	-100,50
+	+Justify:	right
+$Loading Text: Tip 1
+$Loading Text: Tip 2
+$Loading Text: Tip 3
+$Loading Text: Lore 1
+$Loading Text: Lore 2
+
+$Name: Test2
+$Loading Bar: rainbow
+$Loading Image: darius2
+	+Scaling: true
+$Text Color: 192,192,255,255
+$Text Origin: 0.5, 0.1
+	+Center
+$Image Origin: 0.5, 0.75
+	+Center
+$Loading Text: Tip 1
+$Loading Text: Tip 2
+$Loading Text: Tip 3
+$Loading Text: Lore 1
+$Loading Text: Lore 2
+
+#End
+
+#Mission Screens
+
+;All mission screens must have...
+;$Filename:			The filename of the mission that the loading screen will apply to. The file extension is not needed, but is not harmful either
+;$Loading Screen:	The Loading Screen Name Entry as specified in the table
+
+$Filename: testload1.fs2
+$Loading Screen: Test1
+
+$Filename: testload2
+$Loading Screen: Test2
+
+#End

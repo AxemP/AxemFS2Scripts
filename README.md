@@ -31,6 +31,10 @@ This script will automatically do an in mission jump sequence to a selected wayp
 
 A sample mission is included
 
+# Extended Loading Screen
+
+This script will allow the modder to more finely customize mission loading screens. Added features include customizeable loading bars, randomized loading images, ability to automatically draw the mission's title, and random text (for tips or lore, as well as associated images). Care must be taken with the placement of the loading bar, random text and images, since they will **not** scale with the game's resolution (however, the background does have the ability to scale). This script only overrides missions that are inside the loading screen table. (A nightly after July 23, 2018 is needed to use this script)
+
 # Mark Box
 
 This script will allow the mission designer to **highlight** certain ships, wings and subsystems. This script does not do targetting, only highlighting. For ships and wings, brackets will be drawn around the ships at all times. An optional text string will be drawn over a ship if it has been targetted. For subsystems, brackets will only be drawn if the parent ship is targetted. A simple health bar is also drawn next to the subsystem.
