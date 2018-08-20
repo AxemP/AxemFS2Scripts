@@ -14,6 +14,7 @@ function XLoadingScreen:Init()
 	self.LoadingText = {}
 	self.LoadingScreens = {}
 	self.MissionScreens = {}
+	self.LastProgress = nil
 
 	--load lua-loadscreen.tbl
 	self:Parse("lua-loadscreen.tbl")
@@ -383,8 +384,20 @@ function XLoadingScreen:GetBGInfo(image, scaling)
 end
 
 function XLoadingScreen:InitDraw(mission)
+
+	--strip off .fs2 extension if it exists (but why would mn.getMissionFilename() return the filename with or without an extension??)
+			
+	local pos = mission:find(".fs2", -4, true)
 	
-	local this = self.LoadingScreens[self.MissionScreens[mission].LoadingScreen]
+	if pos then
+		mission = mission:sub(1,pos-1)
+	end
+	
+	local thisScreen = self.MissionScreens[mission]
+	
+	if not thisScreen then return end
+	
+	local this = self.LoadingScreens[thisScreen.LoadingScreen]
 	
 	if this then
 		self.Drawing = true
@@ -446,7 +459,14 @@ function XLoadingScreen:Draw(progress)
 	local index = 1
 		
 	if self.AnimFrames then
-		index = math.floor(progress * self.AnimFrames)
+		if not self.LastProgress or self.LastProgress < (progress * self.AnimFrames) then
+			index = math.floor(progress * self.AnimFrames)
+			self.LastProgress = index
+		else
+			index = self.LastProgress
+		end
+				
+		if index == 0 then index = 1 end
 	end
 	
 	--then draw the loading bar
@@ -461,8 +481,11 @@ function XLoadingScreen:Draw(progress)
 			x1 = x1 - self.LoadAnimation:getWidth()/2
 			y1 = y1 - self.LoadAnimation:getHeight()/2
 		end
-		
+				
 		gr.drawImage(self.LoadAnimation[index], x1, y1)
+		--[[gr.setColor(255,255,255,255)
+		gr.drawString(index,x1,y1+25)
+		gr.drawString(progress)]]--
 	end
 	
 	--then draw any text we might want
@@ -548,6 +571,7 @@ function XLoadingScreen:Exit()
 		self.ActiveText = nil
 		self.AnimFrames = nil
 		self.UsedImage = nil
+		self.LastProgress = nil
 	end
 
 end
@@ -558,6 +582,7 @@ XLoadingScreen:Init()
 
 $On Load Screen:
 [
+	
 	if not XLoadingScreen.Drawing then
 		XLoadingScreen:InitDraw(mn.getMissionFilename())
 	end
