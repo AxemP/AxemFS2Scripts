@@ -120,7 +120,7 @@ $Loading Text: Lore 2
 #Mission Screens
 
 ;All mission screens must have...
-;$Filename:			The filename of the mission that the loading screen will apply to. The file extension is not needed, but is not harmful either
+;$Filename:			The filename of the mission that the loading screen will apply to. The file extension is not needed, but is not harmful either. Note that a filename of 'default' will be a special case and will draw the loading screen if no other valid missions are being loaded.
 ;$Loading Screen:	The Loading Screen Name Entry as specified in the table
 
 $Filename: testload1.fs2

@@ -233,7 +233,7 @@ function XLoadingScreen:Parse(file)
 		while parse.optionalString("$Filename:") do
 		
 			local t = {}
-			local name = parse.getString()
+			local name = string.lower(parse.getString())
 			
 			--strip off .fs2 extension if it exists
 			
@@ -385,6 +385,8 @@ end
 
 function XLoadingScreen:InitDraw(mission)
 
+	self.DefaultScreen = nil
+
 	--strip off .fs2 extension if it exists (but why would mn.getMissionFilename() return the filename with or without an extension??)
 			
 	local pos = mission:find(".fs2", -4, true)
@@ -395,13 +397,25 @@ function XLoadingScreen:InitDraw(mission)
 	
 	local thisScreen = self.MissionScreens[mission]
 	
-	if not thisScreen then return end
+	if not thisScreen then 
+		if self.MissionScreens["default"] then
+			self.DefaultScreen = true
+			thisScreen = self.MissionScreens["default"]
+		else
+			return
+		end
+	end
 	
 	local this = self.LoadingScreens[thisScreen.LoadingScreen]
 	
 	if this then
 		self.Drawing = true
-		self.MissionFilename = mission
+		
+		if self.DefaultScreen then
+			self.MissionFilename = "default"
+		else
+			self.MissionFilename = mission
+		end
 		
 		--get image info ready
 		
@@ -504,16 +518,16 @@ function XLoadingScreen:Draw(progress)
 			
 			if this.TextCenter then
 				local str_width = gr.getStringWidth(text.Text)
-				x1 = x1 - str_width/2
+				x1 = math.max(50,x1 - str_width/2)
 			end
 			
 			if this.Width then
-				x2 = math.min(x1 + this.Width, x2)
+				x2 = math.min(x1 + this.Width, x2-50)
 			end
 			
 			local color = this.TextColor
 			gr.setColor(color[1],color[2],color[3],color[4] or 255)
-			
+
 			gr.drawString(text.Text, x1, y1, x2, y2)
 					
 			--then draw the image
@@ -584,7 +598,7 @@ $On Load Screen:
 [
 	
 	if not XLoadingScreen.Drawing then
-		XLoadingScreen:InitDraw(mn.getMissionFilename())
+		XLoadingScreen:InitDraw(string.lower(mn.getMissionFilename()))
 	end
 	
 	if XLoadingScreen.Drawing then
