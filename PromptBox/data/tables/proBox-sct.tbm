@@ -166,6 +166,8 @@ function PromptBox:ResetRef(reference)
 
 end
 
+;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-clear-prompt"].Action = function(reference) PromptBox:ResetRef(reference) end
+
 function PromptBox:LoadMsgBox(filename)
 
 	ba.print("LoadMsgBox called\n")
@@ -449,7 +451,7 @@ function PromptBox:Draw()
 
 	gr.drawImage(self.Image.file, self.Position.x, self.Position.y)
 
-	self:UpdateText()
+	--self:UpdateText()
 		
 	gr.CurrentFont = gr.Fonts[self.Config.Title.Font]
 	AXUI:SetColor("white")
@@ -538,7 +540,7 @@ $On HUD Draw:
 [
 	if PromptBox.Enabled then
 		if PromptBox.Visible then
-			PromptBox:UpdateText()
+			--PromptBox:UpdateText()
 			PromptBox:Draw()
 			PromptBox:LockPlayer()
 			

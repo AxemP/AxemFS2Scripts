@@ -49,7 +49,17 @@ $Parameter:
 $Parameter:
 	+Description: Variable to store responses. This will store all valid responses as a bitfield. Use is-bit-set to check responses. You don't need to use this way to get responses, it's just here in case you need some advanced method of checking the status of responses.
 	+Type: variable
-
+	
+$Operator: lua-clear-prompt
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Clear prompt for the given reference. Handy for repeating events.
+$Parameter:
+	+Description: Prompt reference. The response for this call-prompt will be erased.
+	+Type: string
 
 $Operator: lua-get-prompt-response
 $Category: Status
