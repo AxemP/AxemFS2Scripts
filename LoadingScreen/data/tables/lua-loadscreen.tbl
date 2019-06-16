@@ -2,6 +2,14 @@
 ;lua-loadscreen.tbl
 ;Modular table suffix: "*-lls.tbm"
 
+#General Settings
+
+;Scale Zoom: Should the background image be intelligently scaled to fit the resolution? Intelligently scaled means no stretching or skewed aspect ratio. Portions of the background may be clipped to fit.
+
+$Scale Zoom:	true
+
+#End
+
 #Loading Bars
 
 ;All loading Bars have...

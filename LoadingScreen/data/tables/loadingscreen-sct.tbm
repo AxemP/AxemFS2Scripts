@@ -38,6 +38,18 @@ function XLoadingScreen:Parse(file)
 		return
 	end
 	
+	 if parse.optionalString("#General Settings") then
+				
+		if parse.optionalString("$Scale Zoom:") then
+			self.ScaleZoom = parse.getBoolean()
+		else
+			self.ScaleZoom = true
+		end
+
+		parse.requiredString("#End")
+		
+	end
+	
 	--Loading Bar Load
 	
 	 if parse.optionalString("#Loading Bars") then
@@ -355,9 +367,17 @@ function XLoadingScreen:GetBGInfo(image, scaling)
 			local scalingFactor = 1
 
 			if (screenWidth / imageWidth) > (screenHeight / imageHeight) then
-				scalingFactor = screenWidth / imageWidth
+				if scalezoom then
+					scalingFactor = screenWidth / imageWidth
+				else
+					scalingFactor = screenHeight / imageHeight
+				end
 			else
-				scalingFactor = screenHeight / imageHeight
+				if scalezoom then
+					scalingFactor = screenHeight / imageHeight
+				else
+					scalingFactor = screenWidth / imageWidth
+				end
 			end
 						
 			local new_width = imageWidth * scalingFactor
@@ -365,8 +385,8 @@ function XLoadingScreen:GetBGInfo(image, scaling)
 			local x_offset = (screenWidth - new_width)/2
 			local y_offset = (screenHeight - new_height)/2
 			
-			local bg_x = x_offset + screenWidth/2 - new_width/2
-			local bg_y = y_offset + screenHeight/2 - new_height/2
+			local bg_x = screenWidth/2 - new_width/2
+			local bg_y = screenHeight/2 - new_height/2
 			
 			return bg_x, bg_y, new_width, new_height
 
@@ -523,6 +543,8 @@ function XLoadingScreen:Draw(progress)
 			
 			if this.Width then
 				x2 = math.min(x1 + this.Width, x2-50)
+			else
+				x2 = x2-50
 			end
 			
 			local color = this.TextColor
