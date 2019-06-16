@@ -1,0 +1,239 @@
+#Lua SEXPs
+
+$Operator: lua-proxy-kill
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 2
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Kills a ship crediting another ship. Useful for weak point objects that aren't part of the main ship. No argument will credit the player.
+$Parameter:
+	+Description: Ship to kill
+	+Type: Ship
+$Parameter:
+	+Description: Ship to credit (if not defined, will credit the player)
+	+Type: Ship
+
+$Operator: lua-set-player-target
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Forces the player to target specified ship.
+$Parameter:
+	+Description: Ship player will target
+	+Type: Ship
+
+$Operator: lua-get-player-target
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Stores the player's target in the specified variable
+$Parameter:
+	+Description: Variable to store player's target
+	+Type: Variable
+	
+$Operator: lua-lockdown
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Return Type: Nothing
+$Description: Locks a ship down so it cannot fire weapons & afterburners (and optionally forces AI to play dead). This is useful to apply to the player for the purpose of cutscenes.
+$Parameter:
+	+Description: Forces ship to have play-dead orders. You usually want this on.
+	+Type: Boolean
+$Repeat
+$Parameter:
+	+Description: Ships to lock down
+	+Type: Ship
+	
+$Operator: lua-unlockdown
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Return Type: Nothing
+$Description: Releases the ship from the lockdown state.
+$Repeat
+$Parameter:
+	+Description: Ships to lock down
+	+Type: Ship
+	
+$Operator: lua-change-ship-class-2
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 5
+$Return Type: Nothing
+$Description: Changes a ship to another class while allowing the ship to retaining weapon information. If bank sizes grow in size, default weapons will be used for new banks.
+$Parameter:
+	+Description: Ship class to change to
+	+Type: String
+$Parameter:
+	+Description: Save primary weapon info?
+	+Type: Boolean
+$Parameter:
+	+Description: Save secondary weapon info?
+	+Type: Boolean
+$Parameter:
+	+Description: Save weapon energy info?
+	+Type: Boolean
+$Repeat
+$Parameter:
+	+Description: Ships to change
+	+Type: Ship
+	
+$Operator: lua-is-in-campaign
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Boolean
+$Description: Detects if we are in a campaign state or not
+
+;These next three functions reside in parsecfg-sct.tbm
+
+$Operator: lua-save-data-integer
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+$Maximum Arguments: 3
+$Return Type: Nothing
+$Description: Saves data into a file for a variety of nefarious purposes. File will be saved as [PLAYERNAME]-[suffix].sav. Suffix defaults to "sdx". This version is for storing integers only. Data stored as a JSON formatted file.
+$Parameter:
+	+Description: Key to store data under
+	+Type: String
+$Parameter:
+	+Description: Value to store under the key
+	+Type: Number
+$Parameter:
+	+Description: Suffix for data saving
+	+Type: String
+	
+$Operator: lua-save-data-string
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+$Maximum Arguments: 3
+$Return Type: Nothing
+$Description: Saves data into a file for a variety of nefarious purposes. File will be saved as [PLAYERNAME]-[suffix].sav. Suffix defaults to "sdx". This version is for storing strings only. Data stored as a JSON formatted file.
+$Parameter:
+	+Description: Key to store data under
+	+Type: String
+$Parameter:
+	+Description: Value to store under the key
+	+Type: String
+$Parameter:
+	+Description: Suffix for data saving
+	+Type: String
+	
+$Operator: lua-get-data-integer
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 1
+$Maximum Arguments: 2
+$Return Type: Number
+$Description: Returns an integer stored under a certain key. It will look at a file named [PLAYERNAME]-[suffix].sav. Suffix defaults to "sdx". This version is for resolving integers only. If it doesn't exist, will return 0.
+$Parameter:
+	+Description: Key that data was stored under
+	+Type: String
+$Parameter:
+	+Description: Suffix for data loading
+	+Type: String
+	
+$Operator: lua-get-data-string
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 2
+$Maximum Arguments: 3
+$Return Type: Nothing
+$Description: Takes a string found under a certain key and puts it into a sexp variable. It will look at a file named [PLAYERNAME]-[suffix].sav. Suffix defaults to "sdx". This version is for strings only. Since FreeSpace SEXPs can't return strings, we can only tell it to put stuff in a variable... If it doesn't exist will return empty string.
+$Parameter:
+	+Description: Key that data was stored under
+	+Type: String
+$Parameter:
+	+Description: Variable to store result in
+	+Type: Variable
+$Parameter:
+	+Description: Suffix for data loading
+	+Type: String	
+	
+$Operator: lua-clear-saved-data
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Deletes saved data saved under [PLAYERNAME]-[suffix].sav.
+$Parameter:
+	+Description: File suffix to delete
+	+Type: String
+	
+$Operator: lua-swap-ship-position
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+$Maximum Arguments: 3
+$Return Type: Nothing
+$Description: Swaps the positions of 2 ships, with an optional orientation argument.
+$Parameter:
+	+Description: Ship A
+	+Type: Ship
+$Parameter:
+	+Description: Ship B
+	+Type: Ship
+$Parameter:
+	+Description: If true, also swap orientations
+	+Type: Boolean
+	
+$Operator: lua-reverse-waypoint
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Changes the positions of a waypoint path so that they go in reverse order.
+$Parameter:
+	+Description: Waypoint Path
+	+Type: waypointpath
+	
+$Operator: lua-get-ammo-pct
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 3
+$Maximum Arguments: 3
+$Return Type: Number
+$Description: Gets the ammo count by a superpercent for a given bank (super perecents are scaled by 10,000% for more precision)
+$Parameter:
+	+Description: Ship to change
+	+Type: ship
+$Parameter:
+	+Description: Bank Type (1=primary, 2=secondary)
+	+Type: number
+$Parameter:
+	+Description: Bank Number to get (0-2)
+	+Type: number
+	
+$Operator: lua-set-ammo-pct
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 4
+$Maximum Arguments: 4
+$Return Type: Nothing
+$Description: Sets the ammo count by a superpercent for a given bank (super perecents are scaled by 10,000% for more precision)
+$Parameter:
+	+Description: Ship to change
+	+Type: ship
+$Parameter:
+	+Description: Bank Type (1=primary, 2=secondary)
+	+Type: number
+$Parameter:
+	+Description: Bank Number to change (0-2)
+	+Type: number
+$Parameter:
+	+Description: Percent (0-10000) to adjust ammo count to
+	+Type: number
+
+#End

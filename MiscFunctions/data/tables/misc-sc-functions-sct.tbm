@@ -1,0 +1,331 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+function ProxyKill(target, killer)
+
+	if not target then return end
+
+	if not killer then killer = hv.Player end
+	
+	if type(target) == "string" then
+		targetObj = mn.Ships[target]
+	else
+		targetObj = target
+	end
+	
+	if targetObj:isValid() then
+		targetObj:kill(killer)
+	end
+
+end
+
+mn.LuaSEXPs["lua-proxy-kill"].Action = ProxyKill
+
+
+function PlayerTarget(ship)
+
+	if type(ship) == "string" then
+		ship = mn.Ships[ship]
+	end
+
+	if ship:isValid() and hv.Player:isValid() and ship ~= hv.Player and hv.Player.HitpointsLeft > 0 then
+		
+		hv.Player.Target = ship
+		
+	end
+
+end
+
+mn.LuaSEXPs["lua-set-player-target"].Action = PlayerTarget
+
+mn.LuaSEXPs["lua-get-player-target"].Action = function(variable) variable.Value = hv.Player.Target.Name end
+
+function Lockdown(name, noplaydead)
+
+if not name then
+	name = hv.Player.Name
+end
+
+mn.runSEXP("(lock-primary-weapon !" .. name .. "!)")
+mn.runSEXP("(lock-secondary-weapon !" .. name .. "!)")
+mn.runSEXP("(lock-afterburner !" .. name .. "!)") 
+mn.runSEXP("(disable-ets !" .. name .. "!)")
+if not noplaydead then
+	mn.runSEXP("(player-use-ai)") 
+	mn.runSEXP("(add-goal !" .. name .. "! ( ai-play-dead 200 ) )")
+end
+mn.runSEXP("(lock-perspective (true)))")
+
+local ship = mn.Ships[name]
+
+if ship:isValid() then
+	ship.Physics.ForwardDecelerationTime = ship.Physics.ForwardDecelerationTime / 1000
+end
+
+end
+
+function LockdownSEXP(playdead, ...)
+
+	for _, data in ipairs(arg) do
+		local ship = data[1]
+		if ship:isValid() then
+			Lockdown(ship.Name, not playdead)
+		end
+	end
+
+end
+
+mn.LuaSEXPs["lua-lockdown"].Action = LockdownSEXP
+
+function UnLockdown(name)
+
+if not name then
+	name = hv.Player.Name
+end
+
+mn.runSEXP("(unlock-primary-weapon !" .. name .. "!)")
+mn.runSEXP("(unlock-secondary-weapon !" .. name .. "!)")
+mn.runSEXP("(unlock-afterburner !" .. name .. "!)" ) 
+mn.runSEXP("(enable-ets !" .. name .. "!)")
+mn.runSEXP("(player-not-use-ai)") 
+mn.runSEXP("(clear-goals !" .. name .. "!)")
+mn.runSEXP("(lock-perspective (false) )")
+
+local ship = mn.Ships[name]
+
+if ship:isValid() then
+	ship.Physics.ForwardDecelerationTime = ship.Physics.ForwardDecelerationTime * 1000
+end
+
+end
+
+function UnLockdownSEXP(...)
+
+	for _, data in ipairs(arg) do
+		local ship = data[1]
+		if ship:isValid() then
+			UnLockdown(ship.Name)
+		end
+	end
+
+end
+
+mn.LuaSEXPs["lua-unlockdown"].Action = UnLockdownSEXP
+
+
+function SwapClassWithData(class, primary, secondary, wepEnergy, ...)
+
+	if type(class) == "string" then
+		class = tb.ShipClasses[class]
+	end
+	
+	for _, data in ipairs (arg) do
+		local ship = data[1]
+		if type(ship) == "string" then
+			ship = mn.Ships[ship]
+		end
+
+		if ship:isValid() and class:isValid() then	--always check validity of game objects!
+			
+			local priWeapons = {}	--Declaring primary and secondary weapon tables as an empty object for later population
+			local priAmmo = {}
+			local secWeapons = {}
+			local secAmmo = {}   
+			local wepEnergypct = 1
+			
+			if wepEnergy then wepEnergypct = ship.WeaponEnergyLeft / ship.WeaponEnergyMax end
+			
+			if primary then
+				--First let's figure out what weapons we have
+				for i=1, #ship.PrimaryBanks do		-- ship.PrimaryBanks has a # operator that returns the number of banks
+					local thisBank = ship.PrimaryBanks[i]
+					priWeapons[i] = thisBank.WeaponClass
+					priAmmo[i] = thisBank.AmmoLeft / thisBank.AmmoMax	--Storing ammo counts as a percent of max ammo so if ammo capacity changes we're all good
+				end
+			end
+			
+			if secondary then
+				for i=1, #ship.SecondaryBanks do		-- SecondaryBanks too
+					local thisBank = ship.SecondaryBanks[i]
+					secWeapons[i] = thisBank.WeaponClass
+					secAmmo[i] = thisBank.AmmoLeft / thisBank.AmmoMax
+				end
+			end
+			
+			--Now we switch the ship class
+			
+			ship.Class = class
+			
+			--Now we swap back the info
+			
+			if wepEnergy then ship.WeaponEnergyLeft = wepEnergypct * ship.WeaponEnergyMax end
+			
+			if primary then
+				for i=1, #ship.PrimaryBanks do
+					local thisBank = ship.PrimaryBanks[i]
+					thisBank.WeaponClass = priWeapons[i]
+					thisBank.AmmoLeft = math.floor(priAmmo[i] * thisBank.AmmoMax)
+				end
+			end
+			
+			if secondary then
+				for i=1, #ship.SecondaryBanks do
+					local thisBank = ship.SecondaryBanks[i]
+					thisBank.WeaponClass = secWeapons[i]
+					thisBank.AmmoLeft = math.floor(secAmmo[i] * thisBank.AmmoMax)
+				end
+			end
+			
+		end
+	end
+
+end
+
+mn.LuaSEXPs["lua-change-ship-class-2"].Action = SwapClassWithData
+
+function InCampaign()
+
+	return mn.isInCampaign()
+
+end
+
+mn.LuaSEXPs["lua-is-in-campaign"].Action = InCampaign
+
+function SwapPositions(a,b, orientation)
+
+	local intermediate = a.Position
+	
+	a.Position = b.Position
+	
+	b.Position = intermediate
+	
+	if orientation then
+		local o = a.Orientation
+		
+		a.Orientation = b.Orientation
+		
+		b.Orientation = o
+		
+	end
+	
+end
+
+mn.LuaSEXPs["lua-swap-ship-position"].Action = SwapPositions
+
+function ReverseWaypointPath(waypointpath)
+
+	local t = {}
+	local pathsize = #waypointpath
+	
+	for i=1, pathsize do
+		t[pathsize-i+1] = waypointpath[i].Position
+	end
+	
+	for i=1, pathsize do
+		waypointpath[i].Position = t[i]
+	end
+	
+end
+
+mn.LuaSEXPs["lua-reverse-waypoint"].Action = ReverseWaypointPath
+
+function GetAllPositions()
+
+	local t = {}
+
+	for i=1, #mn.Ships do
+	
+		t[i] = {}
+	
+		local thisShip = mn.Ships[i]
+		t[i].Ship = thisShip.Name
+		t[i].Position = "X:" .. thisShip.Position.x .. ", Y:" .. thisShip.Position.y .. ", Z:" .. thisShip.Position.z
+		t[i].Orientation = "P:" .. thisShip.Orientation.p .. ", B:" .. thisShip.Orientation.b .. ", H:" .. thisShip.Orientation.h
+	
+	end
+	
+	DumpToFile(t,"pos")
+
+end
+
+function ReplaceTexture(ship, oldtex, newtex)
+
+	if type(ship) == "string" then
+		ship = mn.Ships[ship]
+	end
+		
+	local newTexture = gr.loadTexture(newtex)
+	
+	ship.Textures[oldtex] = newTexture
+
+end
+
+function GetDebrisOffsets(parent)
+
+	if type(parent) == "string" then parent = mn.Ships[parent] end
+
+	FlagshipDebris = {}
+	
+	for i=1, #mn.Debris do
+		if mn.Debris[i]:isValid() then
+			local thisDebris = mn.Debris[i]
+			local t = {}
+			t.Sig = thisDebris:getSignature()
+			t.Offset = thisDebris.Position - parent.Position
+			
+			FlagshipDebris[i] = t
+		end
+	end
+
+end
+
+function MoveDebris(parent)
+
+	if type(parent) == "string" then parent = mn.Ships[parent] end
+
+	for i=1, #FlagshipDebris do
+		if FlagshipDebris[i] then
+			local thisDebrisEntry = FlagshipDebris[i]
+			local thisDebris = mn.getObjectFromSignature(thisDebrisEntry.Sig)
+			thisDebris.Position = parent.Position + parent.Orientation:unrotateVector(thisDebrisEntry.Offset)
+		end
+	end
+	
+	FlagshipDebris = nil
+
+end
+
+mn.LuaSEXPs["lua-get-ammo-pct"].Action = function(ship, banktype, bank)
+
+	local thisBank
+	
+	if banktype == 1 then
+		thisBank = ship.PrimaryBanks[bank+1]
+	elseif banktype == 2 then
+		thisBank = ship.SecondaryBanks[bank+1]
+	end
+	
+	return (thisBank.AmmoLeft / thisBank.AmmoMax) * 10000
+
+end
+
+mn.LuaSEXPs["lua-set-ammo-pct"].Action = function(ship, banktype, bank, pct)
+
+	local thisBank
+	
+	if banktype == 1 then
+		thisBank = ship.PrimaryBanks[bank+1]
+	elseif banktype == 2 then
+		thisBank = ship.SecondaryBanks[bank+1]
+	end
+	
+	thisBank.AmmoLeft = math.floor((pct/10000) * thisBank.AmmoMax)
+
+end
+
+]
+
+#End
