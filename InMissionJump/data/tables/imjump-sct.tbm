@@ -78,7 +78,7 @@ function IMJump:Monitor()
 			
 			local entry = self.Ships[i]
 			
-			if mtime > entry.Timer then
+			if entry and (mtime > entry.Timer) then
 			
 				if entry.Stage == 5 and entry.AltTime[5] and entry.AltTime[5] == 0 then --If transit time is zero then let's not bother with the subspace stuff
 					entry.Stage = 7
@@ -129,8 +129,12 @@ function IMJump:Stage1() --Rev warmup
 	mn.runSEXP("( lock-primary-weapon !" .. name .. "!)")
 	mn.runSEXP("( lock-secondary-weapon !" .. name .. "!)")
 	mn.runSEXP("( lock-afterburner !" .. name .. "!)")
-	mn.runSEXP("( ship-lat-maneuver !" .. name .. "! 7000 0 0 " .. IMJump.Speed * 100 .. "( true ) )")
-
+	
+	if me == hv.Player then
+		mn.runSEXP("( ship-lat-maneuver !" .. name .. "! 60000 0 0 " .. IMJump.Speed * 100 .. "( true ) )")
+	else
+		mn.runSEXP("( ship-lat-maneuver !" .. name .. "! 7000 0 0 " .. IMJump.Speed * 100 .. "( true ) )")
+	end
 end
 
 function IMJump:Stage2() --Open warp flash
