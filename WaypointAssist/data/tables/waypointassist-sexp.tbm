@@ -1,0 +1,45 @@
+#Lua SEXPs
+
+$Operator: lua-follow-waypoint
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+$Maximum Arguments: 3
+$Return Type: Nothing
+$Description: Allows player to follow a single waypoint path, with a pointer object being put at the waypoint the player must follow. Also has optional offset in case you want not start at the first point. Eg:) If you place the player AT point 1 to start, the offset should be 1. Offset is by default 0. Use lua-get-waypoint-progress and lua-get-waypoint-status to find out where the player is. Aside from 'lua-get-waypoint-status' returning 2, nothing else happens on completion. It's up to the FREDder to do.
+$Parameter:
+	+Description: Waypoint path to follow
+	+Type: waypointpath
+$Parameter:
+	+Description: Pointer object (probably should be a no-collide one!)
+	+Type: ship
+$Parameter:
+	+Description: Waypoint offset (defaults to 0)
+	+Type: number
+
+$Operator: lua-end-follow-waypoint
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Turns off the following waypoint system.
+
+$Operator: lua-get-waypoint-progress
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Number
+$Description: Returns the last waypoint number the player has passed.
+
+$Operator: lua-get-waypoint-status
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Number
+$Description: Returns the last waypoint status. 0 = System not active. 1 = Player following waypoints. 2 = Player reached last waypoint.
+
+
+#End

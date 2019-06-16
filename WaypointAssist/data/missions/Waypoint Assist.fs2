@@ -1,0 +1,594 @@
+#Mission Info
+
+$Version: 0.10
+$Name:  XSTR("Waypoint Assist Test", -1)
+$Author: axem
+$Created: 06/15/19 at 21:38:54
+$Modified: 06/15/19 at 21:49:15
+$Notes:
+This is a FRED2_OPEN created mission.
+$End Notes:
+
+$Mission Desc:
+ XSTR("Put mission description here
+", -1)
+$end_multi_text
++Game Type Flags: 1
++Flags: 0
++Fog Near Mult: 1.000000
+
++Fog Far Mult: 1.000000
+
++Disallow Support: 0
++Hull Repair Ceiling: 0.000000
++Subsystem Repair Ceiling: 100.000000
+
++Viewer pos: -2477.531738, 3242.263916, -6458.153809
++Viewer orient:
+	1.000000, 0.000000, -0.000000,
+	0.000000, 0.866025, 0.500000,
+	0.000000, -0.500000, 0.866025
+
+
+$AI Profile: FS2 RETAIL
+
+#Command Briefing
+
+#Briefing
+$start_briefing
+$num_stages: 0
+$end_briefing
+
+#Debriefing_info
+
+$Num stages: 0
+
+#Players		;! 1 total
+
+$Starting Shipname: Alpha 1
+$Ship Choices: (
+	"GTF Ulysses"	5
+	"GTF Hercules"	5
+	"GTF Hercules Mark II"	5
+	"GTF Ares"	5
+	"GTF Erinyes"	5
+	"GTF Loki"	5
+	"GTF Pegasus"	5
+	"GTF Perseus"	5
+	"GTF Myrmidon"	5
+	"SF Mara (terrans)"	5
+	"GTB Artemis"	5
+	"GTB Artemis D.H."	5
+	"GTB Medusa"	5
+	"GTB Ursa"	5
+	"GTB Zeus"	5
+	"GTB Boanerges"	5
+	"GVF Ptah"	5
+)
+
++Weaponry Pool: (
+	"Subach HL-7"	17
+	"Subach HL-D"	16
+	"Mekhu HL-7"	16
+	"Mekhu HL-7D"	16
+	"Akheton SDG"	16
+	"Morning Star"	16
+	"MorningStar D"	16
+	"Prometheus R"	17
+	"Prometheus S"	16
+	"Prometheus D"	16
+	"Maxim"	16
+	"Maxim D"	16
+	"UD-8 Kayser"	16
+	"UD-D Kayser"	16
+	"Circe"	16
+	"Lamprey"	16
+	"Rockeye"	500
+	"Rockeye D"	500
+	"Tempest"	500
+	"Tempest D"	500
+	"Hornet"	540
+	"Hornet D"	500
+	"Hornet#Weak"	500
+	"Tornado"	500
+	"Tornado D"	500
+	"Harpoon"	516
+	"Harpoon D"	500
+	"Harpoon#Weak"	500
+	"Trebuchet"	500
+	"TAG-A"	500
+	"TAG-B"	500
+	"TAG-C"	500
+	"Piranha"	500
+	"Stiletto II"	500
+	"Infyrno"	500
+	"Infyrno D"	500
+	"Cyclops"	500
+	"Cyclops#short"	500
+	"Helios"	500
+	"EMP Adv."	500
+	"Rockeye#Shivan"	500
+	"Rockeye D#Shivan"	500
+	"Tempest#Shivan"	500
+	"Tempest D#Shivan"	500
+	"Hornet#Shivan"	500
+	"Hornet D#Shivan"	500
+	"Hornet#Weak#Shivan"	500
+	"Tornado#Shivan"	500
+	"Tornado D#Shivan"	500
+	"Harpoon#Shivan"	500
+	"Harpoon D#Shivan"	500
+	"Harpoon#Weak#Shivan"	500
+	"Trebuchet#Shivan"	500
+	"Piranha#Shivan"	500
+	"Shivan Disruptor"	500
+	"Shivan Area Bomb"	500
+	"Shivan Bomb"	500
+	"Shivan Bomb#Short"	500
+	"Shivan Megabomb"	500
+	"EMP Adv.#Shivan"	500
+	"Cloaking Device"	500
+)
+
+#Objects		;! 3 total
+
+$Name: Alpha 1		;! Object #0
+$Class: GTF Perseus
+$Team: Friendly
+$Location: -288.375519, 0.000000, -1247.182861
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" "player-start" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Score: 8
+
+$Name: GTD Orion 1		;! Object #1
+$Class: GTD Orion
+$Team: Friendly
+$Location: -994.178467, 0.000000, -1064.042969
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Initial Shields: 100
++Subsystem: Pilot
++Subsystem: turret01a
++Subsystem: turret02a
++Subsystem: turret03a
++Subsystem: turret04a
++Subsystem: turret05a
++Subsystem: turret06
++Subsystem: turret07
++Subsystem: turret08
++Subsystem: turret09
++Subsystem: turret10
++Subsystem: turret11
++Subsystem: turret12
++Subsystem: turret13
++Subsystem: turret14
++Subsystem: turret15
++Subsystem: turret16
+$Arrival Location: Hyperspace
+$Arrival Cue: ( true ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" "no-shields" )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 0		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 1000
+
+$Name: Waypoint Marker		;! Object #2
+$Class: GTNB Pharos
+$Team: Friendly
+$Location: -282.697845, -0.000122, -1425.933960
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Shields: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( true ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( is-event-true-delay 
+   "Waypoints Done" 
+   0 
+)
+$Determination: 10
++Flags: ( "cargo-known" "no-shields" "escort" "no-departure-warp" )
++Flags2: ( "no_collide" )
++Respawn priority: 0
++Escort priority: 100
++Group: 0
++Use Table Score:
++Score: 0
+
+#Wings		;! 1 total
+
+$Name: Alpha
+$Waves: 1
+$Wave Threshold: 0
+$Special Ship: 0		;! Alpha 1
+
+$Arrival Location: Hyperspace
+$Arrival Cue: ( true ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Ships: (		;! 1 total
+	"Alpha 1"
+)
++Hotkey: 0
++Flags: ( )
+
+#Events		;! 2 total
+
+$Formula: ( when 
+   ( has-time-elapsed 1 ) 
+   ( lua-follow-waypoint 
+      "Waypoints" 
+      "Waypoint Marker" 
+   )
+   ( send-message 
+      "#Command" 
+      "High" 
+      "Fly the waypoints!" 
+   )
+)
++Name: Start
++Repeat Count: 1
++Interval: 1
+
+$Formula: ( when 
+   ( = ( lua-get-waypoint-status ) 2 ) 
+   ( send-message 
+      "#Command" 
+      "High" 
+      "Done waypoints" 
+   )
+   ( lua-end-follow-waypoint ) 
+)
++Name: Waypoints Done
++Repeat Count: 1
++Interval: 1
+
+#Goals		;! 0 total
+
+
+#Waypoints		;! 1 lists total
+
+$Name: Waypoints
+$List: (		;! 7 points in list
+	( -467.233398, 0.000000, -725.357666 )
+	( -649.242554, 0.000000, 256.985596 )
+	( -1563.151978, 0.000000, 534.131348 )
+	( -1508.492676, 0.000244, -2309.681152 )
+	( -582.705200, 0.000488, -2334.811035 )
+	( -393.058594, 0.000244, -1788.716309 )
+	( -440.550751, 0.000000, -986.253662 )
+)
+
+#Messages		;! 2 total
+
+
+$Name: Fly the waypoints!
+$Team: -1
+$MessageNew:  XSTR("Hey, Alpha 1. Why don't you fly these waypoints!", -1)
+$end_multi_text
++AVI Name: Head-CM3
+
+$Name: Done waypoints
+$Team: -1
+$MessageNew:  XSTR("Looks like you're all done. Thanks!", -1)
+$end_multi_text
++AVI Name: Head-CM3
+
+#Reinforcements		;! 0 total
+
+
+#Background bitmaps		;! 44 total
+
+$Num stars: 500
+$Ambient light level: 7895160
+
+$Bitmap List:
+$Sun: SunDeneb
++Angles: 0.872665 0.000000 5.393067
++Scale: 4.000000
+$Starbitmap: NebulB1-Main
++Angles: 0.872665 0.785398 1.396263
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB1-Main
++Angles: 0.872664 0.785398 1.396262
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB2-Main
++Angles: 0.000000 0.000000 5.585049
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB3-Main
++Angles: 0.000000 5.585049 3.490656
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB6-Whisp
++Angles: 6.108648 0.000000 4.712385
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB5-Whisp
++Angles: 6.108648 0.000000 5.235984
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB8-Whisp
++Angles: 0.000000 0.000000 4.363320
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB11-Whisp
++Angles: 0.000000 0.785398 3.839721
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB6-Whisp
++Angles: 0.174533 2.792525 4.101521
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB14-Whisp
++Angles: 5.410516 4.712385 4.886918
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB12-Whisp
++Angles: 5.585049 1.570795 4.886918
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB2-Main
++Angles: 0.000000 3.490656 4.537852
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB13-Whisp
++Angles: 0.000000 0.000000 5.934115
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB6-Whisp
++Angles: 0.174533 0.000000 5.497783
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB4-Whisp
++Angles: 6.021381 2.967057 5.585049
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB8-Whisp
++Angles: 5.934115 2.094393 5.410516
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB5-Whisp
++Angles: 6.108648 0.349066 3.665189
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB6-Whisp
++Angles: 5.585049 3.141590 5.323250
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB7-Whisp
++Angles: 0.000000 5.235984 3.316123
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB14-Whisp
++Angles: 0.174533 3.141590 3.316123
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB13-Whisp
++Angles: 0.261799 0.000000 3.665189
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB7-Whisp
++Angles: 5.061451 1.919861 1.745328
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB11-Whisp
++Angles: 4.886918 1.047197 2.094393
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB10-Whisp
++Angles: 0.349066 5.934115 1.745328
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB13-Whisp
++Angles: 4.363320 0.349066 2.094393
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB8-Whisp
++Angles: 0.523598 1.570795 1.221730
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB12-Whisp
++Angles: 1.047197 4.886918 1.658062
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB4-Whisp
++Angles: 5.759582 0.872664 1.308996
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB6-Whisp
++Angles: 1.308996 5.497783 1.745328
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB5-Whisp
++Angles: 4.886918 0.000000 2.443459
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB13-Whisp
++Angles: 5.235984 3.141590 1.047197
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB2-Main
++Angles: 1.570795 0.000000 1.919861
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB6-Whisp
++Angles: 1.221730 5.497783 2.007127
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB9-Whisp
++Angles: 1.745328 0.000000 2.443459
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB11-Whisp
++Angles: 5.061451 0.000000 2.792525
++ScaleX: 2.000000
++ScaleY: 2.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB14-Whisp
++Angles: 0.698131 0.523598 2.094393
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB8-Whisp
++Angles: 0.698131 2.617992 2.181660
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB12-Whisp
++Angles: 0.785398 4.712385 2.356193
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB6-Whisp
++Angles: 6.108648 4.014254 0.959930
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB12-Whisp
++Angles: 5.235984 0.523598 0.610865
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB14-Whisp
++Angles: 4.363320 3.141590 3.141590
++ScaleX: 2.000000
++ScaleY: 2.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB6-Whisp
++Angles: 4.363320 1.396262 5.759582
++ScaleX: 2.000000
++ScaleY: 2.000000
++DivX: 1
++DivY: 1
+$Starbitmap: NebulB12-Whisp
++Angles: 4.188787 3.141590 5.759582
++ScaleX: 2.000000
++ScaleY: 2.000000
++DivX: 1
++DivY: 1
+$Starbitmap: PlanetH
++Angles: 0.000000 4.485493 4.014254
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 1
++DivY: 1
+
+#Asteroid Fields
+
+#Music
+
+$Event Music: 1: Genesis
+$Briefing Music: None
+
+#End
+

@@ -1,0 +1,103 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+WaypointAssist = {}
+
+function WaypointAssist:Init()
+
+	self.Enabled = nil
+	self.RouteGiven = {}
+	self.Progress = 0
+	self.MaxProgress = -1
+	self.Pointer = nil
+	self.Status = 0 --0 = not active, 1 = active, 2 = finished waypoint
+	self.BeepSound = ad.getSoundentry(57)
+
+end
+
+function WaypointAssist:AddRoute(waypointpath, pointer, offset)
+
+	self:Init()
+	self.Enabled = true
+
+	if waypointpath and waypointpath:isValid() then
+		self.RouteGiven = waypointpath
+		self.Progress = offset or 0
+		self.MaxProgress = #self.RouteGiven
+		self.Status = 1
+		
+		if pointer and pointer:isValid() then
+			self.Pointer = pointer
+			self.Pointer.Position = self.RouteGiven[self.Progress+1].Position
+		end
+		
+	end
+
+end
+
+function WaypointAssist:PointAt(a,b)
+
+	local pointAt = a - b
+	
+	return pointAt:getOrientation()
+
+end
+
+function WaypointAssist:Watch()
+
+	if self.Status == 1 and self.RouteGiven[self.Progress+1] then
+	
+		local player = hv.Player
+		local nextWaypoint = self.RouteGiven[self.Progress+1]
+		
+		if player.Position:getDistance(nextWaypoint.Position) < 50 then
+			if (self.Progress + 1) >= self.MaxProgress then
+				self.Progress = self.Progress + 1
+				self.Status = 2
+				ad.playSound(self.BeepSound)
+			else
+				self.Progress = self.Progress + 1
+				ad.playSound(self.BeepSound)
+				if self.Pointer then
+					self.Pointer.Position = self.RouteGiven[self.Progress+1].Position
+					if self.RouteGiven[self.Progress+2]:isValid() then
+						self.Pointer.Orientation = self:PointAt(self.Pointer.Position, self.RouteGiven[self.Progress+2].Position)
+					else
+						self.Pointer.Orientation = self:PointAt(self.Pointer.Position, player.Position)
+					end
+				end
+			end
+			
+		end
+	
+	end
+
+end
+
+mn.LuaSEXPs["lua-follow-waypoint"].Action = function(waypointpath, pointer, offset) WaypointAssist:AddRoute(waypointpath, pointer, offset) end
+mn.LuaSEXPs["lua-end-follow-waypoint"].Action = function() WaypointAssist.Enabled = nil end
+mn.LuaSEXPs["lua-get-waypoint-progress"].Action = function() return WaypointAssist.Progress end
+mn.LuaSEXPs["lua-get-waypoint-status"].Action = function() return WaypointAssist.Status end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+
+$On Gameplay Start:
+[
+
+	WaypointAssist:Init()
+
+]
+
+$On Frame:
+[
+	if WaypointAssist.Enabled then
+		WaypointAssist:Watch()
+	end
+]
+
+#End
