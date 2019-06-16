@@ -343,9 +343,9 @@ end
 		local entry = data[1]
 		
 		if onoff then
-			CloakSys:Force(entry.Name, true)
+			CloakSys:Force(entry.Name, 1)
 		else
-			CloakSys:Force(entry.Name, false)
+			CloakSys:Force(entry.Name, -1)
 		end
 	end
 	

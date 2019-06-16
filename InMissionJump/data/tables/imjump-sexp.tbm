@@ -11,7 +11,7 @@ $Parameter:
 	+Description: Waypoint destination. The first point in the waypoint list will be where the ship appears, while the second will be what the ship points to. If there is no second point, orientation will be 0,0,0.
 	+Type: waypointpath
 $Parameter:
-	+Description: Subspace transit time in seconds
+	+Description: Subspace transit time in seconds. Non player ships have a minimum transit time of 2 seconds. Player ships do not have a minimum time.
 	+Type: number
 $Repeat
 $Parameter:

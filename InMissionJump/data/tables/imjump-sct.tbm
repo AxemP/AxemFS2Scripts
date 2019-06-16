@@ -47,7 +47,7 @@ function IMJump:To(ship, dest, transittime)
 		
 		if not transittime then transittime = 3 end
 
-		if transittime and (transittime < 0) then transittime = 0 end
+		if (ship ~= hv.Player) and (transittime < 2) then transittime = 2 end
 		
 		t.AltTime = {nil, nil, nil, nil, transittime, nil, nil}
 		t.Timer = mn.getMissionTime() + self.SeqTimer[1]
@@ -129,7 +129,7 @@ function IMJump:Stage1() --Rev warmup
 	mn.runSEXP("( lock-primary-weapon !" .. name .. "!)")
 	mn.runSEXP("( lock-secondary-weapon !" .. name .. "!)")
 	mn.runSEXP("( lock-afterburner !" .. name .. "!)")
-	mn.runSEXP("( ship-lat-maneuver !" .. name .. "! 60000 0 0 " .. IMJump.Speed * 100 .. "( true ) )")
+	mn.runSEXP("( ship-lat-maneuver !" .. name .. "! 7000 0 0 " .. IMJump.Speed * 100 .. "( true ) )")
 
 end
 
@@ -137,11 +137,13 @@ function IMJump:Stage2() --Open warp flash
 
 	local me = mn.getObjectFromSignature(self.Sig)
 	local name = me.Name
-	local distance = me.Physics.VelocityMax.z * IMJump.Speed * (IMJump.SeqTimer[2] + 0.5)
+	local distance = me.Physics.VelocityMax.z * IMJump.Speed * (IMJump.SeqTimer[2] + 0.05)
 	local lvector = ba.createVector(0,0,distance)
 	local wvector = me.Position + me.Orientation:unrotateVector(lvector)
 	
-	mn.runSEXP("( warp-effect " .. wvector.x .. " " .. wvector.y .. " " .. wvector.z .. " " .. me.Position.x .. " " .. me.Position.y .. " " .. me.Position.z .. " " .. me.Class.Model.Radius * 2 .. " 10 45 46 0 0 )")
+	if me.Class.Model.Radius < 250 then --no jump vortex ships larger than fighters and bombers
+		mn.runSEXP("( warp-effect " .. wvector.x .. " " .. wvector.y .. " " .. wvector.z .. " " .. me.Position.x .. " " .. me.Position.y .. " " .. me.Position.z .. " " .. me.Class.Model.Radius * 2 .. " 10 45 46 0 0 )")
+	end
 
 end
 
@@ -243,7 +245,7 @@ function IMJump:Stage7() --Go to destination
 	mn.runSEXP("( unlock-primary-weapon !" .. name .. "!)")
 	mn.runSEXP("( unlock-secondary-weapon !" .. name .. "!)")
 	mn.runSEXP("( unlock-afterburner !" .. name .. "!)")
-
+	mn.runSEXP("( clear-goals !" .. name .. "! )")
 
 end
 
