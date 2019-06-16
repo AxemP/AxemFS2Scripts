@@ -1,0 +1,100 @@
+#Lua SEXPs
+
+$Operator: lua-scroll-write
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 12
+$Return Type: Nothing
+$Description: Writes a subtitle-esque string of text but one character at a time. Use this to spruce up your cutscenes!
+$Parameter:
+	+Description: Text to write
+	+Type: string
+$Parameter:
+	+Description: X coordinate to begin drawing at (based on percent of the screen width, 0-100). Default is 50
+	+Type: number
+$Parameter:
+	+Description: Y coordinate to begin drawing at (based on percent of the screen height, 0-100). Default is 50
+	+Type: number
+$Parameter:
+	+Description: Text speed, the number of milliseconds between each character. Default is 30.
+	+Type: number
+$Parameter:
+	+Description: How long the text will appear on screen in milliseconds. Default is 5000 ms.
+	+Type: number
+$Parameter:
+	+Description: Time it takes to fade everything out in milliseconds. Default is 0 ms.
+	+Type: number
+$Parameter:
+	+Description: Should the text drawing sound be played when drawing a new line? Defaults to true.
+	+Type: boolean	
+$Parameter:
+	+Description: Font to use for the text. Default is Font '1'.
+	+Type: string
+$Parameter:
+	+Description: Should text be centered? Defaults to true.
+	+Type: boolean
+$Parameter:
+	+Description: Text Color - Red (0-255) Defaults to 255.
+	+Type: number
+$Parameter:
+	+Description: Text Color - Green (0-255) Defaults to 255.
+	+Type: number
+$Parameter:
+	+Description: Text Color - Blue (0-255) Defaults to 255.
+	+Type: number
+
+$Operator: lua-scroll-write-file
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 12
+$Maximum Arguments: 12
+$Return Type: Nothing
+$Description: Writes a subtitle-esque wall of text from a file but one character at a time. Use this to really spruce up your cutscenes! File must be a '.txt' in the fiction directory. Use '\n' for line breaks in the text file.
+$Parameter:
+	+Description: File to write (must be present in the ficion directory!)
+	+Type: string
+$Parameter:
+	+Description: X coordinate to begin drawing at (based on percent of the screen width, 0-100). Default is 50
+	+Type: number
+$Parameter:
+	+Description: Y coordinate to begin drawing at (based on percent of the screen height, 0-100). Default is 50
+	+Type: number
+$Parameter:
+	+Description: Text speed, the number of milliseconds between each character. Default is 30.
+	+Type: number
+$Parameter:
+	+Description: How long the text will appear on screen in milliseconds. Default is 5000 ms.
+	+Type: number
+$Parameter:
+	+Description: Time it takes to fade everything out in milliseconds. Default is 0 ms.
+	+Type: number
+$Parameter:
+	+Description: Should the text drawing sound be played when drawing a new line? Defaults to true.
+	+Type: boolean	
+$Parameter:
+	+Description: Font to use for the text. Default is Font '1'.
+	+Type: string
+$Parameter:
+	+Description: Should text be centered? Defaults to true.
+	+Type: boolean
+$Parameter:
+	+Description: Text Color - Red (0-255) Defaults to 255.
+	+Type: number
+$Parameter:
+	+Description: Text Color - Green (0-255) Defaults to 255.
+	+Type: number
+$Parameter:
+	+Description: Text Color - Blue (0-255) Defaults to 255.
+	+Type: number
+
+$Operator: lua-scroll-write-clear
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Clears all lines!
+
+
+#End
