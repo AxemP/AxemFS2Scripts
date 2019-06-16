@@ -47,7 +47,7 @@ $Parameter:
 $Operator: lua-scroll-write-file
 $Category: Change
 $Subcategory: Scripted
-$Minimum Arguments: 12
+$Minimum Arguments: 1
 $Maximum Arguments: 12
 $Return Type: Nothing
 $Description: Writes a subtitle-esque wall of text from a file but one character at a time. Use this to really spruce up your cutscenes! File must be a '.txt' in the fiction directory. Use '\n' for line breaks in the text file.

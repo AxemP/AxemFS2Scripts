@@ -21,9 +21,17 @@ end
 
 function Scroll:WriteFromFile(file, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b)
 
+	local pos = file:find(".txt", -4, true)
+	
+	if not pos then
+		file = file .. ".txt"
+	end
+
 	if cf.fileExists(file, "data/fiction", true) then
-		local data = cf.openFile(file,"rb","data/fiction"):read("*a")
+		local f = cf.openFile(file,"rb","data/fiction")
+		local data = f:read("*a")
 		self:Write(data, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b)
+		f:close()
 	end
 
 end
