@@ -19,12 +19,15 @@ $Operator: lua-set-player-target
 $Category: Change
 $Subcategory: Scripted
 $Minimum Arguments: 1
-$Maximum Arguments: 1
+$Maximum Arguments: 2
 $Return Type: Nothing
-$Description: Forces the player to target specified ship.
+$Description: Forces the player to target specified ship, and optionally, a subsystem on that target.
 $Parameter:
 	+Description: Ship player will target
 	+Type: Ship
+$Parameter:
+	+Description: Subsystem on the ship that player will target. (Note this needs to be a string since there is no subsystem parameter for lua sexps yet!) 
+	+Type: String
 
 $Operator: lua-get-player-target
 $Category: Change

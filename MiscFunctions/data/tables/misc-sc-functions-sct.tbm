@@ -25,7 +25,7 @@ end
 mn.LuaSEXPs["lua-proxy-kill"].Action = ProxyKill
 
 
-function PlayerTarget(ship)
+function PlayerTarget(ship, subsystem)
 
 	if type(ship) == "string" then
 		ship = mn.Ships[ship]
@@ -34,6 +34,12 @@ function PlayerTarget(ship)
 	if ship:isValid() and hv.Player:isValid() and ship ~= hv.Player and hv.Player.HitpointsLeft > 0 then
 		
 		hv.Player.Target = ship
+		
+		if subsystem and ship[subsystem] and ship[subsystem]:isValid() then
+		
+			hv.Player.TargetSubsystem = ship[subsystem]
+		
+		end
 		
 	end
 
