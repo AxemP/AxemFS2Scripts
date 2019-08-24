@@ -283,11 +283,39 @@ function MarkBox:DrawWingBracket(data)
 
 end
 
+function MarkBox:ClearShipWing(isShip, ...)
+
+--isShip = true if ship, false if wings
+
+	local index
+	for i, data in ipairs(arg) do
+		local thisData = data[1]
+		local t = {}
+		
+		if isShip then
+			t.Type = 2
+			t.Key = thisData:getSignature()
+		else
+			t.Type = 3
+			t.Key = thisData
+		end
+				
+		index = self:DoesEntryExist(t)
+		if index then
+			table.remove(self.List, index)
+		end
+	end
+
+end
+
 --[[ LUA SEXP DEFS ]] --
 
 mn.LuaSEXPs["lua-mark-subsystem"].Action = function(ship, text, ...) MarkBox:AddSubsys(ship, text, ...) end
 mn.LuaSEXPs["lua-mark-ship"].Action = function(text, ...) MarkBox:AddShip(text, ...) end
 mn.LuaSEXPs["lua-mark-wing"].Action = function(text, ...) MarkBox:AddWing(text, ...) end
+mn.LuaSEXPs["lua-mark-clear-all"].Action = function(...) MarkBox:ClearList() end
+mn.LuaSEXPs["lua-mark-clear-ship"].Action = function(...) MarkBox:ClearShipWing(true, ...) end
+mn.LuaSEXPs["lua-mark-clear-wing"].Action = function(...) MarkBox:ClearShipWing(false, ...) end
 
 ]
 

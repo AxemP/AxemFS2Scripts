@@ -48,4 +48,36 @@ $Parameter:
 	+Description: Subsystem to highlight
 	+Type: string
 
+$Operator: lua-mark-clear-all
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Clears *everything* from the mark box list (subsystems, ships, wings)
+
+$Operator: lua-mark-clear-ship
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Clears ships from the mark box list. This will not remove any marked subsystems, even if you are specifying the ship with marked subsystems.
+$Repeat
+$Parameter:
+	+Description: Ship to remove from list
+	+Type: Ship
+	
+$Operator: lua-mark-clear-wing
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Clears wing from the mark box list.
+$Repeat
+$Parameter:
+	+Description: Wing to remove from list
+	+Type: string
+
 #End

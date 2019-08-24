@@ -4,7 +4,7 @@ $Version: 0.10
 $Name:  XSTR("Mark Box Example", -1)
 $Author: Axem
 $Created: 01/01/18 at 13:20:27
-$Modified: 07/15/18 at 08:03:38
+$Modified: 08/24/19 at 17:54:19
 $Notes:
 This is a FRED2_OPEN created mission.
 $End Notes:
@@ -23,9 +23,9 @@ $end_multi_text
 +Hull Repair Ceiling: 0.000000
 +Subsystem Repair Ceiling: 100.000000
 
-+Viewer pos: 0.000000, 1451.917480, -2514.793701
++Viewer pos: -1213.471313, 3.683666, -749.961731
 +Viewer orient:
-	0.923593, 0.000000, -0.383375,
+	0.923593, 0.000001, -0.383375,
 	0.017518, 0.998955, 0.042205,
 	0.382974, -0.045696, 0.922628
 
@@ -129,7 +129,7 @@ $Ship Choices: (
 	"EMP Adv.#Shivan"	500
 )
 
-#Objects		;! 5 total
+#Objects		;! 7 total
 
 $Name: Alpha 1		;! Object #0
 $Class: GTF Erinyes
@@ -283,7 +283,56 @@ $Determination: 10
 +Use Table Score:
 +Score: 10
 
-#Wings		;! 2 total
+$Name: Myr 1		;! Object #5
+$Class: GTF Myrmidon
+$Team: Friendly
+$Location: -1182.598755, 0.000000, -675.586426
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 10
+
+$Name: Myr 2		;! Object #6
+$Class: GTF Myrmidon
+$Team: Friendly
+$Location: -1210.394897, -0.000001, -718.591858
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Use Table Score:
++Score: 10
+
+#Wings		;! 3 total
 
 $Name: Alpha
 $Waves: 1
@@ -317,7 +366,22 @@ $Ships: (		;! 3 total
 +Hotkey: 1
 +Flags: ( )
 
-#Events		;! 2 total
+$Name: Myr
+$Waves: 1
+$Wave Threshold: 0
+$Special Ship: 0		;! Myr 1
+
+$Arrival Location: Hyperspace
+$Arrival Cue: ( true ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Ships: (		;! 2 total
+	"Myr 1"
+	"Myr 2"
+)
++Flags: ( )
+
+#Events		;! 3 total
 
 $Formula: ( when 
    ( has-time-elapsed 1 ) 
@@ -328,6 +392,11 @@ $Formula: ( when
       "turret02" 
    )
    ( lua-mark-wing "Experimental" "Beta" ) 
+   ( lua-mark-ship 
+      "Midon" 
+      "Myr 1" 
+      "Myr 2" 
+   )
 )
 +Name: Mark some boxes
 +Repeat Count: 1
@@ -341,6 +410,16 @@ $Formula: ( when
 +Repeat Count: 1
 +Interval: 1
 +Chained: 9
+
+$Formula: ( when 
+   ( true ) 
+   ( lua-mark-clear-wing "Beta" ) 
+   ( lua-mark-clear-ship "Myr 1" "Myr 2" ) 
+)
++Name: Remove that Box
++Repeat Count: 1
++Interval: 1
++Chained: 10
 
 #Goals		;! 0 total
 
