@@ -1,0 +1,104 @@
+#Conditional Hooks
+$Application: FS2_Open
+ 
+$On Game Init:
+[
+ 
+PMFF = {}
+ 
+function PMFF:Init()
+ 
+        self.Handle = nil
+        self.Volume = nil
+        self.Fade = false
+        self.File = nil
+        self.Playing = false
+ 
+end
+ 
+function PMFF:Play(file, fade, volume)
+       
+        self.File = file
+        self.Volume = volume or 100
+               
+                self.Volume = self.Volume / 100
+       
+        if fade == 1 or fade == true then
+                self.Fade = true
+        else
+                self.Fade = false
+        end
+       
+        if not file and self.Handle then
+                ad.stopMusic(self.Handle, self.Fade)
+                self.Playing = false
+        elseif file and self.Handle then
+                ad.stopMusic(self.Handle, self.Fade)
+                self.Handle = ad.playMusic(file, self.Volume)
+        else
+                self.Handle = ad.playMusic(file, self.Volume)
+                self.Playing = true
+        end
+ 
+end
+ 
+function PMFF:Stop(fade)
+       
+        if self.Handle then
+                ad.stopMusic(self.Handle, fade or self.Fade)
+                self.Handle = nil
+                self.Playing = false
+        end
+ 
+end
+ 
+function PMFF:Pause()
+ 
+        if self.Handle then
+                ad.pauseMusic(self.Handle, self.Playing)
+ 
+                if self.Playing then
+                        self.Playing = false
+                else
+                        self.Playing = true
+                end
+               
+        end
+ 
+end
+ 
+function pm( MFile, fade, Vol)
+ 
+        PMFF:Play(MFile, fade, Vol)
+       
+end
+ 
+function sm()
+ 
+        PMFF:Stop()
+ 
+end
+ 
+function pzm()
+ 
+        PMFF:Pause()
+ 
+end
+
+mn.LuaSEXPs["lua-play-music-from-file"].Action = function(file, fade, vol) pm(file, fade, vol) end
+mn.LuaSEXPs["lua-stop-music-from-file"].Action = sm
+mn.LuaSEXPs["lua-pause-music-from-file"].Action = pzm
+ 
+]
+ 
+$On Gameplay Start:
+[
+        PMFF:Init()
+]
+ 
+$On Mission End:
+[
+        PMFF:Stop()
+]
+ 
+#End

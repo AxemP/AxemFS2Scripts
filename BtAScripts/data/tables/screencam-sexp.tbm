@@ -1,0 +1,15 @@
+#Lua SEXPs
+
+$Operator: lua-screencam-enable
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Sets the enable for the screen cam script. True = turns on, false = turns off
+$Parameter:
+	+Description: Screen Cam Script Enable
+	+Type: Boolean
+
+
+#End

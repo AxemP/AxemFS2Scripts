@@ -1,0 +1,54 @@
+#Lua SEXPs
+
+$Operator: lua-superbracket-add
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 4
+$Return Type: Nothing
+$Description: Adds ship to the superbracket script system with optional color
+$Parameter:
+	+Description: Ship to add
+	+Type: Ship
+$Parameter:
+	+Description: Custom Color - Red (0-255)
+	+Type: Number
+$Parameter:
+	+Description: Custom Color - Green (0-255)
+	+Type: Number
+$Parameter:
+	+Description: Custom Color - Blue (0-255)
+	+Type: Number
+
+$Operator: lua-superbracket-remove
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Removes ship from the superbracket script system
+$Parameter:
+	+Description: Ship to remove
+	+Type: Ship
+	
+$Operator: lua-superbracket-change-color
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 4
+$Return Type: Nothing
+$Description: Changes ship in the superbracket script system to have a different bracket color
+$Parameter:
+	+Description: Ship to change
+	+Type: Ship
+$Parameter:
+	+Description: Custom Color - Red (0-255)
+	+Type: Number
+$Parameter:
+	+Description: Custom Color - Green (0-255)
+	+Type: Number
+$Parameter:
+	+Description: Custom Color - Blue (0-255)
+	+Type: Number
+
+#End

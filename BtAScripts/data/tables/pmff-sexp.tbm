@@ -1,0 +1,37 @@
+#Lua SEXPs
+
+$Operator: lua-play-music-from-file
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 3
+$Return Type: Nothing
+$Description: Begins playing music using the 'play-music-from-file' script.
+$Parameter:
+	+Description: Music Filename
+	+Type: string
+$Parameter:
+	+Description: Should music fade? Defaults to true.
+	+Type: boolean
+$Parameter:
+	+Description: Volume level (0-100). Defaults to 100.
+	+Type: number
+	
+$Operator: lua-stop-music-from-file
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Stops playing music using the 'play-music-from-file' script.
+
+$Operator: lua-pause-music-from-file
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Pauses playing music using the 'play-music-from-file' script.
+
+
+#End

@@ -1,0 +1,168 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+--[[function string.filterInvisible(str)
+    local index = str:find("#", 0, true)
+
+    if (index ~= nil) then
+        str = str:sub(1, index - 1)
+    end
+
+    return str
+end]]-- Uncomment if not used with the escort bracket script
+
+SuperBrackets = {}
+
+function SuperBrackets:Init()
+
+	self.Enabled = false
+	self.Ships = {}
+	self.Padding = 7
+	self.LineWidth = 5
+
+end
+
+function SuperBrackets:Add(ship,r,g,b)
+
+	if not self.Enabled then
+		self.Enabled = true
+	end
+
+	if not (ship and mn.Ships[ship]:isValid()) then
+		return
+	end
+	
+	local t = {}
+	local thisShip = mn.Ships[ship]
+	
+	t.Sig = thisShip:getSignature()
+	
+	if not (r and g and b) then
+		r,g,b = thisShip.Team:getColor()
+	end
+	
+	t.Color = {r,g,b}
+	
+	self.Ships[#self.Ships+1] = t
+
+end
+
+function SuperBrackets:GetIndexFromName(name)
+
+	for i=1, #self.Ships do
+		local maybeShip = mn.getObjectFromSignature(self.Ships[i].Sig)
+		if name == maybeShip.Name then
+			return i
+		end
+	end
+	
+	return nil
+
+end
+
+function SuperBrackets:Rem(ship)
+
+	local thisIndex
+
+	if type(ship) == "string" then
+		thisIndex = self:GetIndexFromName(ship)
+	elseif type(ship) == "number" then
+		thisIndex = ship
+	else
+		return nil
+	end
+	
+	if thisIndex then
+		table.remove(self.Ships,thisIndex)
+	end
+
+end
+
+function SuperBrackets:Prune()
+
+	for i=1, #self.Ships do
+		local thisShip = mn.getObjectFromSignature(self.Ships[i].Sig)
+		
+		if not thisShip:isValid() then
+			self:Rem(i)
+		end	
+	end
+
+end
+
+function SuperBrackets:Draw()
+
+	self:Prune()
+
+	for i = 1, #self.Ships do
+		local thisEntry = self.Ships[i]
+		local thisShip = mn.getObjectFromSignature(thisEntry.Sig)
+		
+		gr.setColor(thisEntry.Color[1], thisEntry.Color[2], thisEntry.Color[3])
+		gr.setLineWidth(self.LineWidth)
+		
+		local l,t,r,b = gr.drawTargetingBrackets(thisShip, true, self.Padding)
+		
+		local dist = thisShip.Position:getDistance(hv.Player.Position)
+		local distString = string.format("%.0fm", dist)
+		
+		if l and t and r and b then
+			gr.drawString(thisShip.Name:filterInvisible(), r + 3, t)
+			gr.drawString(thisShip.Class.Name:filterInvisible())
+
+			gr.drawString(distString, r - gr.getStringWidth(distString), b + 3)
+		end
+		
+	end
+	
+	gr.setLineWidth(1)
+
+end
+
+function SuperBrackets:ChangeColor(ship,r,g,b)
+
+	if ship and r and g and b then
+
+		local thisEntry = self.Ships[self:GetIndexFromName(ship)]
+		thisEntry.Color = {r,g,b}
+	
+	end
+
+end
+
+mn.LuaSEXPs["lua-superbracket-add"].Action = function(ship,r,g,b) SuperBrackets:Add(ship.Name,r,g,b) end
+mn.LuaSEXPs["lua-superbracket-remove"].Action = function(ship) SuperBrackets:Rem(ship.Name) end
+mn.LuaSEXPs["lua-superbracket-change-color"].Action = function(ship,r,g,b) SuperBrackets:ChangeColor(ship.Name,r,g,b) end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	SuperBrackets:Init()
+]
+
+$On State End:
+[
+
+	SuperBrackets.Enabled = false
+	SuperBrackets.Ships = {}
+
+]
+
+
+$On Frame:
+[
+
+	if SuperBrackets.Enabled then
+		if hu.HUDDrawn and not hu.HUDDisabledExceptMessages then --and (gr.hasViewmode(VM_INTERNAL) or gr.hasViewmode(VM_CHASE)) then
+			SuperBrackets:Draw()
+		end
+	end
+		
+]
+
+#End

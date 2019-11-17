@@ -1,0 +1,108 @@
+#Conditional Hooks
+
+$Application: FS2_Open
+$On Game Init:
+[
+
+ert_active = false
+function string.filterInvisible(str)
+    local index = str:find("#", 0, true)
+
+    if (index ~= nil) then
+        str = str:sub(1, index - 1)
+    end
+
+    return str
+end
+
+function drawReticle(ship)
+	local r, g, b = ship.Team:getColor()
+	gr.setColor(255, 255, 255, 75)
+	
+	local l, t, r, b = gr.drawTargetingBrackets(ship, true)
+	
+	if l ~= nil then
+		local dist = ship.Position:getDistance(hv.Player.Position)
+		local distString = string.format("%.0fm", dist)
+		
+		gr.drawString(ship.Name:filterInvisible(), r + 3, t)
+		gr.drawString(ship.Class.Name:filterInvisible())
+
+		local hit_x = r + 3
+		local hit_y = b - gr.CurrentFont.Height
+		local percentage = ship.HitpointsLeft / ship.HitpointsMax
+
+		local hitpointsString
+
+		if (percentage <= 0) then
+			percentage = 0
+		end
+
+		hitpointsString = string.format("%.1f%%", percentage * 100)
+
+		if (t + 2 * gr.CurrentFont.Height > b - gr.CurrentFont.Height) then
+			gr.drawString(hitpointsString)
+		else
+			gr.drawString(hitpointsString, hit_x, hit_y)
+		end
+
+		gr.drawString(distString, r - gr.getStringWidth(distString), b + 3)
+	end
+end
+
+function ert_act()
+	ert_active = true
+end
+
+function ert_inact()
+	ert_active = false
+end
+
+mn.LuaSEXPs["lua-escort-recticle-enable"].Action = function(enable)
+
+	if enable then
+		ert_active = true
+	else
+		ert_active = false
+	end
+
+end
+
+]
+
+$On Mission Start:
+[
+ert_active = false
+]
+
+$On HUD Draw:
+[
+if ert_active then
+	if ert_missiontime == nil then
+	   ert_missiontime = mn.getMissionTime()
+	   ert_oldmissiontime = missiontime
+	end
+
+	if ert_missiontime ~= nil then
+		if hu.HUDDrawn then
+			ert_missiontime = mn.getMissionTime()
+			
+			if ert_oldmissiontime ~= ert_missiontime then
+				if mn.EscortShips ~= nil then
+					local NumberEscorted = #mn.EscortShips
+					for i= 1,NumberEscorted do
+						local escortedship = mn.EscortShips[i]
+						if escortedship.Position:getScreenCoords() ~= false and escortedship ~= hv.Player.Target and escortedship.Team.Name == "Friendly" then
+							drawReticle(escortedship)
+						end
+					end
+				end
+			end
+		end
+		
+		ert_oldmissiontime = ert_missiontime
+	end
+end
+]
+
+#End

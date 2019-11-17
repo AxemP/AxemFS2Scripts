@@ -1,0 +1,15 @@
+#Lua SEXPs
+
+$Operator: lua-escort-recticle-enable
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Sets the enable for the escort reticle script. True = turns on, false = turns off
+$Parameter:
+	+Description: Escort Recticle Enable
+	+Type: Boolean
+
+
+#End

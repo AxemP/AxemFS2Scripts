@@ -1,0 +1,134 @@
+#Conditional Hooks
+$Application: FS2_Open
+$On Game Init:
+[
+function screencam_change()	
+		local player = hv.Player
+		if screencam_active then
+			local Fvec = player.Orientation:getFvec()
+			if not screencam_switch then
+				screencam_shipnum = screencam_shipnum + 1
+				screencam_switch = true
+			end
+			local cam_shipname = "ScreenCam"..tostring(screencam_shipnum)
+			local cam = mn.Ships[cam_shipname]
+			if cam:isValid() then
+				cpsp(player.Name,1,cam_shipname)
+				cam.Position = cam.Position + Fvec * 50
+				mn.runSEXP("(change-ship-class !ScreenCam#Fast! !"..player.Name.."!)")
+				mn.runSEXP("(ship-invisible !"..cam_shipname.."!)")
+				mn.runSEXP("(friendly-stealth-invisible !"..cam_shipname.."!)")
+				mn.runSEXP("(ship-stealthy !"..cam_shipname.."!)")
+				mn.runSEXP("(ship-invulnerable !"..cam_shipname.."!)")
+				mn.runSEXP("(ship-invulnerable !"..player.Name.."!)")
+				mn.runSEXP("(clear-subtitles)")
+				mn.runSEXP("(ignore-key !-1! !C! !Alt-J!)")
+				PMFF:Pause()
+			else
+				cam = mn.createShip(cam_shipname,player.Class,player.Orientation,player.Position)
+				player.Position = player.Position - Fvec * 50
+				screencam_throttle = player.Physics.ForwardThrust * 100
+				mn.runSEXP("(set-time-compression !0.01!)")
+				screencam_paused = true
+				mn.runSEXP("(set-player-throttle-speed !"..player.Name.."! !0!)")
+				screencam_playershipclass = player.Class.Name
+			end
+		else
+			local cam_shipname = "ScreenCam"..tostring(screencam_shipnum)
+			local cam = mn.Ships[cam_shipname]
+			if cam:isValid() and ((player.Physics:getForwardSpeed() < 1 and player.Physics:getForwardSpeed() > -1) or not screencam_setting) then
+				if not screencam_switch then
+					mn.runSEXP("(change-ship-class !"..screencam_playershipclass.."! !"..player.Name.."!)")
+					screencam_switch = true
+				else
+					cpsp(cam_shipname,1,player.Name)
+					player.Position = cam.Position
+					player.Orientation = cam.Orientation
+					mn.runSEXP("(ship-vanish !"..cam_shipname.."!)")
+					mn.runSEXP("(reset-time-compression)")
+					mn.runSEXP("(ignore-key !0! !C! !Alt-J!)")
+					mn.runSEXP("(ship-vulnerable !"..player.Name.."!)")
+					mn.runSEXP("(set-player-throttle-speed !"..player.Name.."! !"..screencam_throttle.."!)")
+					PMFF:Pause()
+				end
+			else
+				screencam_active = true
+			end
+			
+		end
+end
+function scam_act()
+	screencam_setting = true
+end
+
+function scam_inact()
+	screencam_setting = false
+	if screencam_active then
+		screencam_active = false
+		screencam_change()
+	end
+end
+
+mn.LuaSEXPs["lua-screencam-enable"].Action = function(enable)
+
+	if enable then
+		scam_act()
+	else
+		scam_inact()
+	end
+
+end
+
+]
+$Application: FS2_Open
+$On Gameplay Start: [
+screencam_shipnum = 0
+screencam_playershipclass = "none"
+screencam_active = false
+screencam_setting = true
+screencam_throttle = 0
+screencam_switch = false
+screencam_paused = true
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Key Pressed:
+[
+if hv.Key == "Alt-1" and screencam_setting then
+	if screencam_active  then
+		screencam_active = false
+		screencam_change()
+		elseif not screencam_active then
+		screencam_active = true
+		screencam_change()
+	end
+end
+if hv.Key == "Alt-2" and screencam_setting and screencam_active then
+	local player = hv.Player
+	if screencam_paused then
+		mn.runSEXP("(reset-time-compression)")
+		screencam_paused = false
+		mn.runSEXP("(change-ship-class !ScreenCam#Slow! !"..player.Name.."!)")
+	else
+		mn.runSEXP("(set-time-compression !0.01!)")
+		screencam_paused = true
+		mn.runSEXP("(change-ship-class !ScreenCam#Fast! !"..player.Name.."!)")
+	end
+end
+]
+
+$On Frame:
+[
+if screencam_active then
+	mn.runSEXP("(hud-set-directive !SCNoteUp! !SLIDE UP: $SHIFT-PAD +$!)")
+	mn.runSEXP("(hud-set-directive !SCNoteDown! !SLIDE DOWN: $SHIFT-PAD ENTER$!)")
+	mn.runSEXP("(hud-set-directive !SCNoteLeft! !SLIDE LEFT: $SHIFT-1$!)")
+	mn.runSEXP("(hud-set-directive !SCNoteRight! !SLIDE RIGHT: $SHIFT-3$!)")
+	mn.runSEXP("(hud-set-directive !HUDDisWarn! !DISABLE HUD: $SHIFT-O$!)")	
+end
+if screencam_switch then
+	screencam_change()
+	screencam_switch = false
+end
+]
+#end
