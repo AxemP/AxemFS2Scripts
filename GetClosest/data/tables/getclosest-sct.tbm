@@ -1,0 +1,46 @@
+#Conditional Hooks
+$Application: FS2_Open
+$On Game Init:
+[
+
+mn.LuaSEXPs["lua-get-closest-from-team"].Action = function(origin, targetTeam, targetVariable)
+
+	if origin:isValid() and targetVariable:isValid() then
+	
+		local numShips = #mn.Ships
+		local bestShip
+		local bestDistance = 99999999
+		
+		for i=1, numShips do
+		
+			local thisShip = mn.Ships[i]
+			
+			if thisShip:isValid() and (thisShip ~= origin) and (thisShip.Team.Name == targetTeam) then
+			
+				local thisDistance = origin.Position:getDistance(thisShip.Position)
+				
+				ba.print("Ship: " .. thisShip.Name .. ", Distance: " .. thisDistance .. "\n")
+				
+				if (thisDistance < bestDistance) then
+					bestDistance = thisDistance
+					bestShip = thisShip
+					ba.print("^^^^^THIS IS THE BEST ONE!\n")
+				end
+			
+			end
+		
+		end
+	
+		if bestShip and bestShip.Name then
+			targetVariable.Value = tostring(bestShip.Name)
+		else
+			targetVariable.Value = "nil"
+		end
+	
+	end
+
+end
+
+]
+
+#End

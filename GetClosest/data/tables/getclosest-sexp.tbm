@@ -1,0 +1,20 @@
+#Lua SEXPs
+
+$Operator: lua-get-closest-from-team
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 3
+$Maximum Arguments: 3
+$Return Type: Nothing
+$Description: Finds the closest ship on a team from a given origin ship. The ship name is put in a variable for further use.
+$Parameter:
+	+Description: Ship to use as an origin point
+	+Type: ship
+$Parameter:
+	+Description: Team name to look for. Be sure to practice correct capitalization! 'Friendly' != 'friendly'
+	+Type: string
+$Parameter:
+	+Description: Variable to throw ship name in. Will be 'nil' if no valid ship is found
+	+Type: variable
+	
+#End
