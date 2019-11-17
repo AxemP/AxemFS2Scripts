@@ -161,9 +161,9 @@ $On Gameplay Start:
 
 $On Frame:
 [
-	if TurretHotkey.Enabled then
+	--[[if TurretHotkey.Enabled then
 		PrintDebug(TurretHotkey)
-	end
+	end]]--
 ]
 
 $On Key Pressed:
