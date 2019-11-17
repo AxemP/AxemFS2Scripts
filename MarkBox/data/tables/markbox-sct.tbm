@@ -308,6 +308,28 @@ function MarkBox:ClearShipWing(isShip, ...)
 
 end
 
+function MarkBox:ClearSubsys(ship, ... )
+
+	local index
+	for i, data in ipairs(arg) do
+		local thisData = data[1]
+		
+		local t = {}
+		
+		t.Type = 1
+		t.Key = ship:getSignature()
+		t.Target = thisData
+		
+		index = self:DoesEntryExist(t)
+		
+		if index then
+			table.remove(self.List, index)
+		end
+	
+	end
+
+end
+
 --[[ LUA SEXP DEFS ]] --
 
 mn.LuaSEXPs["lua-mark-subsystem"].Action = function(ship, text, ...) MarkBox:AddSubsys(ship, text, ...) end
@@ -316,6 +338,7 @@ mn.LuaSEXPs["lua-mark-wing"].Action = function(text, ...) MarkBox:AddWing(text, 
 mn.LuaSEXPs["lua-mark-clear-all"].Action = function(...) MarkBox:ClearList() end
 mn.LuaSEXPs["lua-mark-clear-ship"].Action = function(...) MarkBox:ClearShipWing(true, ...) end
 mn.LuaSEXPs["lua-mark-clear-wing"].Action = function(...) MarkBox:ClearShipWing(false, ...) end
+mn.LuaSEXPs["lua-mark-clear-subsys"].Action = function(ship, ...) MarkBox:ClearSubsys(ship, ...) end
 
 ]
 

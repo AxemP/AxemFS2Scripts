@@ -79,5 +79,20 @@ $Repeat
 $Parameter:
 	+Description: Wing to remove from list
 	+Type: string
+	
+$Operator: lua-mark-clear-subsys
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Clears wing from the mark box list.
+$Parameter:
+	+Description: Ship with subsystems
+	+Type: Ship
+$Repeat
+$Parameter:
+	+Description: Subsystem to remove from list
+	+Type: string
 
 #End

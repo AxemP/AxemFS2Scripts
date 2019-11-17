@@ -1,0 +1,45 @@
+#Lua SEXPs
+	
+$Operator: lua-turrethotkey-add
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 3
+$Maximum Arguments: 4
+$Return Type: Nothing
+$Description: Adds a turret hotkey entry
+$Parameter:
+	+Description: Hotkey to assign
+	+Type: String
+$Parameter:
+	+Description: Ship that has the turret
+	+Type: Ship
+$Parameter:
+	+Description: Turret to assign
+	+Type: String
+$Parameter:
+	+Description: If this is filled out and the MarkBox script is installed, the turret will be highlighted with the text drawn next to it
+	+Type: String
+	
+$Operator: lua-turrethotkey-remove
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+$Maximum Arguments: 2
+$Return Type: Nothing
+$Description: Removes a turret hotkey entry
+$Parameter:
+	+Description: Ship has has the turret
+	+Type: Ship
+$Parameter:
+	+Description: Turrets to assign
+	+Type: String
+	
+$Operator: lua-turrethotkey-clear-all
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Clears all the turret hotkey data. (NOTE: This will also clear all MarkBox list data too!)
+	
+#End

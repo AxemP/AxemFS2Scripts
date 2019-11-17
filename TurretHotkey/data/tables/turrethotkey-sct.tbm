@@ -1,0 +1,184 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+TurretHotkey = {}
+
+function TurretHotkey:Init()
+
+	self.Enabled = nil
+
+	TurretHotkey:ClearAll()
+
+end
+
+function TurretHotkey:ClearAll(markboxtoo)
+
+	self.List = {}
+	--Structure of List
+	--self.List["key"][index][ship, subsystem]
+	
+	self.CurrentPosition = {}
+	--Structure of position
+	--self.CurrentPosition[key, index]
+	
+	if markboxtoo and MarkBox then
+		MarkBox:ClearList()
+	end
+
+end
+
+mn.LuaSEXPs["lua-turrethotkey-clear-all"].Action = function()
+
+	TurretHotkey:ClearAll(true)
+
+end
+
+function TurretHotkey:Add(key, ship, subsystem, usemarkbox)
+
+	self.Enabled = true
+
+	if ship:isValid() and ship[subsystem]:isValid() then
+
+		if not self.List[key] then
+			self.List[key] = {}
+		end
+
+		local entry = self.List[key]
+		local t = {}
+		t.Ship = ship
+		t.Subsystem = ship[subsystem]
+		entry[#entry+1] = t
+		
+		if usemarkbox and MarkBox then
+			MarkBox:AddSubsys(ship, usemarkbox, {subsystem})
+		end
+		
+	end
+
+end
+
+mn.LuaSEXPs["lua-turrethotkey-add"].Action = function(key, ship, subsystem, usemarkbox)
+
+	TurretHotkey:Add(key, ship, subsystem, usemarkbox)
+
+end
+
+function TurretHotkey:Cycle(key, offset)
+
+	if #self.List[key] > 0 then
+
+		if key ~= self.CurrentPosition.Key then
+			self.CurrentPosition.Key = key
+			self.CurrentPosition.Index = 1
+		else
+			self.CurrentPosition.Index = self.CurrentPosition.Index + offset
+		end
+		
+		if self.CurrentPosition.Index > #self.List[key] then
+			self.CurrentPosition.Index = 1
+		end
+		
+		local entry = self.List[self.CurrentPosition.Key][self.CurrentPosition.Index]
+
+		self:SetTarget(entry.Ship, entry.Subsystem)
+	
+	end
+
+end
+
+function TurretHotkey:SetTarget(ship, subsystem)
+
+	if hv.Player:isValid() then
+	
+		hv.Player.Target = ship
+		hv.Player.TargetSubsystem = subsystem
+	
+	end
+
+end
+
+function TurretHotkey:GetEntry(ship, subsystem)
+
+	for key, list in pairs(self.List) do
+		--ba.print("Key: " .. key .. "\n")
+		for i, entry in ipairs(list) do
+			--ba.print("i: " .. i .. "\n")
+			--ba.print("entry: " .. tostring(entry.Ship) .. ", " .. tostring(entry.Subsystem) .. "\n")
+			--ba.print("subsystem = " .. tostring(subsystem) .. ", entry.Subsystem = " .. tostring(entry.Subsystem) .. "\n")
+			--ba.print("subsystem = " .. tostring(subsystem:getModelName()) .. ", entry.Subsystem = " .. tostring(entry.Subsystem:getModelName()) .. "\n")
+			if (entry.Ship == ship) and (entry.Subsystem:getModelName() == subsystem:getModelName()) then
+					--ba.print("FOUND SUBSYSTEM!\n")
+					return key, i
+				end
+			end
+	end
+	
+	ba.print("DID NOT FIND SUBSYSTEM!\n")
+end
+
+function TurretHotkey:Remove(ship, subsystem)
+
+	if type(subsystem) == "string" and ship:isValid() and ship[subsystem]:isValid() then
+		subsystem = ship[subsystem]
+	end
+
+	local key, pos = self:GetEntry(ship, subsystem)
+	
+	if key and pos then
+		table.remove(self.List[key],pos)
+		if self.CurrentPosition.Key == key then
+			self:Cycle(key, 0)
+		end
+	end
+
+end
+
+mn.LuaSEXPs["lua-turrethotkey-remove"].Action = function(ship, subsystem)
+
+	TurretHotkey:Remove(ship, subsystem)
+	if MarkBox then MarkBox:ClearSubsys(ship, {subsystem}) end
+
+end
+
+function TurretHotkey:CheckKey(key)
+
+	if self.List[key] then
+		self:Cycle(key, 1)
+	end
+
+end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	TurretHotkey:Init()
+]
+
+$On Frame:
+[
+	if TurretHotkey.Enabled then
+		PrintDebug(TurretHotkey)
+	end
+]
+
+$On Key Pressed:
+[
+	if TurretHotkey.Enabled then
+		TurretHotkey:CheckKey(hv.Key)
+	end
+]
+
+$On Subsystem Destroyed:
+[
+	if TurretHotkey.Enabled then
+		--ba.print("SUBSYS DESTROYED: " ..  tostring(hv.Ship) .. ", " .. tostring(hv.Subsystem) .. "\n")
+		TurretHotkey:Remove(hv.Ship, hv.Subsystem)
+	end
+]
+
+#End
