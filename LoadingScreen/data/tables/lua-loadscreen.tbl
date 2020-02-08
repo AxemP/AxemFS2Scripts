@@ -17,6 +17,7 @@ $Scale Zoom:	true
 ;$File: 	This should be an animation, can be any length. For reference FS2's loading animation is 14 frames long
 ;$Origin	(optional) x,y Origins are based off of % of the screen's size. Loading bars will NOT scale up or down. Default is 0.5, 0.5
 ;$Offset	(optional) x,y Pixel offset from the origin, comment out or remove Offset and the graphic will center itself automatically
+;Scaling	(optional) Boolean, if true, the loading bar will inherit the scaling of the background. This should make the loading bar be the same relative size in any resolution.
 
 $Name: heat
 $File: loadingbar2	
@@ -35,6 +36,7 @@ $Origin: 0.5, 0.5
 ;$Text: 	The actual text. XSTRs can be used for localization support.
 ;$Font: 	(optional) Font to use. Default is font 1.
 ;$Image:	(optional) Associated image to go with the text
+;$Variable:	(optional) String, sexp variable. If specified, the script will attempt to read the sexp variable present (if present) in the mission and display it instead of the text. NOTE: Due to the way the mission loading works, this will not appear at the very start of loading.
 
 $Name: Tip 1
 $Text: XSTR("Avoid the beams so you won't get hit!", -1)
@@ -57,6 +59,11 @@ $Name: Lore 2
 $Text: XSTR("Admiral Bosch was laughed at for his ideas about ETAK. Who's laughing now???", -1)
 $Font: 2
 $Image: load_bosch
+
+$Name: Lore 3
+$Text: XSTR(" ", -1)
+$Font: 2
+$Variable: variable1
 
 #End
 
@@ -122,6 +129,7 @@ $Loading Text: Tip 2
 $Loading Text: Tip 3
 $Loading Text: Lore 1
 $Loading Text: Lore 2
+$Loading Text: Lore 3
 
 #End
 

@@ -74,6 +74,12 @@ function XLoadingScreen:Parse(file)
 				t.Offset = {0,0}
 				t.AutoCenter = true
 			end
+			
+			if parse.optionalString("+Scaling:") then
+				t.Scaling = parse.getBoolean()
+			else
+				t.Scaling = false
+			end
 						
 			self.LoadingBars[name] = t
 		end
@@ -102,6 +108,10 @@ function XLoadingScreen:Parse(file)
 			
 			if parse.optionalString("$Image:") then
 				t.Image = parse.getString()
+			end
+			
+			if parse.optionalString("$Variable:") then
+				t.Variable = parse.getString()
 			end
 						
 			self.LoadingText[name] = t
@@ -388,14 +398,14 @@ function XLoadingScreen:GetBGInfo(image, scaling)
 			local bg_x = screenWidth/2 - new_width/2
 			local bg_y = screenHeight/2 - new_height/2
 			
-			return bg_x, bg_y, new_width, new_height
+			return bg_x, bg_y, new_width, new_height, scalingFactor
 
 		else
 		
 			local bg_x = screenWidth/2 - imageWidth/2
 			local bg_y = screenHeight/2 - imageHeight/2
 			
-			return bg_x, bg_y, imageWidth, imageHeight
+			return bg_x, bg_y, imageWidth, imageHeight, 1
 		
 		end
 		
@@ -446,13 +456,18 @@ function XLoadingScreen:InitDraw(mission)
 		end
 		
 		this.BG = {}
-		this.BG.X, this.BG.Y, this.BG.W, this.BG.H = self:GetBGInfo(self.UsedImage, this.Scaling)
+		this.BG.X, this.BG.Y, this.BG.W, this.BG.H, this.BG.Scale = self:GetBGInfo(self.UsedImage, this.Scaling)
+		
+		this.Anim = {}
 		
 		--load the loading bar animation
 		
 		if self.LoadingBars[this.Bar] then
-			self.LoadAnimation = gr.loadTexture(self.LoadingBars[this.Bar].File, true)
-			self.AnimFrames = self.LoadAnimation:getFramesLeft()
+			local loadingBar = self.LoadingBars[this.Bar]
+			self.LoadAnimation = gr.loadTexture(loadingBar.File, true)
+			this.Anim.Frames = self.LoadAnimation:getFramesLeft()
+			this.Anim.W = self.LoadAnimation:getWidth() * this.BG.Scale
+			this.Anim.H = self.LoadAnimation:getHeight() * this.BG.Scale
 		end
 		
 		--let's see if we have any text to draw
@@ -492,9 +507,9 @@ function XLoadingScreen:Draw(progress)
 
 	local index = 1
 		
-	if self.AnimFrames then
-		if not self.LastProgress or self.LastProgress < (progress * self.AnimFrames) then
-			index = math.floor(progress * self.AnimFrames)
+	if this.Anim.Frames then
+		if not self.LastProgress or self.LastProgress < (progress * this.Anim.Frames) then
+			index = math.floor(progress * this.Anim.Frames)
 			self.LastProgress = index
 		else
 			index = self.LastProgress
@@ -506,17 +521,20 @@ function XLoadingScreen:Draw(progress)
 	--then draw the loading bar
 	
 	if self.LoadAnimation and self.LoadAnimation:isValid() then
-		local loadingbar = self.LoadingBars[this.Bar]
+		local loadingbar = self.LoadingBars[this.Bar]			
 		
 		x1 = (loadingbar.Origin[1] * screenWidth) + loadingbar.Offset[1]
 		y1 = (loadingbar.Origin[2] * screenHeight) + loadingbar.Offset[2]	
 		
 		if loadingbar.AutoCenter then
-			x1 = x1 - self.LoadAnimation:getWidth()/2
-			y1 = y1 - self.LoadAnimation:getHeight()/2
+			x1 = x1 - this.Anim.W/2
+			y1 = y1 - this.Anim.H/2
 		end
+		
+		x2 = x1 + this.Anim.W
+		y2 = y1 + this.Anim.H
 				
-		gr.drawImage(self.LoadAnimation[index], x1, y1)
+		gr.drawImage(self.LoadAnimation[index], x1, y1, x2, y2)
 		--[[gr.setColor(255,255,255,255)
 		gr.drawString(index,x1,y1+25)
 		gr.drawString(progress)]]--
@@ -535,6 +553,14 @@ function XLoadingScreen:Draw(progress)
 			y1 = (this.TextOrigin[2] * screenHeight) + this.TextOffset[2]
 			x2 = screenWidth
 			y2 = screenHeight
+			
+			if text.Variable then
+				if mn.SEXPVariables[text.Variable]:isValid() then
+					text.Text = mn.SEXPVariables[text.Variable].Value
+				else
+					text.Text = " "
+				end
+			end
 			
 			if this.TextCenter then
 				local str_width = gr.getStringWidth(text.Text)
@@ -559,12 +585,18 @@ function XLoadingScreen:Draw(progress)
 				x1 = (this.ImageOrigin[1] * screenWidth) + this.ImageOffset[1]
 				y1 = (this.ImageOrigin[2] * screenHeight) + this.ImageOffset[2]
 				
+				local w = gr.getImageWidth(text.Image) * this.BG.Scale
+				local h = gr.getImageHeight(text.Image) * this.BG.Scale
+				
 				if this.ImageCenter then
-					x1 = x1 - gr.getImageWidth(text.Image)/2
-					y1 = y1 - gr.getImageHeight(text.Image)/2
+					x1 = x1 - w/2
+					y1 = y1 - w/2
 				end
 				
-				gr.drawImage(text.Image, x1, y1)
+				x2 = x1 + w
+				y2 = y1 + h
+				
+				gr.drawImage(text.Image, x1, y1, x2, y2)
 			
 			end
 		

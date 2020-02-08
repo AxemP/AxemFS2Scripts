@@ -4,7 +4,7 @@ $Version: 0.10
 $Name:  XSTR("Destination: Spooktown", -1)
 $Author: Axem
 $Created: 07/22/18 at 11:53:00
-$Modified: 07/22/18 at 11:53:49
+$Modified: 02/07/20 at 20:10:38
 $Notes:
 This is a FRED2_OPEN created mission.
 $End Notes:
@@ -31,6 +31,13 @@ $end_multi_text
 
 
 $AI Profile: FS2 RETAIL
+
+#Sexp_variables
+
+$Variables:
+(
+		0		"variable1"		"THIS IS A VARIABLE"		"string"
+)
 
 #Command Briefing
 
@@ -174,8 +181,12 @@ $Ships: (		;! 1 total
 +Hotkey: 0
 +Flags: ( )
 
-#Events		;! 0 total
+#Events		;! 1 total
 
+$Formula: ( when ( true ) ( do-nothing ) ) 
++Name: Event name
++Repeat Count: 1
++Interval: 1
 
 #Goals		;! 0 total
 
