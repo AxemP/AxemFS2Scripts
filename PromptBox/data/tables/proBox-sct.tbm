@@ -162,7 +162,9 @@ end
 
 function PromptBox:ResetRef(reference)
 
-	self.PromptData[reference] = nil
+	if self.PromptData and self.PromptData[reference] then
+		self.PromptData[reference] = nil
+	end
 
 end
 
