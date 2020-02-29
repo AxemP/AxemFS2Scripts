@@ -1,0 +1,199 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+	--[[*************************************************************************************
+	BRiefing Audio Hook, allows a non-voice sound file to begin playing at a certain briefing
+	stage defined with lua-brah.tbm or *-bah.tbm. Can be made to loop and not stop until its
+	cleared or the mission starts or exit to main menu.
+	
+	Table File Layout:
+
+	#Briefing Hooks
+
+	$Name: Mission Filename
+	$Stage: Stage Number
+	$File: Sound Filename
+	$Repeat: (true/[false]) (optional, defaults to false)
+	$Clear: (true/[false]) (optional, defaults to false) Will stop all other sounds from
+	playing with this script before starting this one.
+
+	#End
+	**************************************************************************************]]--
+
+BRAH = {}
+	
+function BRAH:Init()
+
+	
+	self.Data = {} --Integer Keyed Table, gets all the parsed data
+	
+	self.Debug = false --Set this to true if you need to debug bad behavior
+	self.DebugString = ""
+
+	self:Parse("lua-brah.tbl")
+	
+	local files = cf.listFiles("data/tables", "*-bah.tbm")
+	
+	for _, file in ipairs(files) do
+		self:Parse(file)
+	end
+	
+	self.PlayingSounds = {} --Integer Keyed Table, holds all of the playing sounds
+
+end
+
+function BRAH:StripFS2(s)
+
+	local pos = s:find(".fs2", -4, true)
+
+	if pos then
+		name = s:sub(1,pos-1)
+	end
+		
+	return s
+
+end
+
+function BRAH:Parse(file)
+
+	if not parse.readFileText(file, "data/tables") then
+		return
+	end
+	
+	if parse.optionalString("#Briefing Hooks") then
+				
+		while parse.optionalString("$Name:") do
+	
+		local t = {}
+		local name = parse.getString()
+		
+		name = self:StripFS2(string.lower(name))
+		
+		t.Name = name
+		
+		parse.requiredString("$Stage:")
+		t.Stage = parse.getInt()-1 --remove -1 if goober fixes his stuff
+		
+		parse.requiredString("$File:")
+		t.File = parse.getString()
+		
+		if parse.optionalString("$Repeat:") then
+			t.Repeat = parse.getBoolean()			
+		else
+			t.Repeat = false
+		end
+		
+		if parse.optionalString("$Clear:") then
+			t.Clear = parse.getBoolean()
+		else
+			t.Clear = false
+		end
+		
+		self.Data[#self.Data+1] = t
+
+	end
+	
+	parse.requiredString("#End")
+		
+	end
+	
+	parse.stop()
+
+end
+
+function BRAH:MaybePlay(newstage)
+
+	local missionname = self:StripFS2(string.lower(mn.getMissionFilename()))
+	
+	for i,entry in ipairs(self.Data) do
+	
+		if self.Debug then
+			self.DebugString = ""
+			if not self:IsPlaying(entry) then self.DebugString = tostring(self.DebugString) .. "+NotPlaying" end
+			if (entry.Name == missionname) then self.DebugString = tostring(self.DebugString) .. "+Name OK" end
+			if (entry.Stage == newstage) then self.DebugString = tostring(self.DebugString) .. "+Stage OK" end
+		end
+	
+		if not self:IsPlaying(entry) and (entry.Name == missionname) and (entry.Stage == newstage) then
+				
+			if entry.Clear then
+				BRAH:StopAll()
+			end
+			
+			local handle = ad.playMusic(entry.File,1,entry.Repeat) --PLAY!!!!!
+			
+			t = {}
+			
+			t.Name = entry.Name
+			t.Stage = entry.Stage
+			t.Handle = handle
+			
+			self.PlayingSounds[#self.PlayingSounds+1] = t
+					
+		end
+	
+	end
+
+end
+
+function BRAH:IsPlaying(entry)
+
+	for i,sound in ipairs(self.PlayingSounds) do
+	
+		if entry.Name == sound.Name and entry.Stage == sound.Stage then
+			return true
+		end
+	
+	end
+
+	return false
+
+end
+
+function BRAH:StopAll() --This will halt all sounds
+
+	for i,sound in ipairs(self.PlayingSounds) do
+		ad.stopMusic(sound.Handle,true)
+	end
+
+	self.PlayingSounds = {}
+
+end
+
+BRAH:Init()
+
+]
+
+$State: GS_STATE_BRIEFING
+$On Frame:
+[
+	if BRAH.Debug then
+		PrintDebug(BRAH)
+	end
+]
+
+$On Briefing Stage:
+[	
+	BRAH:MaybePlay(hv.NewStage)
+	
+	if BRAH.Debug then
+		BRAH.DebugString = self.DebugString .. hv.OldStage .. "=>" .. hv.NewStage .. "\n"
+	end
+]
+
+$State: GS_STATE_MAIN_MENU
+$On State Start:
+[
+	BRAH:StopAll()
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	BRAH:StopAll()
+]
+
+#End
