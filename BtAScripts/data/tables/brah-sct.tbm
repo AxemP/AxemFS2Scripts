@@ -75,7 +75,7 @@ function BRAH:Parse(file)
 		t.Name = name
 		
 		parse.requiredString("$Stage:")
-		t.Stage = parse.getInt()-1 --remove -1 if goober fixes his stuff
+		t.Stage = parse.getInt()
 		
 		parse.requiredString("$File:")
 		t.File = parse.getString()
@@ -112,9 +112,9 @@ function BRAH:MaybePlay(newstage)
 	
 		if self.Debug then
 			self.DebugString = ""
-			if not self:IsPlaying(entry) then self.DebugString = tostring(self.DebugString) .. "+NotPlaying" end
-			if (entry.Name == missionname) then self.DebugString = tostring(self.DebugString) .. "+Name OK" end
-			if (entry.Stage == newstage) then self.DebugString = tostring(self.DebugString) .. "+Stage OK" end
+			if not self:IsPlaying(entry) then self.DebugString = tostring(self.DebugString) .. "\n+NotPlaying" end
+			if (entry.Name == missionname) then self.DebugString = tostring(self.DebugString) .. "\n+Name OK" end
+			if (entry.Stage == newstage) then self.DebugString = tostring(self.DebugString) .. "\n+Stage OK" end
 		end
 	
 		if not self:IsPlaying(entry) and (entry.Name == missionname) and (entry.Stage == newstage) then
@@ -180,7 +180,7 @@ $On Briefing Stage:
 	BRAH:MaybePlay(hv.NewStage)
 	
 	if BRAH.Debug then
-		BRAH.DebugString = self.DebugString .. hv.OldStage .. "=>" .. hv.NewStage .. "\n"
+		BRAH.DebugString = BRAH.DebugString .. "\nStage Path: " .. hv.OldStage .. "=>" .. hv.NewStage .. "\n"
 	end
 ]
 
