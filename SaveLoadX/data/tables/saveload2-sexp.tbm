@@ -1,0 +1,89 @@
+#Lua SEXPs
+
+$Operator: lua-savestate-save
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Saves the state of all ships present in the mission at the time of calling this sexp. Save data can be loaded with lua-savestate-load. Data will be saved in an external JSON file with the filename "[PILOTNAME]_[MISSIONFILENAME].sav". Multiple save states can be saved into one file, use the save state index to decide which index to use.
+$Parameter:
+	+Description: Save state index
+	+Type: number
+
+$Operator: lua-savestate-load
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Loads the save state data into the current mission. Ships not present at start will have save data applied to their parse object data (where the game stores pre-arrival data). Ships present in the save state data but not present on load will automatically have their arrival info changed to warpless arrival, so the FREDder just needs to set up an arrival cue tied to the load data event for them to arrive right away.
+$Parameter:
+	+Description: Save state index
+	+Type: number
+	
+$Operator: lua-savestate-shipstatus
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 1
+$Maximum Arguments: 2
+$Return Type: Boolean
+$Description: Returns true if a ship is present or hasn't arrived in the currently loaded save state or a specified save state index. If no save state has been loaded yet, this will always return true. If the ship is destroyed or departed in the save state, it will return false. Use this in the arrival cue of ships that arrive after mission start to prevent their arrival if they were destroyed before or have already left.
+$Parameter:
+	+Description: Ship to check
+	+Type: string
+$Parameter:
+	+Description: (Optional) Which save state index to look at
+	+Type: number
+	
+$Operator: lua-savestate-getindex
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Number
+$Description: Returns the current save state index. If no save state index has been loaded, this will return 0.
+
+$Operator: lua-savestate-check
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 0
+$Maximum Arguments: 2
+$Return Type: Boolean
+$Description: If no arguments are given, returns true if ANY save states exist for THIS mission. If the first argument is given, returns true if that specific save state is present for THIS mission. If the second argument is given, returns true if a specific save state exists for ANOTHER mission.
+$Parameter:
+	+Description: Save state index
+	+Type: number
+$Parameter:
+	+Description: Other mission filename (without .fs2 extension)
+	+Type: string
+	
+$Operator: lua-savestate-assist
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 3
+$Return Type: Nothing
+$Description: Anti-frustration measure. Sets the minimum hull and minimum ammo counts for specified ships when saved data is applied. This is so the player or other ships, who are extremely unlucky to get 2% on save state, won't start off like that. Set this BEFORE loading data. You can call this multiple times to add new ships, but the applied minimum hull and minimum ammo will be the latest values given. They are NOT call specific.
+$Parameter:
+	+Description: Minimum Hull (as a percent)
+	+Type: number
+$Parameter:
+	+Description: Minimum Ammo (as a perecent)
+	+Type: number
+$Repeat
+$Parameter:
+	+Description: Name of ships to apply assistance too
+	+Type: string
+	
+$Operator: lua-savestate-clear
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: If no arguments given, clears the entire save state data and deletes the file. If an index is given, just that save state is deleted.
+$Parameter:
+	+Description: Save state index
+	+Type: number
+	
+#End
