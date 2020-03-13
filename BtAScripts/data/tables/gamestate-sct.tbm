@@ -1,0 +1,14 @@
+#Conditional Hooks
+$Application: FS2_Open
+$On Game Init:
+[
+
+function GoToState(state)
+
+	ba.postGameEvent(ba.GameEvents[string.gsub(state, "STATE", "EVENT")])
+
+end
+
+]
+
+#End

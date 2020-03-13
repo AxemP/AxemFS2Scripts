@@ -106,7 +106,8 @@ function PromptBox:SEXPCall(reference, text, pause, choiceA, choiceB, choiceC, c
 	self:Activate(2)
 	--self.Mode = 2
 	
-	self.TitleText = text:getMessage(true)
+	self.Message = text
+	self.TitleText = self.Message:getMessage(true)
 	
 	self.List = {}
 	self.List[1] = self:PopulateLine(choiceA, Acond)
@@ -160,6 +161,19 @@ end
 
 ;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-get-prompt-response"].Action = function(reference) return PromptBox:ReturnLastValue(reference) end
 
+
+--[[function PromptBox:ClearRef(key)
+
+	local data = self.PromptData[key]
+	
+	data.LastResult = 0
+	data.Bitfield = 0
+	if data.Variable then data.Variable.Value = data.Bitfield end
+
+end]]--
+
+;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-clear-prompt"].Action = function(reference) PromptBox:ResetRef(reference) end
+
 function PromptBox:ResetRef(reference)
 
 	if self.PromptData and self.PromptData[reference] then
@@ -167,8 +181,6 @@ function PromptBox:ResetRef(reference)
 	end
 
 end
-
-;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-clear-prompt"].Action = function(reference) PromptBox:ResetRef(reference) end
 
 function PromptBox:LoadMsgBox(filename)
 
@@ -202,7 +214,7 @@ function PromptBox:UpdateText()
 		self.List = self:GetTextFromGauges()
 		self.TitleText = hu.getHUDGaugeHandle("PromptBox").Text
 	end
-		
+	
 	if self.List and self.Menu then
 		for i, v in pairs(self.Menu.Item) do
 			if self.List[i]:gsub("%s+", "") ~= "" and not self.Locked[i] then
@@ -460,6 +472,10 @@ function PromptBox:Draw()
 	
 	local x,y = self.Config.Title.Offset[1], self.Config.Title.Offset[2]
 	
+	if self.Message then
+		self.TitleText = self.Message:getMessage(true)
+	end
+	
 	gr.drawString(self.TitleText, self.Position.x + x, self.Position.y + y)
 	
 	self.Menu:DrawList()
@@ -512,6 +528,9 @@ function PromptBox:Exit()
 	self.PlayerMouse = nil
 	self.Actions = nil
 	self.Flags = nil
+	self.PlayerLocked = nil
+	self.UnlockTimer = nil
+
 	
 	self.PromptData = nil
 	self.ActivePrompt = nil
@@ -523,6 +542,7 @@ $State: GS_STATE_GAME_PLAY
 $On Gameplay Start:
 [
 	--PromptBox:Init()
+	PromptBox:Exit()
 
 ]
 
@@ -552,8 +572,6 @@ $On HUD Draw:
 			
 		end
 	end
-	
-
 	
 	if PromptBox.UnlockTimer and PromptBox.UnlockTimer < mn.getMissionTime() then
 		PromptBox:UnlockPlayer()
