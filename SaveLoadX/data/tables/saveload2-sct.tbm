@@ -298,8 +298,13 @@ function SaveState:ApplyData(ship,data)
 			local thisSubsys = ship[i]
 			local ssdata = data.Subsystems[i]
 			
-			thisSubsys.HitpointsLeft = ssdata.HP
-			thisSubsys.ArmorClass = ssdata.Armor
+			if ssdata.HP then
+				thisSubsys.HitpointsLeft = ssdata.HP
+			end
+			
+			if ssdata.Armor then
+				thisSubsys.ArmorClass = ssdata.Armor
+			end
 			
 			if thisSubsys:isTurret() then
 			
