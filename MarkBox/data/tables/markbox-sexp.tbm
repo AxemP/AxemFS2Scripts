@@ -47,6 +47,42 @@ $Repeat
 $Parameter:
 	+Description: Subsystem to highlight
 	+Type: string
+	
+$Operator: lua-mark-weapon
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 2
+$Return Type: Nothing
+$Description: Highlights weapons to help player identify important targets. Text will be displayed by the weapon when targetted. You can also specify a ship to tie distance calculations with the "lua-get-weapon-distance" sexp. The ship is pre-defined here for consideration of how much computing time calculating distances for tons of weapons can have on your poor CPU.
+$Parameter:
+	+Description: Weapon to highlight
+	+Type: string
+$Parameter:
+	+Description: Ship to reference future distance calculations with.
+	+Type: ship
+	
+$Operator: lua-count-weapon
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Number
+$Description: Returns how many of a weapon (that is currently is being marked) is currently in the mission. Use this for keeping track of torp salvos and what-not.
+$Parameter:
+	+Description: Weapon to count
+	+Type: string
+	
+$Operator: lua-get-weapon-distance
+$Category: Status
+$Subcategory: Mission
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Number
+$Description: Returns how the closest distance of a marked weapon type to the ship defined in "lua-mark-weapon". Use this to trigger proximity events related to the weapons.
+$Parameter:
+	+Description: Weapon to count
+	+Type: string
 
 $Operator: lua-mark-clear-all
 $Category: Change

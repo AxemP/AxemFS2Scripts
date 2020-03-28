@@ -9,6 +9,10 @@ function MarkBox:Init()
 
 	self.Enabled = false
 	self.List = {}
+	self.WeaponList = {}
+	
+	self.NextDistCheck = 0
+	self.DistCheckInterval = 1
 
 end
 
@@ -30,6 +34,12 @@ function MarkBox:AddSubsys(ship, text, ...)
 				t.Text = text
 				t.Type = 1
 				t.Target = subsys[1]
+				
+				--[[ba.print("Adding new subsystem!\n")
+				ba.print("New Index: " .. (self:DoesEntryExist(t) or #self.List+1) .. "\n")
+				for k,v in pairs(t) do
+					ba.print(k .. ": " .. tostring(v) .. "\n")
+				end]]--
 
 				self.List[self:DoesEntryExist(t) or #self.List+1] = t
 
@@ -90,12 +100,10 @@ function MarkBox:DoesEntryExist(data)
 	local index
 	
 	for i, entry in ipairs(self.List) do
-		if data.Type == entry.Type and data.Key == entry.Key then
-			if (not data.Target and not entry.Target) or data.Target == entry.Target then
-				exists = true
-				index = i
-				break
-			end
+		if data.Type == entry.Type and data.Key == entry.Key and data.Target == entry.Target then
+			exists = true
+			index = i
+			break
 		end
 	end
 
@@ -103,6 +111,156 @@ function MarkBox:DoesEntryExist(data)
 	
 end
 
+function MarkBox:AddWeapon(weapon, ship)
+
+	if not self.Enabled then self.Enabled = true end
+		
+	if weapon and tb.WeaponClasses[weapon]:isValid() then
+		
+		local t = {}
+		t.Key = weapon
+		t.Count = 0
+		--t.Distance = {}
+		t.MarkedWeapons = {}
+		
+		if ship:isValid() then
+			t.Target = ship:getSignature()
+		end
+		
+		self.WeaponList[self:DoesWeaponEntryExist(t) or #self.WeaponList+1] = t
+				
+	end
+
+end
+
+function MarkBox:DoesWeaponEntryExist(data)
+
+	local index
+	
+	for i, entry in ipairs(self.WeaponList) do
+		if data == entry.Key then
+			index = i
+			break
+		end
+	end
+
+	return index
+
+end
+
+function MarkBox:MaybeAddWeapon(weapon)
+
+	local weaponName = weapon.Class.Name
+	
+	local weaponListIndex = self:DoesWeaponEntryExist(weaponName)
+	local weaponListEntry = self.WeaponList[weaponListIndex]
+	
+	if weaponListEntry then
+	
+		local markedWeaponEntry = weaponListEntry.MarkedWeapons
+		local numMarkedWeapons = #markedWeaponEntry
+		
+		local newIndex = numMarkedWeapons+1
+				
+		if weaponListEntry.Target and numMarkedWeapons > 0 then
+		
+			--[[ba.print("*********TABLE BEFORE************\n")
+			for i,v in ipairs(markedWeaponEntry) do
+				ba.print(i .. ": " .. tostring(v) .. "\n")
+			end]]--
+
+			local targetShipPos = mn.getObjectFromSignature(weaponListEntry.Target).Position
+			local newDistance = weapon.Position:getDistance(targetShipPos)
+			
+			ba.print("Distance of new weapon: " .. newDistance .. "\n")
+			
+			for i=numMarkedWeapons, 1, -1 do
+
+				local oldDistance = mn.getObjectFromSignature(markedWeaponEntry[i]).Position:getDistance(targetShipPos)
+				
+				--ba.print("Distance of old weapon at index " .. i .. ": " .. oldDistance .. "\n")
+				
+				if newDistance < oldDistance then
+					--ba.print("New Distance is smaller, new index could be " .. i .. "\n")
+					newIndex = i
+				else
+					--ba.print("New Distance is not smaller, new index will be " .. i+1 .. "\n")
+					newIndex = i+1
+					break
+				end	
+			end
+			
+		end
+		
+		table.insert(markedWeaponEntry, newIndex, weapon:getSignature())
+		--markedWeaponEntry[newIndex] = weapon:getSignature()
+		weaponListEntry.Count = weaponListEntry.Count + 1
+		
+		--[[ba.print("*********TABLE AFTER************\n")
+		for i,v in ipairs(markedWeaponEntry) do
+			ba.print(i .. ": " .. tostring(v) .. "\n")
+		end]]--
+	
+	end
+
+end
+
+function MarkBox:MaybeDeleteWeapon(weapon)
+
+	local weaponName = weapon.Class.Name
+	local weaponSignature = weapon:getSignature()
+	
+	local weaponListIndex = self:DoesWeaponEntryExist(weaponName)
+	local weaponListEntry = self.WeaponList[weaponListIndex]
+
+	if weaponListEntry then
+	
+		local markedWeaponEntry = weaponListEntry.MarkedWeapons
+		
+		for i=1, #markedWeaponEntry do
+			local thisEntry = markedWeaponEntry[i]
+			
+			if thisEntry then
+				if thisEntry == weaponSignature then
+					table.remove(markedWeaponEntry,i)
+					weaponListEntry.Count = weaponListEntry.Count - 1
+				end
+			end
+		end
+		
+	end
+
+end
+
+function MarkBox:GetCountWeapon(weapon)
+
+	local count = 0
+
+	local weaponIndex = self:DoesWeaponEntryExist(weapon)
+	local weaponListEntry = self.WeaponList[weaponIndex]
+	
+	if weaponListEntry then count = weaponListEntry.Count end
+
+	return count
+
+end
+
+function MarkBox:GetMarkedWeaponDistance(weapon)
+
+	local distance = 999999
+	local weaponIndex = self:DoesWeaponEntryExist(weapon)
+	local weaponListEntry = self.WeaponList[weaponIndex]
+	
+	if weaponListEntry then
+		local markedWeaponEntry = weaponListEntry.MarkedWeapons
+		if markedWeaponEntry[1] then
+			distance = mn.getObjectFromSignature(markedWeaponEntry[1]).Position:getDistance(mn.getObjectFromSignature(weaponListEntry.Target).Position)		
+		end
+	end
+	
+	return distance
+
+end
 
 function MarkBox:ClearList()
 
@@ -150,6 +308,19 @@ function MarkBox:Draw()
 		end
 	end
 	
+
+	for i=1, #self.WeaponList do
+		local thisEntry = self.WeaponList[i]
+		
+		for j=1, #thisEntry.MarkedWeapons do
+		
+			local thisWeapon = thisEntry.MarkedWeapons[j]
+			self:DrawWeaponBracket(mn.getObjectFromSignature(thisWeapon))
+		
+		end
+		
+	end
+	
 end
 
 function MarkBox:DrawSubsystemBracket(subsys, data)
@@ -167,10 +338,10 @@ function MarkBox:DrawSubsystemBracket(subsys, data)
 	
 	if data.Target == player.TargetSubsystem:getModelName() then
 		local r,g,b = player.Target.Team:getColor()
-		gr.setColor(r,g,b,255)
+		gr.setColor(r,g,b,192)
 		focus = true
 	else
-		gr.setColor(255,255,255,255)
+		gr.setColor(255,255,255,128)
 	end
 	
 	local x1,y1,x2,y2 = gr.drawSubsystemTargetingBrackets(subsys, false)
@@ -266,6 +437,17 @@ function MarkBox:DrawShipBracket(ship, data)
 			
 end
 
+
+function MarkBox:DrawWeaponBracket(weapon)
+						
+	--local r,g,b = weapon.Team:getColor()
+	gr.setColor(192,0,0,192)
+	
+	gr.setLineWidth(3)
+	gr.drawTargetingBrackets(weapon)
+	
+end
+
 function MarkBox:DrawWingBracket(data)
 	
 	local thisWing = mn.Wings[data.Key]
@@ -339,6 +521,9 @@ mn.LuaSEXPs["lua-mark-clear-all"].Action = function(...) MarkBox:ClearList() end
 mn.LuaSEXPs["lua-mark-clear-ship"].Action = function(...) MarkBox:ClearShipWing(true, ...) end
 mn.LuaSEXPs["lua-mark-clear-wing"].Action = function(...) MarkBox:ClearShipWing(false, ...) end
 mn.LuaSEXPs["lua-mark-clear-subsys"].Action = function(ship, ...) MarkBox:ClearSubsys(ship, ...) end
+mn.LuaSEXPs["lua-mark-weapon"].Action = function(weapon, ship) MarkBox:AddWeapon(weapon, ship) end
+mn.LuaSEXPs["lua-count-weapon"].Action = function(weapon) return MarkBox:GetCountWeapon(weapon) end
+mn.LuaSEXPs["lua-get-weapon-distance"].Action = function(weapon) return MarkBox:GetMarkedWeaponDistance(weapon) end
 
 ]
 
@@ -353,11 +538,25 @@ $On State End:
 	MarkBox.Enabled = false
 ]
 
-$On Frame:
+$On Weapon Created:
+[
+	if MarkBox.Enabled then
+		MarkBox:MaybeAddWeapon(hv.Weapon)
+	end
+]
+
+$On Weapon Delete:
+[
+	if MarkBox.Enabled then
+		MarkBox:MaybeDeleteWeapon(hv.Weapon)
+	end
+]
+
+$On HUD Draw:
 [
 	if MarkBox.Enabled and hu.HUDDrawn and not hu.HUDDisabledExceptMessages and (gr.hasViewmode(VM_INTERNAL) or gr.hasViewmode(VM_CHASE)) then
 		if mn.getMissionTime() > 1 then
-			--PrintDebug(MarkBox.List)
+			--PrintDebug(MarkBox)
 			MarkBox:Draw()
 		end
 	end
