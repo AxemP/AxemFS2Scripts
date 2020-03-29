@@ -123,7 +123,7 @@ function MarkBox:AddWeapon(weapon, ship)
 		--t.Distance = {}
 		t.MarkedWeapons = {}
 		
-		if ship:isValid() then
+		if ship and ship:isValid() then
 			t.Target = ship:getSignature()
 		end
 		
