@@ -1,0 +1,523 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+
+[
+
+--[[   VERSION 1.3
+
+	The big change with 1.3 is the addition of different resolution-specific settings that can be used. Resolutions must be specified in the axmessage.cfg from smallest to largest. The script will identify the best resolution depending on resolution size and the "MinHRes" parameter. If you have modified your old axmessage.cfg for your mod, please carefully move over the changed values. There is also an ImageScale parameter to adjust the size of the messagebox if you just want to scale it without making new files for each resolution.
+
+]]--
+
+AXMessage = {}
+
+function AXMessage:Init()
+
+	self.Version = 1.3
+
+	ba.print("Initializing AXMessage...\n")
+
+	if cf.fileExists("axmessage.cfg", "data/config", true) then
+		self.Config = axemParse:ReadJSON("axmessage.cfg")
+		ba.print("Loaded axmessage config file\n")
+	else
+		ba.warning("AXMESSAGE: Config file not found! Aborting script initialization!\n")
+		return
+	end
+	
+	if not self.Config.MinVersion or self.Config.MinVersion < self.Version then
+		ba.warning("AXMESSAGE: Config file found is for an obsolete version. If you are upgrading, please use a brand new axmessage.cfg as a template and move your settings over. More details found in axmsg-sct.tbm.\nAborting script initialization!\n")
+		return
+	end
+	
+	if self.Config.Resolutions then
+	
+		local currentIndex
+		
+		for i=1, #self.Config.Resolutions do
+			ba.print("AXMESSAGE: Found resolution " .. i .. ": " .. self.Config.Resolutions[i].MinHRes .. "\n")
+			if (self.Config.Resolutions[i].MinHRes <= gr.getScreenWidth()) then
+				currentIndex = i
+				lastres = self.Config.Resolutions[i].MinHRes
+			end
+		end
+		
+		if currentIndex then
+			ba.print("AXMESSAGE: Loading resolution number " .. currentIndex .. "\n")
+			self.LoadedData = self.Config.Resolutions[currentIndex]
+		else
+			ba.warning("AXMESSAGE: Can't find a good resolution entry to load data. Aborting script initialization!\n")
+			return
+		end
+	
+	end
+	
+	if self.LoadedData then
+
+		self.Enabled = true
+		mn.runSEXP("(hud-set-retail-gauge-active (false) !Messages!)")
+		self.ShowBuiltIn = true
+
+		self.Drawing = false
+		self.Timer = nil
+		self.RawString = nil
+		self.DisplayString = nil
+		self.AlwaysDrawMsgBox = false
+		self.DrawControl = "self"
+		self.Alpha = 1
+		
+		self.Speed = self.Config.Default.Speed or 0.03
+		self.Length = self.Config.Default.Length or 0.07
+		self.AfterVoice = self.Config.Default.AfterVoice or 1.5
+				
+		self.Backlog = {}
+		self.Backlog.Enabled = false or self.LoadedData.Backlog.Enabled
+		self.Backlog.Entry = {}
+		self.Backlog.Height = self.LoadedData.Backlog.Height or 50
+		self.Backlog.MaxSize = self.LoadedData.Backlog.MaxSize or 4
+		
+		self.Offsets = {}
+		self.Offsets.Sender = {x = self.LoadedData.Offsets.Sender[1] or 7, y = self.LoadedData.Offsets.Sender[2] or 3}
+		self.Offsets.Text = {x = self.LoadedData.Offsets.Text[1] or 10, y = self.LoadedData.Offsets.Text[2] or 15}
+		
+		self.Monochrome = self.Config.Monochrome
+			
+		local titleFont, textFont, backlogFont 
+		
+		if self.LoadedData.TitleFont and self.LoadedData.TextFont then
+			if gr.Fonts[self.LoadedData.TitleFont]:isValid() then
+				titleFont = gr.Fonts[self.LoadedData.TitleFont]
+			end
+			
+			if gr.Fonts[self.LoadedData.TextFont]:isValid() then
+				textFont = gr.Fonts[self.LoadedData.TextFont]
+			end
+			
+			if gr.Fonts[self.LoadedData.Backlog.Font]:isValid() then
+				backlogFont = gr.Fonts[self.LoadedData.Backlog.Font]
+			end
+			
+		end
+		
+		self.Fonts = {Title = titleFont or gr.Fonts[3], Text = textFont or gr.Fonts[1], Backlog = backlogFont or gr.Fonts[1]}
+			
+		self:LoadMsgBox(self.LoadedData.Image or "messagebox")
+				
+		if self.Config.Monochrome then
+			self.Color = {}
+			self.Color.Title = {}
+			self.Color.Title[1], self.Color.Title[2], self.Color.Title[3], self.Color.Title[4] = hu.getHUDGaugeColor(27) --27 is message lines!
+			self.Color.Title[4] = 255
+			self.Color.Text = {}
+			self.Color.Text[1], self.Color.Text[2], self.Color.Text[3], self.Color.Text[4] = hu.getHUDGaugeColor(27)
+			self.Color.Text[4] = 255
+			self.Color.HUD = {}
+			self.Color.HUD[1], self.Color.HUD[2], self.Color.HUD[3], self.Color.HUD[4] = hu.getHUDGaugeColor(25) --25 is the talking head!
+		else
+			self.Color = {}
+			self.Color.Title = {self.Config.Default.TitleColor[1] or 161,self.Config.Default.TitleColor[2] or 184,self.Config.Default.TitleColor[3] or 161,self.Config.Default.TitleColor[4] or 255}
+			self.Color.Text = {self.Config.Default.TextColor[1] or 161,self.Config.Default.TextColor[2] or 184,self.Config.Default.TextColor[3] or 161,self.Config.Default.TextColor[4] or 255}
+			self.Color.HUD = {}
+			self.Color.HUD[1], self.Color.HUD[2], self.Color.HUD[3], self.Color.HUD[4] = hu.getHUDGaugeColor(25) --25 is the talking head!
+		end
+				
+	end
+
+end
+
+function AXMessage:LoadMsgBox(filename) --**********************************
+
+	if not filename then
+		ba.print("AXMSG: Oops no file name given!\n")
+		return
+	end
+
+	self.Image = {}
+	self.Image.file = gr.loadTexture(filename)
+	self.Image.file2 = gr.loadTexture(filename .. "2")
+	
+	if not self.Image.file:isValid() then
+		return
+	end
+	
+	local scale = self.LoadedData.ImageScale or 1
+	
+	self.Image.w = self.Image.file:getWidth() * scale
+	self.Image.h = self.Image.file:getHeight() * scale
+
+	self.Position = {}
+	self.BacklogPos = {}
+	
+	local pos = self.LoadedData.Position
+	local blpos = self.LoadedData.Backlog
+	
+	if pos.Origin and pos.Offset then
+		self.Position.x = (gr.getScreenWidth() * pos.Origin[1]) + pos.Offset[1]
+		self.Position.y = (gr.getScreenHeight() * pos.Origin[2]) + pos.Offset[2]
+	elseif pos.Origin and not pos.Offset then
+		self.Position.x = (gr.getScreenWidth() * pos.Origin[1]) - (self.Image.w/2)
+		self.Position.y = (gr.getScreenHeight() * pos.Origin[2])
+	elseif pos.X and pos.Y then
+		self.Position.x = pos.X
+		self.Position.y = pos.Y
+	else
+		self.Position.x = (gr.getScreenWidth() * 0.5) - (self.Image.w/2)
+		self.Position.y = (gr.getScreenHeight() * 0.7)
+	end
+	
+	if blpos.Origin and blpos.Offset then
+		self.BacklogPos.x = (gr.getScreenWidth() * blpos.Origin[1]) + blpos.Offset[1]
+		self.BacklogPos.y = (gr.getScreenHeight() * blpos.Origin[2]) + blpos.Offset[2]
+	elseif blpos.Origin and blpos.Offset then
+		self.BacklogPos.x = (gr.getScreenWidth() * blpos.Origin[1])
+		self.BacklogPos.y = (gr.getScreenHeight() * blpos.Origin[2])
+	else
+		self.BacklogPos.x = 15
+		self.BacklogPos.y = 50
+	end
+	
+	if not blpos.Height then
+		blpos.Height = 50
+	end
+	
+	--local hx, hy = self.Position.x + pos.HeadAni[1], self.Position.y + pos.HeadAni[2]
+	
+	--mn.runSEXP("hud-set-coords !Talking head! !"..hx.."! !"..hy.."!")
+	
+end
+
+function AXMessage:SetupMessage(sender, message, messageText)
+
+	if self.Timer and self.RawString then
+		self:AddToBacklog(self.Sender, self.RawString)
+	end
+
+	local thisMessage
+	local genericVoice
+	local speedFactor = 1
+	
+	if mn.Messages[message]:isValid() then
+		thisMessage = mn.Messages[message]
+	elseif not self.ShowBuiltIn then
+		return
+	end
+	
+	if string.find(message, "!!!", 1, true) == 1 then
+		speedFactor = 0
+	elseif string.find(message, "!!", 1, true) == 1 then
+		speedFactor = 0.3
+	elseif string.find(message, "!", 1, true) == 1 then
+		speedFactor = 0.6
+	elseif string.find(message, "...", 1, true) == 1 then
+		speedFactor = 2.0
+	elseif string.find(message, "..", 1, true) == 1 then
+		speedFactor = 1.6
+	elseif string.find(message, ".", 1, true) == 1 then
+		speedFactor = 1.3
+	end
+		
+	self.Sender = sender
+	
+	self.RawString = messageText
+
+	self.DisplayString = nil
+	self.NextChar = mn.getMissionTime() + self.Length
+	self.Drawing = true
+	
+	if self.Config.GenericFiles and thisMessage and thisMessage.VoiceFile.Filename then
+	
+		for i, v in ipairs(self.Config.GenericFiles) do
+			if v == string.gsub(thisMessage.VoiceFile.Filename,'\....$','') then
+				genericVoice = true
+				break
+			end
+		end
+	end
+	
+	self.Speed = self.Config.Default.Speed or 0.03
+	self.Speed = self.Speed * speedFactor
+	local guesstimatelength 
+	
+	if self.Config.Unicode then
+		guesstimatelength = math.max(self.Length * utf8.len(self.RawString), self.Length * utf8.len(self.RawString) * speedFactor, 2)
+	else
+		guesstimatelength = math.max(self.Length * #self.RawString, self.Length * #self.RawString * speedFactor, 2)
+	end
+	
+	if thisMessage then	
+		if thisMessage.VoiceFile.Duration > 0 and not genericVoice then
+			self.Timer = mn.getMissionTime() + thisMessage.VoiceFile.Duration + self.AfterVoice
+			self.debug = "Got Voice"
+			if self.Config.MatchVoiceLength then
+				self.Speed = self.Timer / #self.RawString
+			end
+		else
+			self.Timer = mn.getMissionTime() + guesstimatelength
+			self.debug = "No voice"
+		end
+	else
+		self.Timer = mn.getMissionTime() + guesstimatelength
+		self.debug = "Built in"
+	end
+	
+	self.Timestamp = mn.getMissionTime()
+
+end
+
+function AXMessage:UpdateString()
+
+	if self.Drawing and self.DisplayString == self.RawString then
+		self.Drawing = false
+		return
+	end
+	
+	if self.Drawing then
+		if self.Speed == 0 then
+			self.DisplayString = self.RawString
+		else
+			if self.RawString and self.RawString ~= self.DisplayString then
+				local toDraw = (mn.getMissionTime() - self.Timestamp) / self.Speed
+					if toDraw > 0 then
+						if self.Config.Unicode then
+							self.DisplayString = utf8.sub(self.RawString, 1, toDraw)
+						else
+							self.DisplayString = self.RawString:sub(1, toDraw)
+						end
+					end
+			end
+		end
+	end
+	
+end
+
+function AXMessage:Draw()
+
+	local draw
+
+	if self.Timer and not self.AlwaysDrawMsgBox then
+		if self.Timer > mn.getMissionTime() then
+			draw = true
+		elseif self.RawString then
+			self:AddToBacklog(self.Sender, self.RawString)
+			self.Sender = nil
+			self.RawString = nil
+			self.Timer = nil
+		end
+	end
+	
+	if self.AlwaysDrawMsgBox then
+		draw = true
+	end
+	
+	if draw then 
+		self:DrawMessageBox()
+	end
+		
+
+end
+
+function AXMessage:SetColor(text,r,g,b,a)
+
+	if text == "title" then
+		self.Color.Title = {r,g,b,a or 255}
+	elseif text == "text" then
+		self.Color.Text = {r,g,b,a or 255}
+	end
+
+end
+
+function AXMessage:AddToBacklog(sender, message)
+
+	local newEntry = {}
+	
+	newEntry.Sender = sender
+	newEntry.Text = message
+	
+	if self.LoadedData.Backlog.Timeout then
+		newEntry.Expire = self.LoadedData.Backlog.Timeout + mn.getMissionTime()
+	end
+
+	self.Backlog.Entry[#self.Backlog.Entry+1] = newEntry
+	self.Backlog.Timestamp = mn.getMissionTime()
+	
+	if #self.Backlog.Entry > self.Backlog.MaxSize then
+		table.remove(self.Backlog.Entry, 1)
+	end
+
+end
+
+
+function AXMessage:DrawMessageBox()
+
+	if self.Monochrome then
+		if self.Image.file2:isValid() then
+			gr.drawImage(self.Image.file2, self.Position.x, self.Position.y, self.Position.x + self.Image.w, self.Position.y + self.Image.h, 0, 0, 1, 1, 0.5 )
+		end
+		gr.setColor(self.Color.HUD[1], self.Color.HUD[2], self.Color.HUD[3], self.Color.HUD[4])
+		--gr.drawMonochromeImage(self.Image.file, self.Position.x, self.Position.y)
+	else
+		gr.drawImage(self.Image.file, self.Position.x, self.Position.y)
+	end
+		
+	if self.DisplayString and self.Sender then
+	
+	--local senderWidth = 0
+	
+	--if string.match(self.Message.Message, "%w") then senderWidth = gr.getStringWidth(self.Sender) end
+	
+		if gr.getStringWidth(self.Sender) > 1 and self.Sender ~= "::" then
+			gr.setColor(self.Color.Title[1], self.Color.Title[2], self.Color.Title[3], self.Color.Title[4])
+			gr.CurrentFont = self.Fonts.Title
+			gr.drawString(self.Sender, self.Position.x + self.Offsets.Sender.x, self.Position.y + self.Offsets.Sender.y)
+		end
+		
+		if gr.getStringWidth(self.DisplayString) > 1 then
+			gr.setColor(self.Color.Text[1], self.Color.Text[2], self.Color.Text[3], self.Color.Text[4])
+			gr.CurrentFont = self.Fonts.Text
+			gr.drawString(self.DisplayString, self.Position.x + self.Offsets.Text.x, self.Position.y + self.Offsets.Text.y + gr.CurrentFont.Height, self.Position.x + self.Image.w - 20, self.Position.y + self.Image.h - 5 + gr.CurrentFont.Height)
+		end
+		
+	end
+
+end
+
+function AXMessage:DrawBacklog()
+
+	gr.CurrentFont = self.Fonts.Backlog
+	
+	local backlogSize = #self.Backlog.Entry
+	local line = 1
+	local drawnLines = 1
+	local offset = 0
+	local screenWidth = gr.getScreenWidth()
+	local fontHeight = gr.CurrentFont.Height
+	
+	if self.Backlog.Timestamp then
+		if (self.Backlog.Timestamp + 0.2) > mn.getMissionTime() then
+			offset = -10 * (mn.getMissionTime()-self.Backlog.Timestamp) / 0.2 + 10
+		else
+			self.Backlog.Timestamp = nil
+		end
+	end
+	
+	local width = screenWidth - self.BacklogPos.x
+	
+	gr.setClip(self.BacklogPos.x, self.BacklogPos.y, width, self.Backlog.Height)
+
+		for i = backlogSize, 1, -1 do
+		
+			local text = self.Backlog.Entry[i].Text
+			local sender = self.Backlog.Entry[i].Sender .. ": "
+			local x1 = 0			
+			local x2 = (screenWidth/2) - 85 - self.BacklogPos.x
+			--local guessedLines = math.floor((gr.getStringWidth(text)+20)/(x2 - (gr.getStringWidth(sender))))
+			--local guessedLines = (gr.getStringWidth(text))/(x2 - (gr.getStringWidth(sender)))
+			local guessedLines = gr.drawString(text, x1 + gr.getStringWidth(sender), self.Backlog.Height + 100, x2, self.Backlog.Height + 200) - 1 --this is horrible, but those two other guessedLines don't work!
+			local y1 = self.Backlog.Height - ((line + guessedLines) * fontHeight) + offset
+			local y2 = y1 + (fontHeight * 5)
+			local alpha = 255
+						
+			if line ~= 1 then
+				alpha = (127 * (y1 / self.Backlog.Height)) + 128
+			end
+						
+			gr.setColor(self.Color.Text[1], self.Color.Text[2], self.Color.Text[3], alpha)
+			
+			if text and y1 > (-1 * (guessedLines+1) * fontHeight) then
+				if (not self.Backlog.Timeout) or (self.Backlog.Timeout and self.Backlog.Entry[i].Expire and (self.Backlog.Entry[i].Expire > mn.getMissionTime())) then
+					gr.drawString = gr.drawString(sender, x1, y1)
+					drawnLines = gr.drawString(text, x1 + gr.getStringWidth(sender), y1, x2, y2)
+				end
+				line = line + drawnLines
+			end
+
+		end
+		
+	gr.resetClip()
+	
+	--gr.setColor(255,255,255,255)
+	--gr.drawString("BACKLOG SIZE: " .. backlogSize, 150,350)
+			
+end
+
+function AXMessage:Exit()
+
+	self.Enabled = false
+	if self.Image.file:isValid() then self.Image.file:unload() end
+	if self.Image.file2:isValid() then self.Image.file2:unload() end
+
+end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	if not AXMessage.Enabled then
+		AXMessage:Init()
+	end
+]
+
+$On State End:
+[
+	if AXMessage.Enabled then
+		AXMessage:Exit()
+	end
+]
+
+$On HUD Draw:
+[
+	if hu.HUDDrawn then
+		if AXMessage.Enabled and AXMessage.DrawControl == "self" then
+			AXMessage:UpdateString()
+			AXMessage:Draw()
+			if not hu.HUDDisabledExceptMessages and AXMessage.Backlog and AXMessage.Backlog.Enabled then
+				AXMessage:DrawBacklog()
+			end
+		end
+	end
+]
+
+$On Message Received:
+[
+
+--Hook vars: "Name" (Message name), "Message" (Message Text), "SenderString" (Displayed name), "Builtin" (boolean if its a builtin message), "Sender" (object handle that sent, not always valid!!!!)
+
+	if AXMessage.Enabled and AXMessage.DrawControl == "self" then	
+		AXMessage:SetupMessage(hv.SenderString, hv.Name, hv.Message)
+	end
+		
+]
+
+$On HUD Message Received:
+[
+	--[[hv.Source Types:
+	0->Computer (Things like "Warp Drive Broken")
+	1->Training (Carries over from the Training Messages)
+	2->Hidden (Things like "Cannot fire %s without a lock")
+	3->Important (Not actually used)
+	4->Failed (Used for objective status in the message log)
+	5->Satisfied (Ditto)
+	6->Terran Command (Anything from #Command)
+	7->Netplayer (Multichat)
+	8+->Teams (8 = friendly, 9 = hostile etc etc)
+	]]--
+	
+	if AXMessage.Enabled and AXMessage.Backlog then
+		if ((hv.SourceType == 0) or (hv.SourceType == 2)) then
+			AXMessage:AddToBacklog("SYSTEM", hv.Text)
+		end
+	end
+	
+]
+
+$State: GS_STATE_GAME_PAUSED
+$On Frame:
+[
+	if AXMessage.Timer then
+		AXMessage.Timer = AXMessage.Timer + ba.getFrametime()
+	end
+]
+#End
