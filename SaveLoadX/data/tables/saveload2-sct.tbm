@@ -419,7 +419,9 @@ function SaveState:ApplyParseData(ship,data)
 		
 	for i,subsys in ipairs(ship.Subsystems) do
 	
-		subsys.Damage = 100 - data.Subsystems[i].HP --We record the health in the save data, but the subsystem uses damage (silly Volition)
+		if data.Subsystems[i].HP then
+			subsys.Damage = 100 - data.Subsystems[i].HP --We record the health in the save data, but the subsystem uses damage (silly Volition)
+		end
 		
 		if subsys.PrimaryBanks and data.Subsystems[i].PBanks then
 			for i, pbank in ipairs(data.Subsystems[i].PBanks) do
