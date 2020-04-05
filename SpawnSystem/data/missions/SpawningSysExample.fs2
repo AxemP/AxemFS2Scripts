@@ -1,0 +1,535 @@
+#Mission Info
+
+$Version: 0.10
+$Name:  XSTR("Spawning System Example", -1)
+$Author: Axem
+$Created: 04/05/20 at 09:27:29
+$Modified: 04/05/20 at 10:49:28
+$Notes:
+This is a FRED2_OPEN created mission.
+$End Notes:
+
+$Mission Desc:
+ XSTR("Put mission description here
+", -1)
+$end_multi_text
++Game Type Flags: 1
++Flags: 0
++Fog Near Mult: 1.000000
+
++Fog Far Mult: 1.000000
+
++Disallow Support: 0
++Hull Repair Ceiling: 0.000000
++Subsystem Repair Ceiling: 100.000000
+
++Viewer pos: -864.576294, 2727.145020, -2517.071533
++Viewer orient:
+	1.000000, 0.000000, -0.000000,
+	0.000000, 0.866025, 0.500000,
+	0.000000, -0.500000, 0.866025
+
+
+$AI Profile: FS2 RETAIL
+
+#Command Briefing
+
+#Briefing
+$start_briefing
+$num_stages: 0
+$end_briefing
+
+#Debriefing_info
+
+$Num stages: 0
+
+#Players		;! 1 total
+
+$Starting Shipname: Alpha 1
+$Ship Choices: (
+	"GTF Ulysses"	5
+	"GTF Hercules"	5
+	"GTF Hercules Mark II"	5
+	"GTF Ares"	5
+	"GTF Erinyes"	5
+	"GTF Loki"	5
+	"GTF Pegasus"	5
+	"GTF Perseus"	5
+	"GTF Myrmidon"	5
+	"SF Mara (terrans)"	5
+	"GTB Artemis"	5
+	"GTB Artemis D.H."	5
+	"GTB Medusa"	5
+	"GTB Ursa"	5
+	"GTB Zeus"	5
+	"GTB Boanerges"	5
+	"GVF Ptah"	5
+)
+
++Weaponry Pool: (
+	"Subach HL-7"	16
+	"Subach HL-D"	16
+	"Mekhu HL-7"	16
+	"Mekhu HL-7D"	16
+	"Akheton SDG"	16
+	"Morning Star"	16
+	"MorningStar D"	16
+	"Prometheus R"	16
+	"Prometheus S"	17
+	"Prometheus D"	16
+	"Maxim"	16
+	"Maxim D"	16
+	"UD-8 Kayser"	17
+	"UD-D Kayser"	16
+	"Circe"	16
+	"Lamprey"	16
+	"Rockeye"	500
+	"Rockeye D"	500
+	"Tempest"	500
+	"Tempest D"	500
+	"Hornet"	500
+	"Hornet D"	500
+	"Hornet#Weak"	500
+	"Tornado"	540
+	"Tornado D"	500
+	"Harpoon"	500
+	"Harpoon D"	500
+	"Harpoon#Weak"	500
+	"Trebuchet"	505
+	"TAG-A"	500
+	"TAG-B"	500
+	"TAG-C"	500
+	"Piranha"	500
+	"Stiletto II"	500
+	"Infyrno"	500
+	"Infyrno D"	500
+	"Cyclops"	500
+	"Cyclops#short"	500
+	"Helios"	500
+	"EMP Adv."	500
+	"Rockeye#Shivan"	500
+	"Rockeye D#Shivan"	500
+	"Tempest#Shivan"	500
+	"Tempest D#Shivan"	500
+	"Hornet#Shivan"	500
+	"Hornet D#Shivan"	500
+	"Hornet#Weak#Shivan"	500
+	"Tornado#Shivan"	500
+	"Tornado D#Shivan"	500
+	"Harpoon#Shivan"	500
+	"Harpoon D#Shivan"	500
+	"Harpoon#Weak#Shivan"	500
+	"Trebuchet#Shivan"	500
+	"Piranha#Shivan"	500
+	"Shivan Disruptor"	500
+	"Shivan Area Bomb"	500
+	"Shivan Bomb"	500
+	"Shivan Bomb#Short"	500
+	"Shivan Megabomb"	500
+	"EMP Adv.#Shivan"	500
+	"Cloaking Device"	500
+)
+
+#Objects		;! 2 total
+
+$Name: Alpha 1		;! Object #0
+$Class: GTF Erinyes
+$Team: Friendly
+$Location: 0.000000, 0.000000, 0.000000
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Hull: 100
++Subsystem: Pilot
++Primary Banks: ( "UD-8 Kayser" "Prometheus S" )
++Secondary Banks: ( "Trebuchet" "Tornado" )
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" "player-start" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Score: 8
+
+$Name: Host		;! Object #1
+$Class: SC Cain
+$Team: Hostile
+$Location: -1729.152588, 0.003906, 4412.953125
+$Orientation:
+	-0.851690, 0.000000, -0.524044,
+	0.000000, 1.000000, 0.000000,
+	0.524044, 0.000000, -0.851690
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Initial Shields: 100
++Subsystem: Pilot
++Subsystem: turret01
++Subsystem: turret02
++Subsystem: turret03
++Subsystem: turret04
++Subsystem: turret05
++Subsystem: turret06
++Subsystem: turret07
++Subsystem: turret08
++Subsystem: turret09
+$Arrival Location: Hyperspace
+$Arrival Cue: ( true ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "no-shields" )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 0		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 150
+
+#Wings		;! 1 total
+
+$Name: Alpha
+$Waves: 1
+$Wave Threshold: 0
+$Special Ship: 0		;! Alpha 1
+
+$Arrival Location: Hyperspace
+$Arrival Cue: ( true ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Ships: (		;! 1 total
+	"Alpha 1"
+)
++Hotkey: 0
++Flags: ( )
+
+#Events		;! 1 total
+
+$Formula: ( when 
+   ( has-time-elapsed 5 ) 
+   ( lua-spawn-set-options 
+      "Enemy" 
+      "Host" 
+      9 
+      3 
+      3 
+      -1 
+      "Hostile" 
+      "default" 
+      10 
+      60 
+      3 
+   )
+   ( lua-spawn-add-class 
+      "SF Mara" 
+      "SF Manticore" 
+   )
+   ( lua-spawn-set-order "chase-any" ) 
+   ( lua-spawn-start ) 
+)
++Name: Start the fun!
++Repeat Count: 1
++Interval: 1
+
+#Goals		;! 0 total
+
+
+#Waypoints		;! 0 lists total
+
+
+#Messages		;! 0 total
+
+
+#Reinforcements		;! 0 total
+
+
+#Background bitmaps		;! 44 total
+
+$Num stars: 500
+$Ambient light level: 7895160
+
+$Bitmap List:
+$Sun: SunBlue
++Angles: 2.705260 0.000000 0.209440
++Scale: 0.200000
+$Starbitmap: NebulB2-Main
++Angles: 0.349066 0.000000 0.436332
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulB5-whisp
++Angles: 0.541052 5.759582 0.593412
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulB4-whisp
++Angles: 0.628318 6.195914 0.261799
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulB6-whisp
++Angles: 0.314159 1.623155 0.069813
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulB7-whisp
++Angles: 0.069813 0.383972 0.383972
++ScaleX: 4.000000
++ScaleY: 3.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulB8-whisp
++Angles: 0.069813 3.089230 0.610865
++ScaleX: 3.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD10-whisp
++Angles: 0.349066 0.366519 0.261799
++ScaleX: 3.000000
++ScaleY: 3.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulB3-main
++Angles: 0.069813 5.567596 0.000000
++ScaleX: 4.000000
++ScaleY: 3.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulB8-whisp
++Angles: 0.471239 1.047197 6.178461
++ScaleX: 4.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+$Starbitmap: nebulB8-whisp
++Angles: 0.750491 6.161007 0.069813
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: nebulB7-whisp
++Angles: 1.064650 0.802851 0.506145
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulB8-whisp
++Angles: 0.506145 4.520399 0.680678
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulB8-whisp
++Angles: 0.034907 2.356193 0.296706
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulE3-main
++Angles: 5.777035 0.000000 3.141590
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulE8-whisp
++Angles: 5.742129 3.019417 2.827431
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF2-main
++Angles: 5.567596 0.000000 3.141590
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF9-whisp
++Angles: 5.323250 0.000000 3.141590
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF12-whisp
++Angles: 5.480330 0.000000 3.490656
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF5-whisp
++Angles: 5.148717 0.000000 3.839721
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF4-whisp
++Angles: 4.572759 0.000000 3.839721
++ScaleX: 3.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF12-whisp
++Angles: 4.118974 0.750491 3.543016
++ScaleX: 2.500000
++ScaleY: 5.000000
++DivX: 3
++DivY: 3
+$Starbitmap: nebulD14-whisp
++Angles: 3.700095 0.314159 3.106684
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD14-whisp
++Angles: 3.769908 1.326449 2.478366
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD4-whisp
++Angles: 3.979347 0.349066 2.251473
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD3-whisp
++Angles: 4.450586 4.223693 2.059487
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 1
++DivY: 1
+$Starbitmap: nebulD3-whisp
++Angles: 4.136427 4.625119 1.937314
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF1-main
++Angles: 5.235984 0.575958 1.954767
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF5-whisp
++Angles: 5.585049 0.052360 2.199113
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF2-main
++Angles: 5.777035 0.000000 2.722712
++ScaleX: 7.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD1-main
++Angles: 6.073741 4.817105 2.914698
++ScaleX: 3.000000
++ScaleY: 2.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD4-whisp
++Angles: 6.230821 5.497783 2.844884
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD7-whisp
++Angles: 6.230821 0.000000 3.089230
++ScaleX: 2.000000
++ScaleY: 2.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD6-whisp
++Angles: 0.104720 0.000000 2.932151
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD4-whisp
++Angles: 0.174533 1.570795 2.879791
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD13-whisp
++Angles: 0.575958 0.000000 2.775071
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD1-main
++Angles: 0.855211 4.712385 2.583085
++ScaleX: 5.000000
++ScaleY: 6.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD1-main
++Angles: 1.064650 1.483529 2.635445
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD5-whisp
++Angles: 1.343902 6.178461 2.530725
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD2-main
++Angles: 1.745328 6.108648 2.460912
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF1-main
++Angles: 2.094393 0.000000 2.460912
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 1
+$Starbitmap: nebulF2-main
++Angles: 2.530725 0.000000 2.740165
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulF6-whisp
++Angles: 2.775071 0.000000 2.740165
++ScaleX: 5.000000
++ScaleY: 5.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD2-main
++Angles: 3.001964 6.265727 2.827431
++ScaleX: 4.000000
++ScaleY: 4.000000
++DivX: 5
++DivY: 5
+$Starbitmap: nebulD7-whisp
++Angles: 3.193950 6.021381 3.001964
++ScaleX: 3.000000
++ScaleY: 5.000000
++DivX: 1
++DivY: 1
+
+#Asteroid Fields
+
+#Music
+
+$Event Music: None
+$Briefing Music: None
+
+#End
+

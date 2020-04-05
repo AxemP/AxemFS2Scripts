@@ -1,0 +1,631 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+--[[
+***INFINITE SPAWNING SYSTEM***
+        By Axem
+]]--
+
+SpawnSystem = {}
+
+function SpawnSystem:Init()
+
+	ba.print("*****Initializing Spawn System...\n")
+
+	self.Loaded = true
+	self.Enabled = false		--Is this thing on?
+	self.Anchor = nil			--All spawned ships will appear around this ship
+	self.SpawnList = {}			--Active spawned ships
+	self.ClassList = {}			--Available classes to spawn
+	
+	self.SpawnCap = 6			--The max number of spawned ships
+	self.SpawnInterval = 5		--The interval between fighter spawnings
+	self.NextSpawnTime = 5		--The time when we spawn a new fighter
+	self.SpawnName = "Enemy#" 	--The template for what we name our new ships
+	self.SpawnCount = 0			--The number that will go at the end of a ship's name
+	self.RadiusMult = 1			--Anchor Radius Spawn Multiplier
+		
+	self.WaveTracker = self.SpawnCap
+	self.WaveInterval = 60
+	self.WaveStatus = -1
+	self.WaveTimer = -1
+	self.GauntletMode = false
+	self.GroupSize = 1
+	
+	self.SpawnAttributes = {} 					--Attributes to give the newly spawned ship
+	self.SpawnAttributes.AIClass = nil 			--If nil we'll use the defaults
+	self.SpawnAttributes.Team = nil				--If Team is nil it'll copy the spawn anchor's team
+	self.SpawnAttributes.Pri = {nil,nil,nil}	-- If nil we'll use the defaults
+	self.SpawnAttributes.Sec = {nil,nil,nil}	-- Ditto
+	self.SpawnAttributes.Order = {target = nil, order = nil}
+	self.SpawnAttributes.ArrivalEffect = 0
+	self.SpawnAttributes.ExpEffect = nil
+
+end
+
+function SpawnSystem:MaybeSpawn(missionTime)
+
+	if (self.Anchor ~= nil) and (self.ClassList ~= nil) then
+		if self.Anchor:isValid() then
+			if (self.NextSpawnTime < missionTime) then
+			
+				if not self.GauntletMode then
+					if (self.SpawnCount == self.WaveTracker) and (self.WaveStatus == 1) then
+						self.WaveStatus = -1
+					end
+					
+					if (self.WaveTimer < missionTime) then
+						if (self.WaveStatus == -1) and (#self.SpawnList < self.SpawnCap) then
+							self.WaveStatus = 1
+						end
+						self.WaveTracker = self.SpawnCount + self.SpawnCap - (#self.SpawnList)
+						self.WaveTimer = missionTime + self.WaveInterval
+					end
+				end
+				
+				if (self.WaveStatus == 1 and (#self.SpawnList < self.SpawnCap)) or self.GauntletMode then
+					for i=1, self.GroupSize do
+						if (self.GroupSize > 1) and (i > 1) and self.AnchorTemp and self.ClassOverride then
+							self:ActuallySpawn(self.AnchorTemp, self.ClassOverride)
+						else
+							self:ActuallySpawn(self.Anchor)
+						end
+					end
+				end
+				
+				self.AnchorTemp = nil
+				self.ClassOverride = nil
+
+				self.NextSpawnTime = mn.getMissionTime() + self.SpawnInterval
+				ba.print("Spawn System: Next possible spawn in " .. self.SpawnInterval .. " seconds\n")
+				ba.print("Spawn System: Spawn List is " .. #self.SpawnList .. " items long\n")
+			
+			end
+		end
+	end
+end
+	
+function SpawnSystem:ActuallySpawn(anchorShip, classoverride)
+	
+	local spawnedName = self.SpawnName .. self.SpawnCount
+	local spawnedClass
+	
+	if classoverride then
+		spawnedClass = tb.ShipClasses[classoverride]
+	else
+		spawnedClass = tb.ShipClasses[self.ClassList[math.random(#self.ClassList)]]
+	end
+	
+	local spawnedOrient
+	
+	if self.AnchorTemp then
+		spawnedOrient = ba.createOrientation(self.AnchorTemp.Orientation.p, self.AnchorTemp.Orientation.b, self.AnchorTemp.Orientation.h)
+	else
+		spawnedOrient = ba.createOrientation(math.random(-180,180),math.random(-180,180),math.random(-180,180))
+	end
+	
+	local radius = anchorShip.Class.Model.Radius
+	
+	ba.print("Spawn System: radius = " .. radius .. "\n")
+	
+	local anchorRadius = radius * self.RadiusMult
+	
+	ba.print("Spawn System: anchorRadius = " .. anchorRadius .. "\n")
+	
+	local spawnedOrigin = ba.createVector(0,0,0)
+	
+	for i = 1, 3 do
+		
+		local mn = anchorRadius * -0.5
+		local mx = anchorRadius * 0.5
+		
+		local x = math.random(mn, mx)
+		
+		if x <= 0 then
+			x = x + mn
+		else
+			x = x + mx
+		end
+		
+		ba.print("Spawn System: random " ..  x .. "\n")
+		
+		spawnedOrigin[i] = anchorShip.Position[i] + x
+		ba.print(i .. ": " .. spawnedOrigin[i] .. "\n")
+	
+	end
+		
+	local spawnIndex = #self.SpawnList+1
+	local spawnTeam = anchorShip.Team
+	local foo
+	local spawnattribs = self.SpawnAttributes
+	
+	--Create our spawned ship here
+	local newship = mn.createShip(spawnedName, spawnedClass, spawnedOrient, spawnedOrigin)
+	
+	--Arrival Effects: 0=None, 1=FS1 Ship Effect, 2=Decloak, 3=Warp In (Defaults to 0)
+	if spawnattribs.ArrivalEffect == 1 then
+		newship:addShipEffect("FS1 Ship select",500) --Make it appear all pretty like
+	elseif spawnattribs.ArrivalEffect == 2 then
+		newship:addShipEffect("Decloak",500)
+	elseif spawnattribs.ArrivalEffect == 3 then
+		newship:warpIn()
+	end
+		
+	if spawnattribs.ExpEffect > 0 then
+		mn.runSEXP("(explosion-effect " .. spawnedOrigin.x .. " " .. spawnedOrigin.y .. " " .. spawnedOrigin.z .. " 10 10 " .. newship.Class.Model.Radius * 1.5 .. " 1 10 0 " .. spawnattribs.ExpEffect .. " 1)")
+	end
+	
+	ba.print("Spawn System: Spawned: " .. spawnedName .. ", a " .. spawnedClass.Name .."-class ship on team " .. spawnTeam.Name .. "\n")
+		
+	self.SpawnCount = self.SpawnCount + 1
+	
+	--Tweak any attributes we wanted
+	--Change team?
+	if spawnattribs.Team == nil then
+		newship.Team = spawnTeam
+	else
+		mn.runSEXP("(change-iff !" .. spawnattribs.Team .. "! !" .. spawnedName .. "!)")
+	end
+	
+	local numPrimaryBanks = #mn.Ships[spawnedName].PrimaryBanks
+	local numSecondaryBanks = #mn.Ships[spawnedName].SecondaryBanks
+	
+	--Change Primary Weapons?
+	for i = 1, numPrimaryBanks do
+		if spawnattribs.Pri[i] ~= nil then
+			mn.runSEXP("(set-primary-weapon !".. spawnedName .."! !".. i-1 .."! !"..spawnattribs.Pri[i].."!)")
+		end
+	end
+	
+	--Change Secondary Weapons?
+	for i = 1, numSecondaryBanks do
+		if spawnattribs.Sec[i] ~= nil then
+			mn.runSEXP("(set-secondary-weapon !".. spawnedName .."! !".. i-1 .."! !".. spawnattribs.Sec[i] .."! !999999!)")
+		end
+	end
+	
+	--Change AI Class?
+	if spawnattribs.AIClass ~= nil then
+		mn.runSEXP("(change-ai-class !" .. spawnattribs.AIClass .. "! !" .. spawnedName .. "!)")
+	end
+	
+	--Change Orders?
+	if (spawnattribs.Order["target"] ~= nil and spawnattribs.Order["order"] ~= nil) or (spawnattribs.Order["target"] ~= nil and spawnattribs.Order["order"] == ORDER_ATTACK_ANY )then
+		foo = newship:giveOrder(spawnattribs.Order["order"],spawnattribs.Order["target"],nil,89)
+		ba.print("Spawn System: Ship got order? " .. tostring(foo) .."\n")
+	end
+	
+	self.SpawnList[spawnIndex] = newship
+	
+	if self.GroupSize > 1 and (not self.AnchorTemp) and (not self.ClassOverride) then
+		self.AnchorTemp = newship
+		self.ClassOverride = newship.Class.Name
+	end
+		
+	
+end
+
+function SpawnSystem:VanishSpawned()
+
+	--[[local numSpawnList = #self.SpawnList
+	
+		for i = 1, numSpawnList do
+			mn.runSEXP("(ship-vanish !" .. self.SpawnList[i].Name .. "!)")
+		end]]--
+		
+	if self.SpawnList and (#self.SpawnList > 0) then
+		for k,v in pairs(self.SpawnList) do
+			mn.runSEXP("(ship-vanish !" .. v.Name .. "!)")
+		end
+		
+		self.SpawnList = {}
+	end
+
+end
+
+function SpawnSystem:RemoveShip(ship)
+
+	local numSpawnList = #self.SpawnList
+		
+		for i = 1, numSpawnList do
+			if self.SpawnList[i] == ship then
+				ba.print("Spawn System: " .. ship.Name .. " was removed\n")
+				table.remove(self.SpawnList,i)			
+			end
+		end
+
+end
+
+--FRED Functions Start Here!
+
+function spStartSpawn()
+
+	SpawnSystem:Init()
+	SpawnSystem.Enabled = true
+	SpawnSystem.WaveStatus = 1
+
+end
+
+function spStopSpawn()
+
+	SpawnSystem.Enabled = false
+
+end	
+
+function spSetAnchor(ship)
+	
+	if mn.Ships[ship]:isValid() then
+		SpawnSystem.Anchor = mn.Ships[ship]
+	end
+
+end
+
+function spAddClass(class)
+
+	if tb.ShipClasses[class]:isValid() then
+		SpawnSystem.ClassList[#SpawnSystem.ClassList+1] = tb.ShipClasses[class].Name
+	end
+	
+end
+
+function spRemClass(class)
+
+	if tb.ShipClasses[class]:isValid() then
+	
+		local numClassList = #SpawnSystem.ClassList
+		
+		for i = 1, numClassList do
+			if SpawnSystem.ClassList[i] == tb.ShipClasses[class]:getShipClassIndex() then
+				SpawnSystem.ClassList[i] = nil
+			end
+		end
+	end
+	
+end
+
+function spSetCap(number)
+
+	if type(number) == "number" then
+		SpawnSystem.SpawnCap = number
+	else
+		ba.error("Spawn System: spSetCap() was not given a number")
+	end
+end
+
+function spSetRMult(number)
+
+	if type(number) == "number" then
+		SpawnSystem.RadiusMult = number
+	else
+		ba.error("Spawn System: spSetRMult() was not given a number")
+	end
+	
+end
+
+function spSetSI(number)
+	
+	if type(number) == "number" then
+		SpawnSystem.SpawnInterval = number
+		else
+		ba.error("Spawn System: spSetSI() was not given a number")
+	end
+	
+end
+
+function spSpawnedLeft()
+
+	return #self.SpawnList
+
+end
+
+function spSetName(name)
+
+SpawnSystem.SpawnName = name .. "#"
+
+end
+
+function spEndSpawn()
+
+	SpawnSystem.Enabled = false
+	SpawnSystem:VanishSpawned()
+
+end
+
+function spSetOrder(order,target)
+
+	if mn.Ships[target]:isValid() then
+		ba.print("Spawn System: Got Target!\n")
+		SpawnSystem.SpawnAttributes.Order["target"] = mn.Ships[target]
+	end
+	
+	if string.lower(order) == "atk" then
+		SpawnSystem.SpawnAttributes.Order["order"] = ORDER_ATTACK
+		ba.print("Spawn System: Attack!\n")
+	elseif string.lower(order) == "grd" then
+		SpawnSystem.SpawnAttributes.Order["order"] = ORDER_GUARD
+		ba.print("Spawn System: Guard!\n")
+	elseif string.lower(order) == "atkany" then
+		SpawnSystem.SpawnAttributes.Order["target"] = nil
+		SpawnSystem.SpawnAttributes.Order["order"] = ORDER_ATTACK_ANY
+		ba.print("Spawn System: Attack any!\n")
+	end
+		
+	local numSpawnList = #SpawnSystem.SpawnList
+		
+	for i = 1, numSpawnList do
+		SpawnSystem.SpawnList[i]:giveOrder(self.SpawnAttributes.Order["order"],self.SpawnAttributes.Order["target"],nil,89)
+	end
+	
+	--ba.print("Order Set: order: " .. tostring(SpawnSystem.SpawnAttributes.Order["order"]) .. " target: " .. SpawnSystem.SpawnAttributes.Order["target"].Name .. "\n")
+
+end
+
+--NO ERROR CHECKING HERE, GET IT RIGHT THE FIRST TIME!!
+function spSetAI(class)
+
+	SpawnSystem.SpawnAttributes.AIClass = class
+
+end
+
+--NO ERROR CHECKING HERE, GET IT RIGHT THE FIRST TIME!!
+function spSetTeam(team)
+
+	SpawnSystem.SpawnAttributes.Team = team
+
+end
+
+function spSetP(bank,weapon)
+
+	if bank > 0 and bank < 4 then
+		if tb.WeaponClasses[weapon]:isValid() then
+			SpawnSystem.SpawnAttributes.Pri[bank] = weapon
+		end
+	end
+
+end
+
+function spSetS(bank,weapon)
+
+	if bank > 0 and bank < 4 then
+		if tb.WeaponClasses[weapon]:isValid() then
+			SpawnSystem.SpawnAttributes.Sec[bank] = weapon
+		end
+	end
+
+end
+
+function SpawnSystem:Exit()
+
+	self.Enabled = nil
+	self.Anchor = nil
+	self.SpawnList = nil
+	self.ClassList = nil
+	self.SpawnCap = nil
+	self.SpawnInterval = nil
+	self.NextSpawnTime = nil
+	self.SpawnName = nil
+	self.SpawnCount = nil
+	self.RadiusMult = nil
+	self.SpawnAttributes = nil
+
+end
+
+mn.LuaSEXPs["lua-spawn-start"].Action = function()
+
+	if not SpawnSystem.Loaded then
+		SpawnSystem:Init()
+	end
+
+	SpawnSystem.Enabled = true
+	SpawnSystem.WaveStatus = 1
+
+end
+mn.LuaSEXPs["lua-spawn-stop"].Action = function(vanish)
+
+	if not SpawnSystem.Loaded then
+		SpawnSystem:Init()
+	end
+
+	SpawnSystem.Enabled = false
+	if vanish then SpawnSystem:VanishSpawned() end
+
+end
+
+mn.LuaSEXPs["lua-spawn-add-class"].Action = function(...)
+
+	if not SpawnSystem.Loaded then
+		SpawnSystem:Init()
+	end
+
+	for i,v in ipairs(arg) do
+		local class = v[1]
+		if tb.ShipClasses[class]:isValid() then
+			SpawnSystem.ClassList[#SpawnSystem.ClassList+1] = tb.ShipClasses[class].Name
+		end
+	end
+
+end
+
+mn.LuaSEXPs["lua-spawn-rem-class"].Action = function(...)
+
+	if not SpawnSystem.Loaded then
+		SpawnSystem:Init()
+	end
+
+	local numClassList = #SpawnSystem.ClassList
+
+	for i,v in ipairs(arg) do
+		local class = v[1]
+		if tb.ShipClasses[class]:isValid() then
+			for i = 1, numClassList do
+				if SpawnSystem.ClassList[i] == tb.ShipClasses[class]:getShipClassIndex() then
+					SpawnSystem.ClassList[i] = nil
+				end
+			end
+		end
+	end
+
+end
+
+mn.LuaSEXPs["lua-spawn-set-options"].Action = function(name, anchor, cap, radius, arrivaleffect, expeffect, team, aiclass, spawninterval, waveinterval, spawngroupsize)
+
+	if not SpawnSystem.Loaded then
+		SpawnSystem:Init()
+	end
+
+	if name then
+		SpawnSystem.SpawnName = name .. "#"
+	end
+	
+	if anchor and anchor:isValid() then
+		SpawnSystem.Anchor = anchor
+	end
+	
+	if cap and cap > 0 then
+		SpawnSystem.SpawnCap = cap
+	end
+	
+	if radius and radius > 0 then
+		SpawnSystem.RadiusMult = radius
+	end
+	
+	if arrivaleffect and arrivaleffect >= 0 then
+		SpawnSystem.SpawnAttributes.ArrivalEffect = arrivaleffect
+	end
+	
+	if expeffect and expeffect >= -1 then
+		SpawnSystem.SpawnAttributes.ExpEffect = expeffect
+	end
+	
+	if team then
+		SpawnSystem.SpawnAttributes.Team = team.Name
+	end
+	
+	if aiclass then
+		if string.lower(aiclass) == "default" then
+			SpawnSystem.SpawnAttributes.AIClass = nil
+		elseif string.lower(aiclass) ~= "previous" then
+			SpawnSystem.SpawnAttributes.AIClass = aiclass
+		end
+	end
+	
+	if spawninterval and spawninterval > 0 then
+		SpawnSystem.SpawnInterval = spawninterval
+	end
+	
+	if waveinterval and waveinterval >= -1 then
+		if waveinterval == -1 then
+			SpawnSystem.GauntletMode = true
+		else
+			SpawnSystem.GauntletMode = false
+			SpawnSystem.WaveInterval = waveinterval
+		end
+	end
+	
+	if spawngroupsize and spawngroupsize > 0 then
+		SpawnSystem.GroupSize = spawngroupsize
+	end
+
+end
+
+mn.LuaSEXPs["lua-spawn-set-primary"].Action = function(bank, weapon)
+
+	if not SpawnSystem.Loaded then
+		SpawnSystem:Init()
+	end
+
+	if bank > 0 and bank < 4 then
+		if tb.WeaponClasses[weapon]:isValid() then
+			SpawnSystem.SpawnAttributes.Pri[bank] = weapon
+		end
+	end
+
+end
+
+mn.LuaSEXPs["lua-spawn-set-secondary"].Action = function(bank, weapon)
+
+	if not SpawnSystem.Loaded then
+		SpawnSystem:Init()
+	end
+
+	if bank > 0 and bank < 4 then
+		if tb.WeaponClasses[weapon]:isValid() then
+			SpawnSystem.SpawnAttributes.Sec[bank] = weapon
+		end
+	end
+
+end
+
+mn.LuaSEXPs["lua-spawn-set-order"].Action = function(order, target)
+
+	if not SpawnSystem.Loaded then
+		SpawnSystem:Init()
+	end
+
+	if target and mn.Ships[target]:isValid() then
+		ba.print("Spawn System: Got Target!\n")
+		SpawnSystem.SpawnAttributes.Order["target"] = mn.Ships[target]
+	end
+	
+	if string.lower(order) == "chase" then
+		SpawnSystem.SpawnAttributes.Order["order"] = ORDER_ATTACK
+		ba.print("Spawn System: Attack!\n")
+	elseif string.lower(order) == "guard" then
+		SpawnSystem.SpawnAttributes.Order["order"] = ORDER_GUARD
+		ba.print("Spawn System: Guard!\n")
+	elseif string.lower(order) == "chase-any" then
+		SpawnSystem.SpawnAttributes.Order["target"] = nil
+		SpawnSystem.SpawnAttributes.Order["order"] = ORDER_ATTACK_ANY
+		ba.print("Spawn System: Attack any!\n")
+	end
+		
+	local numSpawnList = #SpawnSystem.SpawnList
+		
+	for i = 1, numSpawnList do
+		SpawnSystem.SpawnList[i]:giveOrder(self.SpawnAttributes.Order["order"],self.SpawnAttributes.Order["target"],nil,89)
+	end
+
+end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On State End:
+[
+
+	SpawnSystem:Exit()
+
+]
+
+$On Frame:
+[
+
+	if SpawnSystem.Enabled then
+		SpawnSystem:MaybeSpawn(mn.getMissionTime())
+		--PrintDebug(SpawnSystem)
+	end
+	
+	--[[if SpawnSystem.SpawnList then
+		gr.setColor(255,255,255,255)
+		gr.drawString("Wave Status:" .. SpawnSystem.WaveStatus, 100, 100)
+		gr.drawString("Wave Tracker:" .. SpawnSystem.WaveTracker)
+		gr.drawString("Wave Timer:" .. SpawnSystem.WaveTimer)
+		gr.drawString("Spawn List:")
+		for k,v in pairs(SpawnSystem.SpawnList) do
+			gr.drawString(tostring(k) .. ", " .. v.Name)
+		end
+	end]]--
+	
+]
+
+$On Death:
+[
+	if SpawnSystem.Enabled and SpawnSystem.SpawnList then
+		SpawnSystem:RemoveShip(hv.Self)
+	end
+]
+
+#End

@@ -1,0 +1,129 @@
+#Lua SEXPs
+
+$Operator: lua-spawn-start
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Turns on the infinite ship spawning system. You'll need to add a class and set the basic options before this will do anything. Note about limitations of the system, spawned ships are limited to: just one team, just one anchor, just one set of orders, just one set of weapons used. This isn't for a fine balanced battleground. This is for arcadey gauntlets and other over the top style missions.
+
+$Operator: lua-spawn-stop
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Turns off the infinite ship spawning system. Optional argument to remove all ships that were spawned.
+$Parameter:
+	+Description: Remove all ships that were spawned?
+	+Type: Boolean
+	
+$Operator: lua-spawn-add-class
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Adds a class to consider spawning
+$Repeat
+$Parameter:
+	+Description: Name of ship class to add to spawning consideration
+	+Type: String
+	
+$Operator: lua-spawn-rem-class
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Removes a class from spawning consideration
+$Repeat
+$Parameter:
+	+Description: Name of ship class to remove from spawning consideration
+	+Type: String
+	
+$Operator: lua-spawn-set-options
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+$Maximum Arguments: 11
+$Return Type: Nothing
+$Description: Sets a variety of options related to the infinite ship spawning system.
+$Parameter:
+	+Description: Sets name for the spawned ships (The name will have # + a sequential number attached, but to the player, all they will see is the name).
+	+Type: String
+$Parameter:
+	+Description: Sets the anchor for the spawned ships to spawn around. The ships will spawn randomly within the ship's radius * spawn radius multiplier (defaults to 1, can be set later in this sexp)
+	+Type: Ship
+$Parameter:
+	+Description: Sets the cap of spawned ships. (Defaults to 6, set to negative number to preserve previous value)
+	+Type: Number
+$Parameter:
+	+Description: Sets the spawn radius multiplier (Defaults to 1, set to negative number to preserve previous value)
+	+Type: Number
+$Parameter:
+	+Description: Sets the arrival effect for the spawned ships. 0=None, 1=FS1 Ship Effect, 2=Decloak, 3=Warp In (Defaults to 0, set to negative number to preserve previous value)
+	+Type: Number
+$Parameter:
+	+Description: Sets the arrival explosion (an additional arrival effect). Uses a fireball entry number. A value of -1 will disable this. (Defaults to -1, set to -2 or lower to preserve previous value)
+	+Type: Number
+$Parameter:
+	+Description: Sets the team the spawned ship will belong to. (Defaults to hostile)
+	+Type: Team
+$Parameter:
+	+Description: Sets the AI class for spawned ships. (Defaults to the default class in the ships.tbl entry, can also be 'default' to return to default ai class, or set to 'previous' to preserve previous value)
+	+Type: String
+$Parameter:
+	+Description: Sets the spawn interval. This is the amount of time between ships arriving until the cap is reached. Once the cap is reached, the spawning won't begin again until the next wave interval. (Defaults to 5 seconds, set to negative number to preserve previous value)
+	+Type: Number
+$Parameter:
+	+Description: Sets the wave interval. This is how long the script will wait before it will think about spawning more. This is to reduce the likelihood of the player getting overwhelmed. Set to -1 to disable this. (Defaults to 60 seconds, set to -2 or lower to preserve previous value)
+	+Type: Number
+$Parameter:
+	+Description: Sets the spawn group size. This sets the number of ships that will spawn together at once, near each other, and in the same class of ship. (Sorta like a wing) (Defaults to 1, set to negative number to preserve previous value)
+	+Type: Number
+	
+$Operator: lua-spawn-set-primary
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+$Maximum Arguments: 2
+$Return Type: Nothing
+$Description: Sets the primary weapon in the slot to this weapon. If the ship doesn't have this bank, it won't get it. This only affects ships that spawn after this is called.
+$Parameter:
+	+Description: Slot number (starts at 0)
+	+Type: Number
+$Parameter:
+	+Description: Name of primary weapon class
+	+Type: String
+	
+$Operator: lua-spawn-set-secondary
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 2
+$Maximum Arguments: 2
+$Return Type: Nothing
+$Description: Sets the secondary weapon in the slot to this weapon. If the ship doesn't have this bank, it won't get it. This only affects ships that spawn after this is called.
+$Parameter:
+	+Description: Slot number (starts at 0)
+	+Type: Number
+$Parameter:
+	+Description: Name of secondary weapon class
+	+Type: String
+	
+$Operator: lua-spawn-set-order
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 2
+$Return Type: Nothing
+$Description: Sets the order for all spawned ships.
+$Parameter:
+	+Description: AI Order to give. It must be one of the following: ...
+	+Type: String
+$Parameter:
+	+Description: Target of order
+	+Type: Ship
+	
+#End
