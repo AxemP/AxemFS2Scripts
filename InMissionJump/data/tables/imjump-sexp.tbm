@@ -17,5 +17,26 @@ $Repeat
 $Parameter:
 	+Description: Ship to jump
 	+Type: Ship
+	
+$Operator: lua-jump-to-subspace
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 4
+; No maximum arguments means that it accepts a variable number of arguments
+$Return Type: Nothing
+$Description: Initiates a subspace jump for a ship to arrive at a given waypoint. If this is done on the player, it can take them in or out of a subspace tunnel. Implementation Notes: To use this with the default warp out key (eg: Alt-J), you should disable the player's subspace drive so it won't engage to warp you out of the mission (ideally through the no subspace drive ship flag). 
+$Parameter:
+	+Description: Waypoint destination. The first point in the waypoint list will be where the ship appears, while the second will be what the ship points to. If there is no second point, orientation will be 0,0,0.
+	+Type: waypointpath
+$Parameter:
+	+Description: Flag to decide if shields will be enabled or disabled after the jump is complete. True = Shields Enabled, False = Shields Disabled
+	+Type: boolean
+$Parameter:
+	+Description: Flag to decide if the player is jumping to a subspace tunnel or not. True = Subspace Tunnel after jump, False = Normalspace after jump
+	+Type: boolean
+$Repeat
+$Parameter:
+	+Description: Ship to jump
+	+Type: Ship
 
 #End

@@ -17,7 +17,7 @@ function IMJump:Init()
 
 end
 
-function IMJump:To(ship, dest, transittime)
+function IMJump:To(ship, dest, transittime, subspace, tunnel, shields)
 
 	if type(ship) == "string" then
 		ship = mn.Ships[ship]
@@ -45,7 +45,17 @@ function IMJump:To(ship, dest, transittime)
 		t.Sig = ship:getSignature()
 		t.Dest = dest[1]:getSignature()
 		
-		if not transittime then transittime = 3 end
+		if not subspace then
+			if not transittime then transittime = 3 end
+		else
+			transittime = 0
+		end
+		
+		if subspace then
+			t.SubspaceMode = true
+			t.SubspaceTunnel = tunnel
+			t.Shields = shields
+		end
 
 		if (ship ~= hv.Player) and (transittime < 2) then transittime = 2 end
 		
@@ -62,6 +72,14 @@ end
 
 ;;FSO 3.8.1.20180119;; 	for _, data in ipairs(arg) do
 ;;FSO 3.8.1.20180119;; 		IMJump:To(data[1], dest, transittime)
+;;FSO 3.8.1.20180119;; 	end
+
+;;FSO 3.8.1.20180119;; end
+
+;;FSO 3.8.1.20180119;; mn.LuaSEXPs["lua-jump-to-subspace"].Action = function(dest, shields, tunnel, ...)
+
+;;FSO 3.8.1.20180119;; 	for _, data in ipairs(arg) do
+;;FSO 3.8.1.20180119;; 		IMJump:To(data[1], dest, transittime, true, tunnel, shields)
 ;;FSO 3.8.1.20180119;; 	end
 
 ;;FSO 3.8.1.20180119;; end
@@ -105,7 +123,9 @@ function IMJump:Monitor()
 					entry.Timer = mtime + (entry.AltTime[entry.Stage] or self.SeqTimer[entry.Stage])
 				else
 					table.remove(self.Ships, i)
-					if #self.Ships == 0 then self.Enabled = false end
+					if #self.Ships == 0 then
+						self.Enabled = false 
+					end
 				end
 			end
 		end
@@ -225,6 +245,14 @@ function IMJump:Stage7() --Go to destination
 	
 	mn.runSEXP("( shields-on !" .. me.Name .. "!)" )
 	
+	if self.SubspaceMode then
+		if self.Shields then
+			mn.runSEXP("( shields-on !" .. me.Name .. "!)" )
+		else
+			mn.runSEXP("( shields-off !" .. me.Name .. "!)" )
+		end
+	end
+	
 	me.Position = destList[1].Position
 	
 	local destPos
@@ -242,6 +270,13 @@ function IMJump:Stage7() --Go to destination
 	
 	if me == hv.Player then
 		mn.runSEXP("( warp-effect " .. wvector.x .. " " .. wvector.y .. " " .. wvector.z .. " " .. me.Position.x .. " " .. me.Position.y .. " " .. me.Position.z .. " " .. me.Class.Model.Radius * 2 .. " 4 0 70 0 0 )")
+		if self.SubspaceMode then
+			if self.SubspaceTunnel then
+				mn.runSEXP("( mission-set-subspace 1 )")
+			else
+				mn.runSEXP("( mission-set-subspace 0 )")
+			end		
+		end
 	else
 		me:warpIn()
 	end
@@ -250,7 +285,7 @@ function IMJump:Stage7() --Go to destination
 	mn.runSEXP("( unlock-secondary-weapon !" .. name .. "!)")
 	mn.runSEXP("( unlock-afterburner !" .. name .. "!)")
 	mn.runSEXP("( clear-goals !" .. name .. "! )")
-
+	
 end
 
 ]
