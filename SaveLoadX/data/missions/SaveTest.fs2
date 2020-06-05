@@ -4,7 +4,7 @@ $Version: 0.10
 $Name:  XSTR("Save State Test Mission", -1)
 $Author: Joel Reimer
 $Created: 03/07/20 at 08:19:15
-$Modified: 03/08/20 at 13:46:49
+$Modified: 06/04/20 at 21:00:57
 $Notes:
 This is a FRED2_OPEN created mission.
 $End Notes:
@@ -23,7 +23,7 @@ $end_multi_text
 +Hull Repair Ceiling: 0.000000
 +Subsystem Repair Ceiling: 100.000000
 
-+Viewer pos: -247.804337, 1192.302734, -2016.947510
++Viewer pos: 432.518982, 39.144264, 1317.953125
 +Viewer orient:
 	0.967187, 0.000001, 0.254066,
 	-0.023632, 0.995665, 0.089959,
@@ -132,7 +132,7 @@ $Ship Choices: (
 	"Cloaking Device"	500
 )
 
-#Objects		;! 9 total
+#Objects		;! 12 total
 
 $Name: Alpha 1		;! Object #0
 $Class: GTF Perseus
@@ -327,6 +327,12 @@ $Cargo 1:  XSTR("Nothing", -1)
 +Subsystem: Turret24
 +Subsystem: Turret25
 +Subsystem: Turret26
++Subsystem: Engine01
+$Damage: 75
++Subsystem: Engine02
+$Damage: 50
++Subsystem: Engine03
+$Damage: 25
 $Arrival Location: Hyperspace
 $Arrival Cue: ( true ) 
 $Departure Location: Hyperspace
@@ -409,6 +415,16 @@ $Cargo 1:  XSTR("Nothing", -1)
 +Subsystem: turret07
 +Subsystem: turret08
 +Subsystem: turret09a-01-main
++Subsystem: sensors
+$Damage: 90
++Subsystem: communication
+$Damage: 67
++Subsystem: navigation
+$Damage: 34
++Subsystem: weapons
+$Damage: 75
++Subsystem: engine
+$Damage: 25
 $Arrival Location: Hyperspace
 $Arrival Cue: ( and 
    ( or 
@@ -431,7 +447,82 @@ $Determination: 10
 +Use Table Score:
 +Score: 200
 
-#Wings		;! 2 total
+$Name: Leo 1		;! Object #9
+$Class: GTF Ulysses
+$Team: Hostile
+$Location: 330.755066, -0.000031, 1968.423096
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 8
+
+$Name: Leo 2		;! Object #10
+$Class: GTF Ulysses
+$Team: Hostile
+$Location: 269.629822, -0.000031, 1478.047852
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 8
+
+$Name: Leo 3		;! Object #11
+$Class: GTF Ulysses
+$Team: Hostile
+$Location: 382.484131, -0.000031, 1526.768799
+$Orientation:
+	1.000000, 0.000000, 0.000000,
+	0.000000, 1.000000, 0.000000,
+	0.000000, 0.000000, 1.000000
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Subsystem: Pilot
+$Arrival Location: Hyperspace
+$Arrival Cue: ( false ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "cargo-known" )
++Flags2: ( )
++Respawn priority: 0
++Group: 0
++Use Table Score:
++Score: 8
+
+#Wings		;! 3 total
 
 $Name: Alpha
 $Waves: 1
@@ -465,6 +556,34 @@ $Ships: (		;! 3 total
 	"Beta 3"
 )
 +Hotkey: 1
++Flags: ( )
+
+$Name: Leo
+$Waves: 1
+$Wave Threshold: 0
+$Special Ship: 0		;! Leo 1
+
+$Arrival Location: Near Ship
++Arrival Distance: 1
+$Arrival Anchor: <any friendly>
+$Arrival Cue: ( and 
+   ( or 
+      ( has-time-elapsed 14 ) 
+      ( is-event-true-delay 
+         "Load Checkpoint 1" 
+         0 
+      )
+   )
+   ( lua-savestate-shipstatus "Leo 1" ) 
+)
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Ships: (		;! 3 total
+	"Leo 1"
+	"Leo 2"
+	"Leo 3"
+)
+$AI Goals: ( goals ( ai-guard "Helgenish" 50 ) )
 +Flags: ( )
 
 #Events		;! 7 total

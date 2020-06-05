@@ -299,7 +299,7 @@ function SaveState:ApplyData(ship,data)
 			local ssdata = data.Subsystems[i]
 			
 			if ssdata.HP then
-				thisSubsys.HitpointsLeft = ssdata.HP
+				thisSubsys.HitpointsLeft = (ssdata.HP / 100) * thisSubsys.HitpointsMax
 			end
 			
 			if ssdata.Armor then
@@ -403,7 +403,7 @@ function SaveState:ApplyParseData(ship,data)
 		for i, pbank in ipairs(data.PBanks) do
 			if ship.MainStatus.PrimaryBanks[i] then
 				ship.MainStatus.PrimaryBanks[i].Class = tb.WeaponClasses[pbank.Class]
-				ship.MainStatus.PrimaryAmmo[i] = self:GetAmmo(pbank.AmmoLeft,data.Name)
+				if pbank.AmmoLeft then ship.MainStatus.PrimaryAmmo[i] = self:GetAmmo(pbank.AmmoLeft,data.Name) end
 			end
 		end
 	end
@@ -412,7 +412,7 @@ function SaveState:ApplyParseData(ship,data)
 		for i, sbank in ipairs(data.SBanks) do
 			if ship.MainStatus.SecondaryBanks[i] then
 				ship.MainStatus.SecondaryBanks[i].Class = tb.WeaponClasses[sbank.Class]
-				ship.MainStatus.SecondaryAmmo[i] = self:GetAmmo(sbank.AmmoLeft,data.Name)
+				if sbank.AmmoLeft then ship.MainStatus.SecondaryAmmo[i] = self:GetAmmo(sbank.AmmoLeft,data.Name) end
 			end
 		end
 	end
@@ -427,7 +427,7 @@ function SaveState:ApplyParseData(ship,data)
 			for i, pbank in ipairs(data.Subsystems[i].PBanks) do
 				if subsys.PrimaryBanks[i] then
 					subsys.PrimaryBanks[i].Class = tb.WeaponClasses[pbank.Class]
-					subsys.PrimaryAmmo[i] = self:GetAmmo(pbank.AmmoLeft,data.Name)
+					if pbank.AmmoLeft then subsys.PrimaryAmmo[i] = self:GetAmmo(pbank.AmmoLeft,data.Name) end
 				end
 			end
 		end
@@ -436,7 +436,7 @@ function SaveState:ApplyParseData(ship,data)
 			for i, sbank in ipairs(data.Subsystems[i].SBanks) do
 				if subsys.SecondaryBanks[i] then
 					subsys.SecondaryBanks[i].Class = tb.WeaponClasses[sbank.Class]
-					subsys.SecondaryAmmo[i] = self:GetAmmo(sbank.AmmoLeft,data.Name)
+					if sbank.AmmoLeft then subsys.SecondaryAmmo[i] = self:GetAmmo(sbank.AmmoLeft,data.Name) end
 				end
 			end
 		end
