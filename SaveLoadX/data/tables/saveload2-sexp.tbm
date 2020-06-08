@@ -4,12 +4,15 @@ $Operator: lua-savestate-save
 $Category: Change
 $Subcategory: Scripted
 $Minimum Arguments: 1
-$Maximum Arguments: 1
 $Return Type: Nothing
-$Description: Saves the state of all ships present in the mission at the time of calling this sexp. Save data can be loaded with lua-savestate-load. Data will be saved in an external JSON file with the filename "[PILOTNAME]_[MISSIONFILENAME].sav". Multiple save states can be saved into one file, use the save state index to decide which index to use.
+$Description: Saves the state of all ships present in the mission at the time of calling this sexp. Save data can be loaded with lua-savestate-load. Data will be saved in an external JSON file with the filename "[PILOTNAME]_[MISSIONFILENAME].sav". Multiple save states can be saved into one file, use the save state index to decide which index to use. By default all ships are saved, but the list of ships and wings in the optional arguments will be excluded from being saved. (Note for ships in wings, both the ship name and wing name should be put in the exclusion list)
 $Parameter:
 	+Description: Save state index
 	+Type: number
+$Repeat
+$Parameter:
+	+Description: Name of ships and wings to exclude (Note for ships in wings, both the ship name and wing name should be put in the exclusion list)
+	+Type: string
 
 $Operator: lua-savestate-load
 $Category: Change
@@ -17,10 +20,27 @@ $Subcategory: Scripted
 $Minimum Arguments: 1
 $Maximum Arguments: 1
 $Return Type: Nothing
-$Description: Loads the save state data into the current mission. Ships not present at start will have save data applied to their parse object data (where the game stores pre-arrival data). Ships present in the save state data but not present on load will automatically have their arrival info changed to warpless arrival, so the FREDder just needs to set up an arrival cue tied to the load data event for them to arrive right away.
+$Description: Loads the save state data into the current mission. Ships not present at start will have save data applied to their parse object data (where the game stores pre-arrival data). Ships present in the save state data but not present on load will automatically have their arrival info changed to warpless arrival, so the FREDder just needs to set up an arrival cue tied to the load data event for them to arrive right away. SPECIAL NOTES: Waypoint orders will be cleared. Wings may not be loaded 100% accurately, especially with waves.
 $Parameter:
 	+Description: Save state index
 	+Type: number
+	
+$Operator: lua-savestate-load-external
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 3
+$Return Type: Nothing
+$Description: Loads the save state data from another mission's save state data into the current mission. Position, orientation and order information will not be loaded. This will only work if the ship is already present in the mission!
+$Parameter:
+	+Description: Save state index
+	+Type: number
+$Parameter:
+	+Description: Mission filename
+	+Type: string
+$Repeat
+$Parameter:
+	+Description: Name of ships to load in
+	+Type: string
 	
 $Operator: lua-savestate-shipstatus
 $Category: Status

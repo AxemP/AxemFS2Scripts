@@ -8,6 +8,8 @@ SaveState = {}
 
 function SaveState:Init()
 
+	ba.print("SAVELOAD: Initialization begun...!\n")
+
 	self.WorksOutOfCampaign = true
 	
 	if self.WorksOutOfCampaign or mn.isInCampaign() then
@@ -19,7 +21,11 @@ function SaveState:Init()
 	end
 	
 	self.CurrentIndex = nil
+	self.WingList = {}
 	self.List = self:GetAllCurrentShips()
+
+
+	self.CuedList = {}
 		
 	local playerData = ba.getCurrentPlayer()
 	
@@ -34,22 +40,45 @@ function SaveState:Init()
 	self.AssistList = {}
 	self.AssistHP = nil
 	self.AssistAmmo = nil
+	
+	self.ShipFlags = {"invulnerable", "protect-ship", "beam-protect-ship", "flak-protect-ship", "laser-protect-ship", "missile-protect-ship", "cargo-known", "hidden-from-sensors", "stealth", "friendly-stealth-invisible", "afterburners-locked", "primaries-locked", "secondaries-locked", "free-afterburner-use"}
+
+end
+
+function SaveState:AddWing(wingname)
+
+	for i,v in ipairs(self.WingList) do
+		if v == wingname then return end
+	end
+	
+	ba.print("SAVELOAD: New wing found, " .. wingname ..",  adding to Wing List\n")
+	self.WingList[#self.WingList+1] = wingname
+	
+	ba.print("SAVELOAD: Number of wings: " .. #self.WingList .."\n")
 
 end
 
 --This just gets called at mission start so we have the beginnings of our master list.
 function SaveState:GetAllCurrentShips()
 
+	ba.print("SAVELOAD: Getting ships present at start...\n")
+
 	local t = {}
 	local numShips = #mn.Ships
 	
 	for i=1, numShips do
-	
-		if mn.Ships[i] and mn.Ships[i]:isValid() then
-			t[#t+1] = mn.Ships[i].Name
+		local thisShip = mn.Ships[i]
+		if thisShip and thisShip:isValid() then
+			t[#t+1] = thisShip.Name
+			ba.print("SAVELOAD: Found " .. thisShip.Name .. ", adding to Ship List\n")
+			if thisShip:getWing() and thisShip:getWing():isValid() then
+				self:AddWing(thisShip:getWing().Name)
+			end
 		end
 	
 	end
+	
+	ba.print("SAVELOAD: Found " .. #t .. " items.\n")
 	
 	return t
 
@@ -58,14 +87,43 @@ end
 --When a ship arrives, we add it to THE LIST, which we'll check when we're saving. We want to catch every ship that arrives, even ones that might have died/left already, so that's why we're not just checking mn.Ships[].
 function SaveState:AddShip(ship)
 
+	ba.print("SAVELOAD: " .. ship.Name .. " arrived, adding to Ship List\n")
+
 	if self.Enabled then
 		self.List[#self.List+1] = ship.Name
+		if ship:getWing() and ship:getWing():isValid() then
+			self:AddWing(ship:getWing().Name)
+		end
+	end
+	
+	if self.CurrentIndex then
+		self:CheckLateData(ship)
+	end
+
+end
+
+function SaveState:CheckLateData(ship)
+
+	ba.print("SAVELOAD: Checking " .. ship.Name .. " for late data\n")
+	local thisShipName = ship.Name
+	
+	for i=1, #self.CuedList do
+		if self.CuedList[i] and self.CuedList[i] == thisShipName then
+			local thisloadeddata = self.LoadedData[self.CurrentIndex]
+			local data = thisloadeddata[thisShipName]
+						
+			if data then self:ApplyLateData(ship,data) end
+			
+			return
+		end
 	end
 
 end
 
  --Collecting data from a ship
 function SaveState:GetShipData(shipname)
+
+	ba.print("SAVELOAD: Getting ship data from " .. shipname .. "\n")
 
 	local t = {}
 	
@@ -82,23 +140,62 @@ function SaveState:GetShipData(shipname)
 	
 		if ship and ship:isValid() then
 		
+			--Get Class
 			t.Class = ship.Class.Name
 			
+			--Is this part of a wing?
 			if ship:getWing() and ship:getWing():isValid() then
 				t.Wing = ship:getWing().Name
 			end
 			
+			--Get HP
 			t.HP = math.floor((ship.HitpointsLeft / ship.HitpointsMax) * 100)
 		
+			--Get Shields
 			if ship.Shields and ship.Shields:isValid() then
 				t.Shields = math.floor((ship.Shields.CombinedLeft / ship.Shields.CombinedMax) * 100)
 			end
 			
+			--Get Armor (LateData)
 			t.HullArmor = ship.ArmorClass 
 			t.ShieldArmor = ship.ShieldArmorClass
 			
+			--Get Team (LateData)
 			t.Team = ship.Team.Name
+						
+			--Get Countermeasures (LateData)
+			t.Countermeasures = ship.CountermeasuresLeft
 			
+			--Get Orders (LateData)
+			t.Orders = {}
+			for i=1, #ship.Orders do
+				local order = ship.Orders[i]
+				
+				tt = {}
+				tt.Priority = order.Priority
+				tt.Type = self:GetAIOrderFromEnum(order:getType())
+				if (order:getType() == ORDER_WAYPOINTS) or (order:getType() == ORDER_WAYPOINTS_ONCE) then
+					tt.Target = order.Target:getList().Name
+				else
+					tt.Target = order.Target.Name
+				end
+				tt.Subsystem = order.TargetSubsystem.Name
+				
+				t.Orders[i] = tt
+				
+			end
+			
+			--Get Flags (LateData)
+			t.Flags = {}
+			for i=1, #self.ShipFlags do
+				if mn.evaluateSEXP("(are-ship-flags-set !" .. shipname .. "! !" .. self.ShipFlags[i] .. "!)") then
+					t.Flags[i] = true
+				else
+					t.Flags[i] = false
+				end
+			end
+			
+			--Subsystem craziness
 			local numSubsys = #ship
 			
 			if numSubsys > 0 then
@@ -113,7 +210,7 @@ function SaveState:GetShipData(shipname)
 					
 					if thisSubsys:isTurret() then
 					
-						ss.TurretLocked = thisSubsys.TurretLocked 
+						ss.TurretLocked = thisSubsys.TurretLocked -- (LateData)
 					
 						if thisSubsys.PrimaryBanks and thisSubsys.PrimaryBanks:isValid() then
 							ss.PBanks = {}
@@ -191,23 +288,69 @@ function SaveState:GetShipData(shipname)
 
 end
 
+function SaveState:GetWingData(wingname)
+
+	ba.print("SAVELOAD: Getting wing data from " .. wingname .. "\n")
+
+	local t = {}
+	
+	t.Name = wingname
+		
+	t.HasArrived = mn.evaluateSEXP("(has-arrived-delay 0 !" .. wingname .. "!)")
+	t.HasBeenDestroyed = mn.evaluateSEXP("(is-destroyed-delay 0 !" .. wingname .."!)")
+	t.HasDeparted = mn.evaluateSEXP("(has-departed-delay 0 !" .. wingname .."!)")
+	
+	return t, t.Name
+
+end
+
+function SaveState:CheckList(t, data)
+
+	for i,v in ipairs(t) do
+		if v == data then return true end
+	end
+	
+	return false
+
+end
+
  --This is what lua-savestate-save calls
  --We go through THE LIST and nab all of the ship data which will go into self.LoadedData which is what will get saved.
  --We use the ship name as a key for the data table for ease of retrival and checking later. This might take a bit more CPU time, but we can probably spare it.
-function SaveState:SaveAll(index)
+function SaveState:SaveAll(index, ...)
+
+	ba.print("SAVELOAD: ***** BEGINNING SAVE STATE! *****\n")
 
 	if not self.Enabled then return false end
 
 	local data = {}
+	
+	local exclusionList = {}
+	
+	for i, v in ipairs(arg) do
+		ba.print("SAVELOAD: Adding " .. v[1] .. " to exclusion list\n")
+		exclusionList[#exclusionList+1] = v[1]
+	end
 		
 	for i, entry in ipairs(self.List) do
-		shipdata,key = self:GetShipData(entry)	
-		data[key] = shipdata
+		if not self:CheckList(exclusionList,entry) then 
+			shipdata,key = self:GetShipData(entry)
+			data[key] = shipdata
+		end
+	end
+	
+	data.Wings = {}
+	
+	for i, entry in ipairs(self.WingList) do
+		if not self:CheckList(exclusionList,entry) then
+			wingdata,key = self:GetWingData(entry)
+			data.Wings[key] = wingdata
+		end
 	end
 	
 	self.LoadedData[index or #self.LoadedData+1] = data
 
-	ba.print("SAVE STATE: Writing save data to file " .. self.SaveFilename .. " with save index " .. index .. "\n")
+	ba.print("SAVELOAD: Writing save data to file " .. self.SaveFilename .. " with save index " .. index .. "\n")
 	axemParse:WriteJSON(self.LoadedData, self.SaveFilename, "data/config")
 
 end
@@ -217,6 +360,8 @@ end
 function SaveState:LoadAll(index)
 
 	if not self.Enabled then return false end
+	
+	ba.print("SAVELOAD: ***** BEGINNING LOAD STATE! *****\n")
 
 	if not index then
 		ba.print("SAVE STATE: no index specified, aborting load data.\n")
@@ -262,8 +407,32 @@ function SaveState:LoadAll(index)
 	
 		local data = thisloadeddata[thisShip.Name]
 		
-		if data and data.IsInMission then
-			self:ApplyParseData(thisShip,data)
+		if data then
+			if data.IsInMission then self:ApplyParseData(thisShip,data) end
+			self.CuedList[#self.CuedList+1] = thisShip.Name
+		end
+		
+	end
+
+end
+
+function SaveState:GiveOrders(ship,data)
+
+	mn.runSEXP("(clear-goals !" .. ship.Name .. "!)")
+	
+	for i=1, #data.Orders do
+	
+		local thisOrder = data.Orders[i]
+		local order = self:GetAIOrderFromString(thisOrder.Type)
+		local targetShip = mn.Ships[thisOrder.Target]
+		local targetSubsystem = thisOrder.Subsystem
+		
+		if order and targetShip and targetShip:isValid() then
+			if targetSubsystem then
+				ship:giveOrder(order, targetShip, targetShip[targetSubsystem], thisOrder.Priority)
+			else
+				ship:giveOrder(order, targetShip, nil, thisOrder.Priority)
+			end
 		end
 		
 	end
@@ -271,8 +440,10 @@ function SaveState:LoadAll(index)
 end
 
 --Applying data to ships already present at time of load
-function SaveState:ApplyData(ship,data)
+function SaveState:ApplyData(ship,data,external)
 
+	ba.print("SAVELOAD: Applying data to " .. ship.Name .. "\n")
+	
 	if ship.Class.Name ~= data.Class then
 		ship.Class = tb.ShipClasses[data.Class]
 	end
@@ -289,6 +460,18 @@ function SaveState:ApplyData(ship,data)
 	ship.ShieldArmorClass = data.ShieldArmor
 	
 	ship.Team = mn.Teams[data.Team]
+	
+	if not external then
+		self:GiveOrders(ship, data)
+	end
+	
+	for i=1, #self.ShipFlags do
+		if data.Flags[i] then
+			mn.runSEXP("(alter-ship-flag !" .. self.ShipFlags[i] .. "! true true !" .. ship.Name .. "! )")
+		end
+	end
+	
+	ship.CountermeasuresLeft = data.Countermeasures
 	
 	local numSubsys = #ship
 	
@@ -353,14 +536,16 @@ function SaveState:ApplyData(ship,data)
 	
 	end
 	
-	local newPosition = ba.createVector(data.Position.x, data.Position.y, data.Position.z)
-	ship.Position = newPosition
+	if not external then
+		local newPosition = ba.createVector(data.Position.x, data.Position.y, data.Position.z)
+		ship.Position = newPosition
+		
+		local newOrientation = ba.createOrientation(data.Orientation.p, data.Orientation.b, data.Orientation.h)
+		ship.Orientation = newOrientation
 	
-	local newOrientation = ba.createOrientation(data.Orientation.p, data.Orientation.b, data.Orientation.h)
-	ship.Orientation = newOrientation
-
-	local newVelocity = ba.createVector(data.Velocity.x, data.Velocity.y, data.Velocity.z)
-	ship.Physics.Velocity = newVelocity
+		local newVelocity = ba.createVector(data.Velocity.x, data.Velocity.y, data.Velocity.z)
+		ship.Physics.Velocity = newVelocity
+	end
 	
 end
 
@@ -381,6 +566,8 @@ end
 
 --Applying data to parse objects, or the objects that have yet to actually arrive in game yet.
 function SaveState:ApplyParseData(ship,data)
+
+	ba.print("SAVELOAD: Applying parse data to " .. ship.Name .. "\n")
 
 	--Set the ship to arrive by hyperspace without warp-in to save the FREDder from having to do that
 	mn.runSEXP("(set-arrival-info !" .. ship.Name .. "! !Hyperspace! !<any friendly>! 0 0 0 false)")
@@ -451,6 +638,170 @@ function SaveState:ApplyParseData(ship,data)
 	
 end
 
+--Apply data to ships that aren't present at time of load and don't have the right parse data parameters
+function SaveState:ApplyLateData(ship,data)
+
+	ba.print("SAVELOAD: Applying late data to " .. ship.Name .. "\n")
+	
+	if data.HasBeenDestroyed then
+		self:InstantKill(ship)
+		return
+	elseif data.HasDeparted then
+		self:InstantDepart(ship)
+		return
+	end
+
+	--Apply Armor
+	ship.ArmorClass = data.HullArmor
+	ship.ShieldArmorClass = data.ShieldArmor
+	
+	--Apply Team
+	ship.Team = mn.Teams[data.Team]
+	
+	--Apply Countermeasures
+	ship.CountermeasuresLeft = data.Countermeasures
+	
+	--Apply AI Orders
+	self:GiveOrders(ship, data)
+	
+	--Apply Ship Flags
+	for i=1, #self.ShipFlags do
+		if data.Flags[i] then
+			mn.runSEXP("(alter-ship-flag !" .. self.ShipFlags[i] .. "! true true !" .. ship.Name .. "! )")
+		end
+	end
+
+	--Apply Turret Lock Status
+	
+	local numSubsys = #ship
+			
+	if numSubsys > 0 then
+		
+		for i=1, numSubsys do
+			local thisSubsys = ship[i]
+			
+			if thisSubsys:isTurret() then
+				ship[i].TurretLocked = data.Subsystems[i].TurretLocked
+			end
+		end
+	end
+
+end
+
+--Why...
+function SaveState:GetAIOrderFromEnum(orderEnum)
+
+	local order
+	
+	if orderEnum == ORDER_ATTACK then
+		order = "Attack"
+	elseif orderEnum == ORDER_ATTACK then
+		order = "Attack Any"
+	elseif orderEnum == ORDER_DEPART then
+		order = "Depart"
+	elseif orderEnum == ORDER_DISABLE then
+		order = "Disable"
+	elseif orderEnum == ORDER_DISARM then
+		order = "Disarm"
+	elseif orderEnum == ORDER_DOCK then
+		order = "Dock"
+	elseif orderEnum == ORDER_EVADE then
+		order = "Evade"
+	elseif orderEnum == ORDER_FLY_TO then
+		order = "Fly to"
+	elseif orderEnum == ORDER_FORM_ON_WING then
+		order = "Form on Wing"
+	elseif orderEnum == ORDER_GUARD then
+		order = "Guard"
+	elseif orderEnum == ORDER_IGNORE_SHIP then
+		order = "Ignore"
+	elseif orderEnum == ORDER_KEEP_SAFE_DISTANCE then
+		order = "Keep Safe Distance"
+	elseif orderEnum == ORDER_PLAY_DEAD then
+		order = "Play Dead"
+	elseif orderEnum == ORDER_REARM then
+		order = "Rearm"
+	elseif orderEnum == ORDER_STAY_NEAR then
+		order = "Stay Near"
+	elseif orderEnum == ORDER_STAY_STILL then
+		order = "Stay Still"
+	elseif orderEnum == ORDER_UNDOCK then
+		order = "Undock"
+	elseif orderEnum == ORDER_WAYPOINTS then
+		order = "Waypoints"
+	elseif orderEnum == ORDER_WAYPOINTS_ONCE then
+		order = "Waypoints Once"
+	elseif orderEnum == ORDER_ATTACK_WING then
+		order = "Attack Wing"
+	elseif orderEnum == ORDER_GUARD_WING then
+		order = "Guard Wing"
+	else
+		order = "None"
+	end
+	
+	return order
+
+end
+
+--Why????
+function SaveState:GetAIOrderFromString(order)
+
+	--Waypoints orders will return nil because we can't start a waypoint mid-way through
+
+	local orderEnum
+	
+	if order == "Attack" then
+		orderEnum = ORDER_ATTACK
+	elseif order == "Attack Any" then
+		orderEnum = ORDER_ATTACK
+	elseif order == "Depart" then
+		orderEnum = ORDER_DEPART
+	elseif order == "Disable" then
+		orderEnum = ORDER_DISABLE
+	elseif order == "Disarm" then
+		orderEnum = ORDER_DISARM
+	elseif order == "Dock" then
+		orderEnum = ORDER_DOCK
+	elseif order == "Evade" then
+		orderEnum = ORDER_EVADE
+	elseif order == "Fly to" then
+		orderEnum = ORDER_FLY_TO
+	elseif order == "Form on Wing" then
+		orderEnum = ORDER_FORM_ON_WING
+	elseif order == "Guard" then
+		orderEnum = ORDER_GUARD
+	elseif order == "Ignore" then
+		orderEnum = ORDER_IGNORE_SHIP
+	elseif order == "Keep Safe Distance" then
+		orderEnum = ORDER_KEEP_SAFE_DISTANCE
+	elseif order == "Play Dead" then
+		orderEnum = ORDER_PLAY_DEAD
+	elseif order == "Rearm" then
+		orderEnum = ORDER_REARM
+	elseif order == "Stay Near" then
+		orderEnum = ORDER_STAY_NEAR
+	elseif order == "Stay Still" then
+		orderEnum = ORDER_STAY_STILL
+	elseif order == "Undock" then
+		orderEnum = ORDER_UNDOCK
+	elseif order == "Waypoints" then
+		orderEnum = nil
+		--orderEnum = ORDER_WAYPOINTS
+	elseif order == "Waypoints Once" then
+		orderEnum = nil
+		--orderEnum = ORDER_WAYPOINTS_ONCE
+	elseif order == "Attack Wing" then
+		orderEnum = ORDER_ATTACK_WING
+	elseif order == "Guard Wing" then
+		orderEnum = ORDER_GUARD_WING
+	else
+		orderEnum = nil
+	end
+	
+	return orderEnum
+
+end
+
 --Solves world hunger
 function SaveState:GetCurrentSaveIndex()
 
@@ -459,7 +810,7 @@ function SaveState:GetCurrentSaveIndex()
 end
 
  --Returns false if a ship is destroyed or departed in the current save slot or another specified one.
-function SaveState:QueryStatus(ship, index)
+function SaveState:QueryStatus(object, index)
 
 	if not self.Enabled then return false end
 
@@ -467,12 +818,20 @@ function SaveState:QueryStatus(ship, index)
 		return true
 	end
 
-	local saveData = self.LoadedData[index or self.CurrentIndex]
+	local saveData
 	
-	if saveData[ship] then	
-		if saveData[ship].HasBeenDestroyed then
+	--Wait is this actually a wing?
+	
+	if mn.Wings[object] and mn.Wings[object]:isValid() then
+		saveData = self.LoadedData[index or self.CurrentIndex].Wings
+	else
+		saveData = self.LoadedData[index or self.CurrentIndex]
+	end
+	
+	if saveData[object] then	
+		if saveData[object].HasBeenDestroyed then
 			return false
-		elseif saveData[ship].HasDeparted then
+		elseif saveData[object].HasDeparted then
 			return false
 		else
 			return true
@@ -483,28 +842,70 @@ function SaveState:QueryStatus(ship, index)
 
 end
 
+function SaveState:ExternalLoad(index, mission, ...)
+
+	ba.print("SAVELOAD: Beginning External Load!\n")
+
+	if mission ~= self.ExternalMission then self:LoadExternalData(mission) end
+	
+	local data = self.ExternalData
+	
+	if data and data[index] then
+	
+		local saveData = data[index]
+	
+		for i, v in ipairs(arg) do
+			local ship = v[1]
+			
+			ba.print("SAVELOAD: Attempting to load data for " .. ship .. "\n")
+			
+			if saveData[ship] and mn.Ships[ship] then
+				local thisShip = mn.Ships[ship]
+				self:ApplyData(thisShip,saveData[ship],true)
+			end
+		end
+	end
+	
+	ba.print("SAVELOAD: Finished External Load!\n")
+	
+end
+
+function SaveState:LoadExternalData(mission)
+
+	ba.print("SAVELOAD: Loading external data, " .. mission .. "\n")
+
+	local playerData = ba.getCurrentPlayer()
+	local tempmissionfilename = playerData:getName() .. "_" .. mission .. ".sav"
+	
+	self.ExternalMission = mission
+	
+	tempmissionfilename = self:StripFS2(tempmissionfilename)
+	self.ExternalData = axemParse:ReadJSON(tempmissionfilename, "data/config")
+
+end
+
  --Checks to see if a save slot exists or not. We can also look at other mission save states.
 function SaveState:Exists(index, mission)
 
 	if not self.Enabled then return false end
-	
-	local data
-	
+		
 	if not mission then
 		data = self.LoadedData
 	else
-		local tempmissionfilename = playerData:getName() .. "_" .. mission .. ".sav"
-		tempmissionfilename = self:StripFS2(tempmissionfilename)
-		data = axemParse:ReadJSON(tempmissionfilename, "data/config")
+		if mission ~= self.ExternalMission then self:LoadExternalData(mission) end
 	end
 	
-	if not index then
-		if #data > 0 then
-			return true
-		end
-	else
-		if data[index] then
-			return true
+	local data = self.ExternalData
+	
+	if data then
+		if not index then
+			if #data > 0 then
+				return true
+			end
+		else
+			if data[index] then
+				return true
+			end
 		end
 	end
 	
@@ -578,8 +979,9 @@ function SaveState:StripFS2(s)
 end
 
 --Lua SEXP definitions
-mn.LuaSEXPs["lua-savestate-save"].Action = function(index) SaveState:SaveAll(index) end
+mn.LuaSEXPs["lua-savestate-save"].Action = function(index, ...) SaveState:SaveAll(index, ...) end
 mn.LuaSEXPs["lua-savestate-load"].Action = function(index) SaveState:LoadAll(index) end
+mn.LuaSEXPs["lua-savestate-load-external"].Action = function(index, mission, ...) return SaveState:ExternalLoad(index, mission, ...) end
 mn.LuaSEXPs["lua-savestate-shipstatus"].Action = function(name, index) return SaveState:QueryStatus(name, index) end
 mn.LuaSEXPs["lua-savestate-getindex"].Action = function() return SaveState:GetCurrentSaveIndex() end
 mn.LuaSEXPs["lua-savestate-check"].Action = function(index, mission) return SaveState:Exists(index, mission) end
