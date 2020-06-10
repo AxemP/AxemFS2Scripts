@@ -888,14 +888,15 @@ end
 function SaveState:Exists(index, mission)
 
 	if not self.Enabled then return false end
+	
+	local data
 		
 	if not mission then
 		data = self.LoadedData
 	else
 		if mission ~= self.ExternalMission then self:LoadExternalData(mission) end
+		data = self.ExternalData
 	end
-	
-	local data = self.ExternalData
 	
 	if data then
 		if not index then
