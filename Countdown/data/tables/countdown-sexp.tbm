@@ -1,0 +1,72 @@
+#Lua SEXPs
+
+$Operator: lua-countdown-setup
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 4
+$Maximum Arguments: 4
+$Return Type: Nothing
+$Description: Sets up the scripted countdown system. Must be done before lua-countdown-start. Just a note at the confusing nature of "counting down" and the count direction works. If you want a countdown, you need a negative time on clock and a positive count direction, so the count heads to 0. You can also have a positive time on clock and negative count direction, that heads to 0 as well. Just as long as it heads to zero that's all that matters! If you want to just have a generic timer that counts up, just set time on clock to 0.
+$Parameter:
+	+Description: Time on clock. If you are performing a countdown, you should probably make this a negative number. If you are doing a timer, make this zero.
+	+Type: number
+$Parameter:
+	+Description: Count direction. If true, countdown will count positive (up). If false, countdown will count negative (down).
+	+Type: boolean
+$Parameter:
+	+Description: Sound option. If 0, no sound is used. If 1, you'll get a beep every second. If 2, you'll only get beeps under 90 seconds. Beeping increases in frequency the lower the timer.
+	+Type: number
+$Parameter:
+	+Description: Stop at zero. If true, the countdown will stop at zero, if false, it will continue counting after passing zero.
+	+Type: boolean
+	
+$Operator: lua-countdown-start
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Starts the scripted countdown.
+
+$Operator: lua-countdown-pause
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Pauses the scripted countdown, but will not deactivate it. Resume with lua-countdown-start again.
+
+$Operator: lua-countdown-stop
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Stops and shuts down the scripted countdown.
+
+$Operator: lua-countdown-get-time
+$Category: Status
+$Subcategory: Player
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Number
+$Description: Returns time on clock in seconds. NOTE: If system is inactive, this will return -32762. Keep that in mind if you are doing comparisons.
+
+$Operator: lua-countdown-get-time-ms
+$Category: Status
+$Subcategory: Player
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Number
+$Description: Returns time on clock in milliseconds. NOTE: If system is inactive, this will return -32762. Keep that in mind if you are doing comparisons.
+
+$Operator: lua-countdown-done
+$Category: Status
+$Subcategory: Player
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: boolean
+$Description: Returns true if the timer reached zero (Resets when lua-countdown-setup or lua-countdown-start is called again)
+
+
+#End

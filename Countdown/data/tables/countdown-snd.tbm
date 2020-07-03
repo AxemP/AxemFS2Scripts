@@ -1,0 +1,18 @@
+#Game Sounds Start
+
+$Name:	CountdownStart ;was 299
+	+Filename: 	countdown-start.ogg
+	+Preload: 	no
+	+Volume:	1.00
+	
+$Name:	CountdownChirp ;was 298
+	+Filename: 	countdown-chirp2.ogg
+	+Preload: 	no
+	+Volume:	1.00
+	
+$Name:	CountdownEnd
+	+Filename: 	powerdown.ogg
+	+Preload: 	no
+	+Volume:	1.00	
+	
+#Game Sounds End

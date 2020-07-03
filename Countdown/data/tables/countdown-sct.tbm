@@ -1,0 +1,399 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+--[[
+***DRAMATIC MEGA TIMER***
+        By Axem
+
+Fashions a large and dramatic beeping timer that can count down or up!
+
+]]--
+
+	Countdown = {}
+
+function Countdown:Init()
+
+	self.Enabled = true
+	self.Position = {x = gr.getScreenWidth()*0.5, y = gr.getScreenHeight()*0.1}
+	self.DigitSize = {x = gr.getImageWidth("megatimer_0000"), y = gr.getImageHeight("megatimer_0000")} -- Dimensions of the digits
+	self.StartingCountdown = -90 --This the InitialValue of the countdown
+	self.TimeOnClock = 0 --The time for the clock
+	self.Status = 0 --0 = stopped, 1 = start counting, 2 = currently counting
+	self.Direction = 1 -- +1 = going up, -1 going down (you would still want to go UP for a countdown because the time is a negative value)
+	self.TimeStartedAt = 0 -- The gametime we started at, will compare to the actual gametime to see where in the countdown we are
+	self.Color = {192,0,0} --RGB
+	self.Digits = {	"megatimer_0000", 		-- 0
+					"megatimer_0001", 		-- 1
+					"megatimer_0002", 		-- 2
+					"megatimer_0003", 		-- 3...
+					"megatimer_0004",
+					"megatimer_0005",
+					"megatimer_0006",
+					"megatimer_0007",
+					"megatimer_0008", 		-- 8...
+					"megatimer_0009", 		-- 9
+					"megatimer_0010"} 		-- blank space
+	self.Colon 	= {	"megatimercolon_0001", 	-- bright
+					"megatimercolon_0000"} 	-- dim
+	self.Dot 	= {	"megatimerdot_0001", 	-- bright
+					"megatimerdot_0000"} 	-- dim
+	self.Sign	= {	"megatimersign_0001",
+					"megatimersign_0000"}
+	self.BrokenTime = {} -- We'll store the broken up time here
+	self.Symbol = {blank = 90, minus = 91, colon = 92, dot = 93} -- Special characters, you don't need to modify this
+	
+	--Use sound.tbl/tbm entries here!
+	self.ActivateSound = ad.getSoundentry("CountdownStart") -- The sound.tbl index for when the time is first displayed
+	self.DeactivateSound = ad.getSoundentry(30) -- The sound.tbl index for when we stop the timer
+	self.BeepSound = ad.getSoundentry("CountdownChirp") -- The sound.tbl index for the beeping
+	
+	self.NextBeep = 0 --Next time we should do a tick/beep
+	self.BeepInterval = 1 --How often the timer will beep
+	self.SoundOn = 1 --Should be be beeping?
+	self.StopAtZero = 1 --Do we stop at zero or flip over?
+	self.Done = nil
+	
+	ba.print("*****Initializing Countdown System...\n")
+
+end
+
+function Countdown:GetTimeCoords(place)
+
+	return (self.Position.x - (4.5 * self.DigitSize.x)) + (self.DigitSize.x * (place - 1)), self.Position.y
+
+end
+
+function Countdown:BreakTime(currentTime)
+
+	local signPlace = self.Symbol.blank
+	local minutes, seconds, centiseconds
+	local min_tens, min_ones, sec_tens, sec_ones, cen_tens, cen_ones
+
+	if currentTime < 0 then
+		signPlace = self.Symbol.minus
+	end
+
+	minutes = ((math.abs(currentTime)) /  60) % 60 --Calculate minutes, seconds and centiseconds
+	seconds = ((math.abs(currentTime))) % 60
+	centiseconds = ((math.abs(currentTime)) % 1) * 100
+	
+	--Grab the tens and ones digit (and add one since the table we'll be referring to starts at 1 and not 0)
+	min_tens = math.floor((minutes % 100) /10) + 1
+	min_ones = math.floor((minutes % 10)) + 1
+	
+	sec_tens = math.floor((seconds % 100) /10) + 1
+	sec_ones = math.floor((seconds % 10)) + 1
+	
+	cen_tens = math.floor((centiseconds % 100) /10) + 1
+	cen_ones = math.floor((centiseconds % 10)) + 1
+	
+	self.brokenTime = {signPlace, min_tens, min_ones, self.Symbol.colon, sec_tens, sec_ones, self.Symbol.dot, cen_tens, cen_ones}
+
+end
+
+function Countdown:DrawTime(currentTime)
+	
+	self:BreakTime(currentTime)
+		
+	for i = 1, 9 do
+		
+		local thisX, thisY = self:GetTimeCoords(i)
+		local drawChar = self.Digits[11] --Initialize to draw a blank by default
+		
+		gr.setColor(self.Color[1],self.Color[2],self.Color[3])
+		
+		--Decide what to draw
+		if self.brokenTime[i] == self.Symbol.blank then
+			drawChar = self.Digits[11]
+		elseif self.brokenTime[i] == self.Symbol.minus then
+			drawChar = self.Sign[1]
+		elseif self.brokenTime[i] == self.Symbol.colon then
+			drawChar = self.Colon[1]
+		elseif self.brokenTime[i] == self.Symbol.dot then
+			drawChar = self.Dot[1]
+		elseif (type(self.brokenTime[i]) == "number") and (self.brokenTime[i] < 11) then
+			drawChar = self.Digits[self.brokenTime[i]]	
+		end
+		
+		gr.drawMonochromeImage(drawChar, thisX, thisY)
+	
+	end	
+
+end
+
+function Countdown:UpdateTime(theTime)
+
+	if self.Status == 1 then --Initialize the time we started the counter
+		self.Status = 2
+		self.TimeStartedAt = theTime
+	elseif self.Status == 2 then
+	
+		local internalTimer = theTime - self.TimeStartedAt
+	
+		if self.Direction == 1 then
+			if self.StopAtZero == 0 or (self.StopAtZero == 1 and (internalTimer + self.StartingCountdown) < 0 ) then
+				self.TimeOnClock = self.StartingCountdown + internalTimer
+			else
+				self.TimeOnClock = 0
+				self.Done = true
+				self.Status = 0
+			end
+		else
+			if self.StopAtZero == 0 or (self.StopAtZero == 1 and (self.StartingCountdown - internalTimer) > 0 ) then
+				self.TimeOnClock = self.StartingCountdown - internalTimer
+			else
+				self.TimeOnClock = 0
+				self.Done = true
+				self.Status = 0
+			end
+		end
+		
+	end
+
+end
+
+function Countdown:ChangeTime(newTime)
+
+	self.TimeStartedAt = mn.getMissionTime()
+	self.StartingCountdown = newTime
+	self.TimeOnClock = Countdown.StartingCountdown
+	
+
+end
+
+function Countdown:MaybeBeep(CurrentTime) -- Beep when we're running the clock every interval
+
+	if self.Status == 2 then
+		if self.SoundOn == 1 or (self.SoundOn == 2 and (math.abs(self.TimeOnClock) < 90)) then
+			if CurrentTime > self.NextBeep then
+				ad.playSound(self.BeepSound)
+				self.NextBeep = CurrentTime + self.BeepInterval
+			end
+		end
+	end
+
+end
+
+function Countdown:MaybeChangeBeepInterval(CurrentTime)
+
+	--Normally the counter will beep once a second. If its under a minute left and its going down, it quickens to 2 times a second
+	--Under 15 seconds, 4 times a second. Under 1 second, it's a near constant tone
+
+	if (self.Direction == 1) and (CurrentTime < 0) or (self.Direction == -1) and (CurrentTime > 0) then
+		if math.abs(CurrentTime) < 1.5 and self.BeepInterval ~= 0.005 then
+			self.BeepInterval = 0.005
+		elseif math.abs(CurrentTime) < 15 and math.abs(CurrentTime) >= 1.5 and self.BeepInterval ~= 0.25 then
+			self.BeepInterval = 0.25
+		elseif math.abs(CurrentTime) < 61 and math.abs(CurrentTime) >= 15 and self.BeepInterval ~= 0.5 then
+			self.BeepInterval = 0.5
+		elseif math.abs(CurrentTime) > 61 and self.BeepInterval ~= 1 then
+			self.BeepInterval = 1
+		end
+	end
+
+end
+
+function cdSet(cdTime) --Sets the countdown to a time and displays it (but doesn't start it)
+
+	if type(cdTime) == "number" then
+		
+		if not Countdown.Enabled then
+			Countdown:Init()
+		end
+		Countdown.Enabled = true
+		Countdown.StartingCountdown = cdTime
+		Countdown.TimeOnClock = Countdown.StartingCountdown
+		Countdown.Done = nil
+		
+		if Countdown.SoundOn > 0 then
+			ad.playSound(Countdown.ActivateSound)
+		end
+	else
+	
+	ba.error("cdSet() was not given a number")
+	
+	end
+
+end
+
+function cdDirection(updown) --Determines the direction, 1 = up, -1 = down (defaults to up)
+
+	if updown ~= -1 or updown ~= 1 then
+		updown = 1
+	end
+	
+	Countdown.Direction = updown
+
+end
+
+function cdStart() --Start the countdown (or countup)
+
+	Countdown.Status = 1
+	Countdown.Done = nil
+
+end
+
+function cdPause() --Pauses the countdown, but doesn't remove it
+
+	Countdown.Status = 0
+	
+end
+
+function cdStop() --Stop the countdown and makes the counter vanish
+
+	Countdown.Enabled = false
+	Countdown.Status = 0
+	if Countdown.SoundOn > 0 then
+		ad.playSound(Countdown.DeactivateSound)
+	end
+	
+end
+
+function cdSoundOn(beepnumber) -- Alters the beeping, 0 = no beep, 1 = always beep, 2 = beep under 90 seconds
+
+	Countdown.SoundOn = beepnumber
+end
+
+function cdStopZero(yesno) -- Do we stop at zero or flip over? 0 = no, anything else = yes
+
+	if yesno == 0 then
+		Countdown.StopAtZero = 0
+	else
+		Countdown.StopAtZero = 1
+	end
+
+end
+
+function cdGetTime() -- Returns the time in SECONDS (Using it with SEXPs will chop off the decimal part)
+
+	if not Countdown.Enabled then
+		return 0
+	end
+
+	return tonumber(Countdown.TimeOnClock)
+
+end
+
+function cdGetTimeMs() -- Returns the time in MILLISECONDS (Using it with SEXPs will chop off the decimal part)
+	
+	if not Countdown.Enabled then
+		return 0
+	end
+	
+	return Countdown.TimeOnClock * 1000
+
+end
+
+function cdTrigger()
+
+	if Countdown.Enabled then
+		if Countdown.TimeOnClock == 0 then
+			return 1
+		else
+			return 0
+		end
+	else
+		return -1
+	end
+
+end
+
+function Countdown:Exit()
+
+	self.Enabled = nil
+	self.Position = nil
+	self.DigitSize = nil
+	self.StartingCountdown = nil
+	self.TimeOnClock = nil
+	self.Status = nil
+	self.Direction = nil
+	self.TimeStartedAt = nil
+	self.Color = nil
+	self.Digits = nil
+	self.Colon 	= nil
+	self.Dot 	= nil
+	self.Sign	= nil
+	self.BrokenTime = nil
+	self.Symbol = nil
+	self.ActivateSound = nil
+	self.DeactivateSound = nil
+	self.BeepSound = nil
+	self.NextBeep = nil
+	self.BeepInterval = nil
+	self.SoundOn = nil
+	self.StopAtZero = nil
+	self.Done = nil
+
+end
+
+
+mn.LuaSEXPs["lua-countdown-setup"].Action = function(timeonclock, direction, sound, stopatzero)
+
+	cdSet(timeonclock)
+
+	if direction then Countdown.Direction = 1 else Countdown.Direction = -1 end
+
+	Countdown.SoundOn = sound
+	
+	if stopatzero then Countdown.StopAtZero = 1 else Countdown.StopAtZero = 0 end
+
+end
+
+mn.LuaSEXPs["lua-countdown-start"].Action = function() cdStart() end
+mn.LuaSEXPs["lua-countdown-pause"].Action = function() cdPause() end
+mn.LuaSEXPs["lua-countdown-stop"].Action = function() cdStop() end
+mn.LuaSEXPs["lua-countdown-get-time"].Action = function() 
+
+	if Countdown.Enabled then
+		return tonumber(Countdown.TimeOnClock) 
+	else
+		return -32762
+	end
+end
+
+mn.LuaSEXPs["lua-countdown-get-time-ms"].Action = function()
+
+	if Countdown.Enabled then
+		return tonumber(Countdown.TimeOnClock * 1000)
+	else
+		return -32762
+	end
+end
+
+mn.LuaSEXPs["lua-countdown-done"].Action = function()
+	if Countdown.Done then
+		return true
+	else 
+		return false 
+	end 
+end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On State End:
+[
+	if Countdown.Enabled then
+		Countdown:Exit()
+	end
+]
+$On Frame:
+[
+	if Countdown.Enabled then
+		Countdown:UpdateTime(mn.getMissionTime())
+		
+		if Countdown.SoundOn > 0 then
+			Countdown:MaybeBeep(mn.getMissionTime())
+			Countdown:MaybeChangeBeepInterval(Countdown.TimeOnClock)
+		end
+		
+		if hu.HUDDrawn and (gr.hasViewmode(VM_INTERNAL) or gr.hasViewmode(VM_CHASE)) then
+			Countdown:DrawTime(Countdown.TimeOnClock)
+		end
+	end
+		
+]
+
+#End
