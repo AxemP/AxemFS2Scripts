@@ -350,14 +350,14 @@ function MarkBox:DrawSubsystemBracket(subsys, data)
 		
 			local oldsize = math.max(x2-x1,y2-y1)
 			local newsize = oldsize * 0.5
-			local hsize = newsize/8
+			local hsize = newsize * 0.125
 			
-			if focus then hsize = newsize/4 end
+			if focus then hsize = newsize * 0.25 end
 			
-			local lineLength = math.max(hsize/5,3)
+			local lineLength = math.max(hsize * 0.2, 3)
 		
-			local midX = (x1+x2) / 2
-			local midY = (y1+y2) / 2
+			local midX = (x1+x2) * 0.5
+			local midY = (y1+y2) * 0.5
 			
 			local nx1 = midX - hsize
 			local nx2 = midX + hsize
