@@ -8,7 +8,7 @@ $Maximum Arguments: 12
 $Return Type: Nothing
 $Description: Writes a subtitle-esque string of text but one character at a time. Use this to spruce up your cutscenes!
 $Parameter:
-	+Description: Text to write
+	+Description: Text to write, or name of a message containing text
 	+Type: string
 $Parameter:
 	+Description: X coordinate to begin drawing at (based on percent of the screen width, 0-100). Default is 50
