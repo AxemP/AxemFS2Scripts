@@ -1,0 +1,355 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+	AxHUD = {}
+	
+function AxHUD:Init()
+
+	if not AxEase then
+		ba.error("AxEase not detected! Please have axease-sct.tbm in your tables folder (check https://github.com/AxemP/AxemFS2Scripts/tree/master/BaseFiles/data/tables")
+	end
+
+	--Don't touch these two
+	self.Enabled = false
+	self.Visible = false
+	
+	self.AutoGuardian = false --Makes all subsystems (except the excluded ones) be guardianed at 100% so you don't need to worry about them taking damage at all
+	self.ExcludeSubsys = {} --If you do want destructable subsystems and have auto guardian on, set up this line with subsystem names like this... self.ExcludeSubsys = {"WingL", "WingR"}
+	self.ShowShields = true --If you want to show shields as another health bar. This would probably work best if your ship just has a single shield segment since it won't show you specific shield quad info, just combined shield strength. 
+	self.ShowSubsystemDamage = true --If you want to show the subsystem damage gauge (doesn't make sense to have it on if you have auto guardian on)
+	self.LowHealthAlerts = true --If you want beeps if your health gets low
+	self.LowHealthText = true	--Draws the hull% when you are really low health
+	self.ColorStyle = 1			--0 = use full color bitmap (bitmap MUST have tranparency to work right), 1 = use grayscale bitmap colored by health level (green/yellow/red/deep red), 2 = use IFF color
+	
+	self.Alpha = 0.75		--Transparency of the bars (only affects full color bitmaps)
+	
+	self.PlrHealth = self:SetupPlayerHealth()
+	
+end
+
+function AxHUD:SetupPlayerHealth()
+
+	if not self.ShowSubsystemDamage then
+		mn.runSEXP("(hud-set-retail-gauge-active (false) !Damage!)")
+	end
+
+	local t = {}
+	
+	t.Graphic = {}
+	t.Graphic.Position = {x = (gr.getScreenWidth() * 0.5) - 152, y = (gr.getScreenHeight() * 0.5) - 220} --This is where the frame gets placed
+	t.Graphic.Frame = "csa_healthframe"
+	
+	t.Graphic.Bar =	{aImage = "csa_healthhull", bImage = "csa_healthhull_b", Offset = {42,0}} --Offset is the health bar offset from the frame placement (x.y)
+	t.Graphic.Bar.Width = gr.getImageWidth("csa_healthhull")
+	t.Graphic.Bar.Height = gr.getImageHeight("csa_healthhull")
+	
+	if self.ShowShields then
+		t.Graphic.ShieldBar = {aImage = "csa_healthshield", bImage = "csa_healthshield_b", Offset = {2,0}} --Offset is the shield bar offset from the frame placement (x,y)
+		t.Graphic.ShieldBar.Width = gr.getImageWidth("csa_healthshield")
+		t.Graphic.ShieldBar.Height = gr.getImageHeight("csa_healthshield")
+	end
+	
+	t.ColorStyle = self.ColorStyle
+	t.Colors = {}
+	t.Colors.Good = {90,200,0,192}
+	t.Colors.OK = {255,212,0,192}
+	t.Colors.Bad = {192,0,0,192}
+	t.Colors.Danger = {255,0,0,225}
+	t.Colors.Shield = {0,128,255,255}
+	
+	t.Colors.Frame = {}
+	t.Colors.Frame[1], t.Colors.Frame[2], t.Colors.Frame[3], t.Colors.Frame[4] = hu.getHUDGaugeColor(6)
+	t.Colors.Frame[4] = 200
+	
+	t.CurrentHull = 1
+	t.DisplayedHull = 1
+	t.LastHull = 1
+	
+	t.CurrentShield = 1
+	t.DisplayedShield = 1
+	t.LastShield = 1
+	
+	t.LastClass = -1
+	
+	t.Easing = false
+	t.EaseStart = 1
+	t.EaseDiff = 0
+	t.EaseTimestamp = -1
+	t.EaseDuration = 0.05
+	t.EaseTime = 0
+	
+	t.EasingShield = false
+	t.EaseShieldStart = 1
+	t.EaseShieldDiff = 0
+	t.EaseShieldTimestamp = -1
+	t.EaseShieldDuration = 0.001
+	t.EaseShieldTime = 0
+	
+	if self.LowHealthAlerts then
+		t.LowHealth = {"LowHealth1", "LowHealth2"} -- These need to be set up in your sounds.tbl
+		t.LowHealthLevel = 0
+		t.LowHealthTimer = -1
+	end
+	
+	t.Draw = AxHUD.DrawBar
+	t.DrawHullBar = AxHUD.DrawHullBar
+	t.DrawShieldBar = AxHUD.DrawShieldBar
+
+	self.ShieldUpdateTime = mn.getMissionTime()
+	self.ShieldUpdateRate = 1
+	
+	return t
+
+end
+
+function AxHUD:GuardianAllSS(ship)
+
+	for i=1, #ship do
+		local ss = ship[i]
+		local name = ship.Name
+		local ssName = ss:getModelName()
+		
+		if not self:CheckSubsys(ssName) then
+			mn.runSEXP("( ship-subsys-guardian-threshold 100 !" .. name .. "! !" .. ssName .. "! )")
+		end
+		
+	end
+
+end
+
+function AxHUD:CheckSubsys(subsys)
+
+	for i=1, #self.ExcludeSubsys do
+		local entry = self.ExcludeSubsys[i]
+		
+		if entry == subsys then return true end
+		
+	end
+	
+	return false
+
+end
+
+function AxHUD:DrawBar()
+
+	local mTime = mn.getMissionTime()
+	local object = nil
+	
+	object = hv.Player
+
+	local barInfo = self.Graphic
+	local frameColor = self.Colors.Frame
+	
+	gr.setColor(frameColor[1]*1.5, frameColor[2]*1.5, frameColor[3]*1.5, frameColor[4])
+	--gr.setColor(128,128,128,192)
+	gr.drawMonochromeImage(barInfo.Frame, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+425,barInfo.Position.y+50,0.5)
+	
+	self:DrawHullBar(object, mTime)
+	
+	if AxHUD.ShowShields then
+		self:DrawShieldBar(object,mTime)
+	end
+	
+		
+end
+	
+function AxHUD:DrawHullBar(object, mTime)
+
+	local drawText = false
+	local object = hv.Player
+
+	if AxHUD.AutoGuardian then
+		if self.LastClass ~= object.Class:getShipClassIndex() then
+			self.LastClass = object.Class:getShipClassIndex()
+			AxHUD:GuardianAllSS(object)
+		end	
+	end
+	
+	self.CurrentHull = object.HitpointsLeft / object.HitpointsMax
+	
+	local diff = self.CurrentHull - self.LastHull
+		
+	self.DisplayedHull = AxEase:Process("hull", self.LastHull, self.CurrentHull, 0.5, "linear", 0.01) or self.DisplayedHull
+
+	--Draw frame first
+	
+	local barInfo = self.Graphic
+	local frameColor = self.Colors.Frame	
+	local barColor
+	local barImage = barInfo.Bar.aImage
+		
+	if self.ColorStyle == 1 then
+		if self.DisplayedHull > 0.66 then
+			barColor = self.Colors.Good
+		elseif self.DisplayedHull > 0.33 and self.DisplayedHull <= 0.66 then
+			barColor = self.Colors.OK
+		elseif self.DisplayedHull > 0.15 and self.DisplayedHull <= 0.33 then
+			barColor = self.Colors.Bad
+			drawText = true			
+		elseif self.DisplayedHull <= 0.15 then
+			barColor = self.Colors.Danger
+			barImage = barInfo.Bar.bImage
+			drawText = true			
+		end
+	elseif self.ColorStyle == 2 then
+		local r,g,b = object.Team:getColor()
+		barColor = {r, g, b, 192}
+	end
+	
+	if barColor then
+		gr.setColor(barColor[1], barColor[2], barColor[3], barColor[4])
+	end
+	
+	if AxHUD.LowHealthAlerts then
+		local soundPlayed = false
+		
+		if self.CurrentHull <= 0.15 and self.LastHull > 0.15 then
+			self.Sound = ad.playSound(ad.getSoundentry(self.LowHealth[2]))
+			soundPlayed = true
+		end
+		
+		if self.CurrentHull <= 0.33 and self.LastHull > 0.33 and not soundPlayed then
+			if self.Sound and self.Sound:isPlaying() then self.Sound:stop() end
+			self.Sound = ad.playSound(ad.getSoundentry(self.LowHealth[1]))
+		end
+	end
+	
+	local barWidth = self.DisplayedHull * barInfo.Bar.Width
+	
+	if self.ColorStyle == 0 then
+		gr.drawImage(barImage, barInfo.Position.x + barInfo.Bar.Offset[1], barInfo.Position.y, barInfo.Position.x + barInfo.Bar.Offset[1]+barWidth, barInfo.Position.y+barInfo.Bar.Height,0,0,self.DisplayedHull,1,AxHUD.Alpha)
+	else
+		gr.drawMonochromeImage(barImage, barInfo.Position.x + barInfo.Bar.Offset[1], barInfo.Position.y, barInfo.Position.x + barInfo.Bar.Offset[1]+barWidth, barInfo.Position.y+barInfo.Bar.Height,AxHUD.Alpha)
+	end
+	
+	if AxHUD.LowHealthText and drawText then
+		gr.setColor(255,255,255,192)
+		gr.CurrentFont = gr.Fonts[3]
+		local displayString = string.format("%d%%", self.DisplayedHull * 100)
+		--local displayString2 = string.format("%d %%", self.CurrentHull * 100)
+		local x = math.max(barInfo.Position.x + barInfo.Bar.Offset[1]+25,barInfo.Position.x + barInfo.Bar.Offset[1]+barWidth+2)
+		gr.drawString(displayString, x + 2, barInfo.Position.y+27)
+	end
+	
+	self.LastHull = self.CurrentHull
+
+end
+
+function AxHUD:DrawShieldBar(object, mTime)
+
+	local drawText = false
+	
+	self.CurrentShield = object.Shields.CombinedLeft / object.Shields.CombinedMax
+		
+	local lowQuad = false
+	
+	for i=1, #object.Shields do
+		if (object.Shields[i] / object.Shields.CombinedMax) < 0.05 then
+			lowQuad = true
+		end
+	end
+	
+	self.DisplayedShield = AxEase:Process("shield", self.LastShield, self.CurrentShield, 0.5, "linear", 0.01) or self.DisplayedShield
+	
+	--Draw frame first
+	
+	local barInfo = self.Graphic	
+	local barColor = self.Colors.Shield
+	local barImage
+
+	if lowQuad then
+		barImage = barInfo.ShieldBar.bImage
+	else
+		barImage = barInfo.ShieldBar.aImage
+	end
+			
+	gr.setColor(barColor[1], barColor[2], barColor[3], barColor[4])
+	
+	local barWidth = self.DisplayedShield * barInfo.ShieldBar.Width
+	
+	if self.ColorStyle == 0 then
+		gr.drawImage(barImage, barInfo.Position.x + barInfo.ShieldBar.Offset[1], barInfo.Position.y, barInfo.Position.x + barInfo.ShieldBar.Offset[1]+barWidth, barInfo.Position.y+barInfo.ShieldBar.Height,0,0,self.DisplayedShield,1,AxHUD.Alpha)
+	else
+		gr.drawMonochromeImage(barImage, barInfo.Position.x + barInfo.ShieldBar.Offset[1], barInfo.Position.y, barInfo.Position.x + barInfo.ShieldBar.Offset[1]+barWidth, barInfo.Position.y+barInfo.ShieldBar.Height,AxHUD.Alpha)
+	end
+		
+	--[[if drawText then
+		gr.setColor(255,255,255,192)
+		gr.CurrentFont = gr.Fonts[3]
+		local displayString = string.format("%d %%", self.DisplayedHull * 100)
+		--local displayString2 = string.format("%d %%", self.CurrentHull * 100)
+		local x = math.max(barInfo.Position.x + barInfo.ShieldBar.Offset[1]+25,barInfo.Position.x + barInfo.ShieldBar.Offset[1]+barWidth+2)
+		gr.drawString(displayString, x + 2, barInfo.Position.y+12)
+	end]]--
+	
+	self.LastShield = self.CurrentShield
+
+end
+
+function AxHUD:Draw()
+
+	if hv.Player.HitpointsLeft > 0 then
+		self.PlrHealth:Draw()
+	end
+
+end
+
+function AxHUD:Ease(t,b,c,d)
+  t = t / d
+  return -c * t * (t - 2) + b
+end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	AxHUD:Init()
+]
+
+$On State End:
+[
+	AxHUD.Enabled = false
+]
+
+$On HUD Draw:
+[
+	if not AxHUD.Enabled and mn.getMissionTime() > 0.1 then
+		AxHUD.Enabled = true
+		AxHUD.Visible = true
+	end
+	
+	if AxHUD.Enabled then
+	
+		local canDraw = true
+		
+		if not AxHUD.Visible then
+			canDraw = false
+		end
+		
+		if not hu.HUDDrawn then
+			canDraw = false
+		end
+		
+		if hu.HUDDisabledExceptMessages then
+			canDraw = false
+		end
+		
+		if not (gr.hasViewmode(VM_INTERNAL) or gr.hasViewmode(VM_CHASE)) then
+			canDraw = false
+		end
+		
+		if PromptBox and PromptBox.Visible then
+			canDraw = false
+		end
+	
+		if canDraw then
+			AxHUD:Draw()
+		end
+	end
+]
+
+#End

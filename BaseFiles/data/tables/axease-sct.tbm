@@ -1,0 +1,101 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+AxEase = {}
+
+function AxEase:Process(id, from, to, duration, method, minchange, debugme)
+
+minchange = minchange or 0.01
+	
+if not self.Eases then
+	self.Eases = {}
+end
+
+self.Ease = self.Ease or require "easing.lua"
+
+local entry = self.Eases[id]
+local updating = false
+local result
+
+if (from ~= to) or (entry and entry.Active) then
+
+	method = method or "linear"
+
+	local now = ba.getFrametimeOverall()
+
+	if not entry then
+	
+		if (math.abs(to - from) < minchange) then --if its below the minimum change, don't even bother setting everything else up
+			return to
+		end
+	
+		self.Eases[id] = {Active = true, Start = from, Finish = to, Diff = to - from, Value = start, Duration = duration, StartTimestamp = now, EndTimestamp = now + duration}
+		
+		entry = self.Eases[id]
+	else
+		if entry.Active and (to ~= entry.Finish) and (math.abs(to-entry.Finish) > minchange) then
+			updating = true
+			entry.Finish = to
+			entry.Diff = entry.Finish - entry.Start
+		end
+	end
+
+	entry.Value = self.Ease[method](now - entry.StartTimestamp, entry.Start, entry.Diff, entry.Duration)
+	
+	--[[if entry.Diff < 0 then
+		if entry.Value > entry.Finish then entry.Value = entry.Finish end
+	else
+		if entry.Value < entry.Finish then entry.Value = entry.Finish end
+	end]]--
+	
+	if now > entry.EndTimestamp then
+		entry.Active = false
+		entry.Value = self.Finish
+	end
+	
+	if debugme then
+	
+		gr.CurrentFont = gr.Fonts[3]
+		gr.setColor(255,255,255,255)
+		gr.drawString("DEBUG:", 100,100)
+		if updating then gr.drawString("UPDATING...") end
+		if entry.Active == false then gr.drawString("ENDING...") end
+		gr.drawString("Elapsed: " .. tostring(now - entry.StartTimestamp))
+	
+		for k,v in pairs(entry) do
+			gr.drawString(k .. ": " .. tostring(v))
+		end
+	
+	end
+	
+	result = entry.Value
+
+end
+
+if entry and not entry.Active then
+
+	self.Eases[id] = nil
+
+end
+
+return result
+
+end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	AxEase.Eases = {}
+]
+
+$On State End:
+[
+	AxEase.Eases = {}
+]
+
+#End

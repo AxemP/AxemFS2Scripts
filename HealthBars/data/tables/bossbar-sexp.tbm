@@ -1,0 +1,22 @@
+#Lua SEXPs
+
+$Operator: lua-boss-bar-on
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Displays a large health bar intended for a boss ship (like Star Fox, Dark Souls, etc).
+$Parameter:
+	+Description: Ship to use as THE BOSS
+	+Type: ship
+	
+$Operator: lua-boss-bar-off
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Turns off the boss bar
+	
+#End

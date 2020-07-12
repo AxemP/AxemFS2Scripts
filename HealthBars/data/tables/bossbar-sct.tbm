@@ -1,0 +1,223 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+--[[
+***DRAMATIC BOSS HEALTH BAR***
+           By Axem
+
+For when you want to shove a boss ship's health in the player's face
+
+
+INSTRUCTIONS FOR USE:
+
+Put graphics in /hud/ directory (optional)
+Put tables in /tables/ directory
+
+
+TIPS FOR EXPANDING FOR OTHER MODS:
+If you want a graphic instead of a solid colour, uncomment the self.BarGraphic line and modify it to what you want to use.
+
+]]--
+
+BossBar = {}
+	
+function BossBar:Init()
+
+	self.Enabled = true		-- Is this thing on?
+	self.Boss = nil				-- The boss ship handle
+	self.Color = {0,0,0,0}		-- The color of the boss bar, we'll take the IFF color info from the boss
+	self.LastHealth = 0			-- The health we'll compare to to see if it changed
+	self.Health = 0				-- The current health
+	self.TimeStart = 0			-- Time start for the easing function
+	self.Changed = false		-- Notice if the health has changed
+	self.ScreenWidth = gr.getScreenWidth() 		-- Duh
+	self.ScreenHeight = gr.getScreenHeight() 	-- Super duh
+	self.Alpha = 192 							--(set from 0-255, adjusts the transparency of the bar)
+		
+	--Boss Bar coordinates, the border will draw a bit bigger than this though
+	--self.Frame={File=filename,X=number,Y=number,Alpha=192}
+	--If you want a frame (instead of an automatically drawn border), uncomment the line above and fill in file, x and y.
+	--You can make self.Box's position get tied to the Frame's position by using self.Frame.x and self.Frame.y adding or subtracting a few pixels
+	
+	self.Box={x1 = self.ScreenWidth*0.05, x2 = self.ScreenWidth*0.95, y1 = 20, y2 = 30}
+	self.FullBarWidth = self.Box.x2 - self.Box.x1
+	
+	--self.BarGraphic = "healthbar"		--Uncomment this is you want a graphical bar
+	self.Vertical = false				--Make this true if you want a vertical bar
+	self.ShowBossName = true			--If you want to see the boss's name near the boss bar
+	
+	ba.print("INITIALIZING: Boss Bar Script!\n")
+
+end
+
+function BossBar:Ease(t, b, c, d)
+
+--linear
+  return c * t / d + b
+
+end
+	
+function BossBar:DrawBar(CurrentTime)
+			
+	local name = self.Boss.Name
+	
+		if self.Frame then
+			gr.drawImage(self.Frame.File, self.Frame.X, self.Frame.Y,0,0,1,1,self.Frame.Alpha)
+		else
+			--Drawing the border
+			gr.setColor(192,192,192,192)
+			gr.setLineWidth(2)
+			gr.drawRectangle(self.Box.x1-2, self.Box.y1-2,self.Box.x2+2,self.Box.y2+2, false)
+		end
+		
+		--Draw the actual boss bar here
+		local drawBarWidth = BossBar:ChangeBarWidth(CurrentTime)
+		gr.setColor(self.Color[1],self.Color[2],self.Color[3],self.Color[4])
+		gr.setLineWidth(0)
+		
+		if drawBarWidth > 0.001 then
+			if not self.BarGraphic then
+				if self.Vertical then
+					gr.drawRectangle(self.Box.x1, self.Box.y1, self.Box.x1, self.Box.y2 + (self.FullBarWidth * drawBarWidth))
+				else
+					gr.drawRectangle(self.Box.x1, self.Box.y1, self.Box.x1 + (self.FullBarWidth * drawBarWidth), self.Box.y2)
+				end
+			else
+				if self.Vertical then
+					gr.drawImage("healthbar", self.Box.x1, self.Box.y1, self.Box.x1, self.Box.y2 + (self.FullBarWidth * drawBarWidth) , 0, 0, 1, drawBarWidth, 0.8)
+				else
+					gr.drawImage("healthbar", self.Box.x1, self.Box.y1, self.Box.x1 + (self.FullBarWidth * drawBarWidth), self.Box.y2, 0, 0, drawBarWidth, 1, 0.8)
+				end
+			end
+		end
+		
+		--Draw the Boss's name here
+		if self.ShowBossName then
+			gr.CurrentFont = gr.Fonts[2]
+			local displayString = "Target: " .. name:stopAtHash()
+			gr.drawString(displayString, self.Box.x2 - gr.getStringWidth(displayString), self.Box.y1+25)
+			gr.CurrentFont = gr.Fonts[1]
+		end
+	
+end
+	
+function BossBar:UpdateHealth()
+
+	if self.Enabled == true then
+		if self.Boss ~= nil then
+			if self.Health ~= self.Boss.HitpointsLeft/self.Boss.HitpointsMax then
+				if self.Changed == false then
+					self.Changed = true
+					self.LastHealth = self.Health
+					self.Health = self.Boss.HitpointsLeft/self.Boss.HitpointsMax
+					self.TimeStart = mn.getMissionTime()
+					--ba.print("HEALTH CHANGED!!!\n")
+				end
+			end
+		end
+	end
+	
+end
+
+function BossBar:ChangeBarWidth(CurrentTime)
+
+	-- returns from 0 to 1.0 the width the health bar should be, uses an easing function to help make it move smoothly
+
+	local beginval = self.LastHealth
+	local endval = self.Health
+	local change = endval - beginval
+	local duration = 0.5
+	local easeTime = CurrentTime - self.TimeStart
+
+	local result = self.Health
+
+	if self.Changed == true then
+		result = self:Ease(easeTime, beginval, change, duration)
+	end
+
+	if ((endval > beginval) and (result >= endval)) or ((endval < beginval) and (result <= endval)) then
+		result = endval
+		self.Changed = false
+	end
+	
+	if result < 0 and self.Boss:hasShipExploded() then
+		result = 0
+	end
+
+	return result
+
+end
+
+function BossBar:Activate(boss)
+
+	if not BossBar.Enabled then
+			BossBar:Init()
+		end
+		BossBar.Boss = boss
+		local r,g,b = BossBar.Boss.Team:getColor()
+		BossBar.Color[1] = r
+		BossBar.Color[2] = g
+		BossBar.Color[3] = b
+		BossBar.Color[4] = self.Alpha
+
+end
+
+function BossBar:Exit()
+
+	self.Enabled = nil
+	self.Boss = nil
+	self.Color = nil
+	self.LastHealth = nil
+	self.Health = nil
+	self.TimeStart = nil
+	self.Changed = nil
+	self.ScreenWidth = nil
+	self.ScreenHeight = nil
+	self.Ease = nil
+	self.Box = nil
+	self.FullBarWidth = nil
+
+end
+			
+function bossBarOn(ship)
+
+	if mn.Ships[ship]:isValid() then
+		BossBar:Activate(ship)
+	end
+
+end
+
+function bossBarOff()
+
+	if BossBar.Enabled then
+		BossBar:Exit()
+	end
+
+end
+
+mn.LuaSEXPs["lua-boss-bar-on"].Action = function(boss) BossBar:Activate(boss) end
+mn.LuaSEXPs["lua-boss-bar-off"].Action = function() BossBar:Exit() end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On State End:
+[
+	bossBarOff()
+]
+
+$On HUD Draw:
+[
+	if BossBar.Enabled then
+		if BossBar.Boss:isValid() then
+			BossBar:UpdateHealth()
+			if hu.HUDDrawn and (gr.hasViewmode(VM_INTERNAL) or gr.hasViewmode(VM_CHASE)) then
+				BossBar:DrawBar(mn.getMissionTime())
+			end
+		end
+	end
+]
+
+#End

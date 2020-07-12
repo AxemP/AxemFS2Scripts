@@ -1,0 +1,13 @@
+#Game Sounds Start
+	
+$Name:	LowHealth1
+	+Filename: 	lowhealth1.ogg
+	+Preload: 	yes
+	+Volume:	1.00
+	
+$Name:	LowHealth2
+	+Filename: 	lowhealth2.ogg
+	+Preload: 	yes
+	+Volume:	1.00
+		
+#Game Sounds End
