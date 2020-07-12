@@ -1,0 +1,491 @@
+#Ship Classes
+
+;START    CargoS
+
+$Name:                          Mr Beam Bar#Green
+$Short name:            BeamBarG
+$Species:                       Terran
++Tech Description:
+XSTR("Big Green Minty Chocolate Bar. Everyone loves Mr Beam Bars! Overcharge your day!
+
+Restores 20% of shield strength and 10% of hull strength.", -1)
+$end_multi_text
+$POF file:                      p_beambar-green.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting")
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Mr Beam Bar#Yellow
+$Short name:            BeamBarY
+$Species:                       Terran
++Tech Description:
+XSTR("Banana Nut Aspu-Hek Chocolate Bar. Commence delicious flavor insertion. Eat like a Terran, fight like a Vasudan!
+
+Restores 50% of shield strength and 25% of hull strength.", -1)
+$end_multi_text
+$POF file:                      p_beambar-yellow.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting")
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Mr Beam Bar#Red
+$Short name:            BeamBarR
+$Species:                       Terran
++Tech Description:
+XSTR("Strawberries and Beam flavored. Quantum pulse bubbles that melt in your mouth! Ride the dragon!
+
+Restores 100% of shield strength and 50% of hull strength.", -1)
+$end_multi_text
+$POF file:                      p_beambar-red.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting" )
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Salt Mine Chips#Yellow
+$Short name:            PotaytoChii~
+$Species:                       Terran
++Tech Description:
+XSTR("Duane's Personal Mix. Never stop dancing to life.
+
+Regenerates 2% hull every second for 30 seconds.", -1)
+$end_multi_text
+$POF file:                      p_potaytochii-yellow.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting")
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Salt Mine Chips#Red
+$Short name:            PotaytoChii~
+$Species:                       Terran
++Tech Description:
+XSTR("El Presidente's Mexican Seasoning. You'll be knocked out by the OverPowering Mexi-flavor!
+
+Regenerates 5% hull every second for 30 seconds.", -1)
+$end_multi_text
+$POF file:                      p_potaytochii-red.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting")
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Capella Sun-Boms#Blue
+$Short name:            SunbomsB
+$Species:                       Terran
++Tech Description:
+XSTR("Ultra AAAmazing Blueberry! Why have one when you could have three? A guaranteed flavor hit!
+
+Restores 10% of weapon energy and ammo.", -1)
+$end_multi_text
+$POF file:                      p_sunboms-blue.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting" )
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Capella Sun-Boms#Purp
+$Short name:            SunbomsP
+$Species:                       Terran
++Tech Description:
+XSTR("Ross One Twenty Grape flavored. The simulated grape flavor is keenly matched to the Ash family vineyards.
+
+Restores 25% of weapon energy and ammo.", -1)
+$end_multi_text
+$POF file:                      p_sunboms-purp.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting" )
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Capella Sun-Boms#White
+$Short name:            SunbomsW
+$Species:                       Terran
++Tech Description:
+XSTR("Wintery Nemesis flavored. Don't let bad breath scare your Vasudan allies away. Pop a few and you're good to go!
+
+Restores 50% of weapon energy and ammo.", -1)
+$end_multi_text
+$POF file:                      p_sunboms-white.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting" )
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Mango Plasma Cola
+$Short name:            mango
+$Species:                       Terran
++Tech Description:
+XSTR("Up all night reading the endless chapters of Two Piece? Mango Plasma Cola will keep you energized until you reach that disappointing non-ending!
+
+Unlimited afterburner for 20 seconds.", -1)
+$end_multi_text
+$POF file:                      p_plasmacola_m.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting" )
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Anima Plasma Cola
+$Short name:            animae
+$Species:                       Terran
++Tech Description:
+XSTR("One swig of this and you'll never blink again. Because as soon as you close your eyes, the Great Darkness will consume you.
+
+Unlimited weapon energy for 20 seconds.", -1)
+$end_multi_text
+$POF file:                      p_plasmacola_a.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting" )
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+$Name:                          Atomic Bull
+$Short name:            		GivesYouCancer
+$Species:                       Terran
++Tech Description:
+XSTR("With the power of caffeine and cadmium, get unlimited power! For 20 seconds.
+
+Invulnerability for 20 seconds.", -1)
+$end_multi_text
+$POF file:                      p_atomicbull.pof
+$Detail distance:       (0)
+$Show damage:           NO
+$Density:                       1
+$Damp:                          1
+$Rotdamp:                       0.2
+$Max Velocity:          0.0, 0.0, 0.0
+$Rotation time: 		20.0, 20.0, 20.0
+$Rear Velocity: 		0.0
+$Forward accel: 		0.0
+$Forward decel: 		0.0
+$Slide accel:           0.0
+$Slide decel:           0.0
+$Expl inner rad:        10.0
+$Expl outer rad:    10.0
+$Expl damage:           1.0
+$Expl blast:        1.0
+$Expl Propagates:       NO
+$Default PBanks:        ()
+$Default SBanks:        ()
+$SBank Capacity:        ()
+$Shields:                       0
+$Power Output:          0.0
+$Max Oclk Speed:        0.0
+$Max Weapon Eng:        0.0
+$Hitpoints:                     100
+$Flags:                         ("Cargo" "no_collide" "no lighting")
+$AI Class:                      Captain
+$Afterburner:           NO
+$Countermeasures:       0
+$Scan time:                     2000
+$EngineSnd:       -1                    ;; Engine sound of ship
+$Closeup_pos:           0.0, 0.5, -20
+$Closeup_zoom:          1.0
+$Score:					1
+
+;END
+
+#End

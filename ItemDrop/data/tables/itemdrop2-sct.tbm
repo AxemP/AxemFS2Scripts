@@ -1,0 +1,1083 @@
+#Conditional Hooks
+$Application: FS2_Open
+$On Game Init:
+[
+
+Items = {}
+
+-- Runs on mission start
+function Items:Init()
+
+	self.Enabled = false
+	self.List = {} --Table of items
+	self.Spawners = {} --Objects that spawn an item because reasons
+	self.Containers = {} --Objects that release an item when destroyed
+	self.ExEffects = {}
+	self.ExTimer = 1
+	self.ParticleTimer = 1
+	self.Config = axemParse:ReadJSON("items.cfg")
+	self.ItemCounter = self.ItemCounter or 0
+
+end
+
+--Loads a set, if no set then we use the default set
+function Items:Load(set)
+
+	if not self.Enabled then
+		self.Enabled = true
+	end
+	
+	if not set then
+		self.CurrentSet = self.Config.Sets["default"]
+		self.PrioritySet = self.Config.Sets["priority-default"]
+	else
+		self.CurrentSet = self.Config.Sets[set]
+		self.PrioritySet = self.Config.Sets["priority-" .. set]
+	end
+	
+	if not self.CurrentSet then ba.error("ITEM: No sets available!") end
+	
+	Items:MakeRarityTables()
+	--Items:Scan()
+
+end
+
+--Look through the config file to find what rarity levels we have and throw item indexes into self.Rarity[rarityname]
+function Items:MakeRarityTables()
+
+	self.Rarity = {}
+	self.PriorityRarity = {}
+	
+	--Make empty tables as they are defined in the config file
+	for k,v in pairs(self.Config.Rarity) do
+		self.Rarity[k] = {}
+		self.PriorityRarity[k] = {}
+		ba.print("ITEM: Made rarity table " .. k .. "\n")
+	end
+	
+	--Find matching rarity values and just stuff the item index in
+	--I know this is a bit verbose but I'll mess this up later
+	ba.print("ITEM: Setting up main item drop table...\n")
+	for index,item in ipairs(self.CurrentSet) do
+		tb.ShipClasses[item.Class]:isModelLoaded(true) -- Load the model while we're here
+		for rarityString,rarityTable in pairs(self.Rarity) do
+			if item.Rarity == rarityString then
+				rarityTable[#rarityTable+1] = index
+				ba.print("ITEM: " .. item.Class .. " is a " .. rarityString .. " item\n")
+			end
+		end
+	end
+	
+	ba.print("ITEM: Setting up priority item drop table...\n")
+	if self.PrioritySet then
+		for index,item in ipairs(self.PrioritySet) do
+			tb.ShipClasses[item.Class]:isModelLoaded(true) -- Load the model while we're here
+			for rarityString,rarityTable in pairs(self.PriorityRarity) do
+				if item.Rarity == rarityString then
+					rarityTable[#rarityTable+1] = index
+					ba.print("ITEM: " .. item.Class .. " is a " .. rarityString .. " item\n")
+				end
+			end
+		end
+	else
+		ba.print("ITEM: No priority table data found, oh well!\n")
+	end
+
+end
+
+--With a item name, return the item index
+function Items:NameLookup(name)
+
+	for i,v in ipairs(self.CurrentSet) do
+		if v.Class == name then
+			return i
+		end
+	end
+
+end
+
+--Create an item spawner, item will spawn at the x,y,z offset. Once taken it will take respawntime to create a new one.
+function Items:CreateSpawner(host, item, respawntime, x, y, z, vx, vy, vz)
+
+	if not host then
+		ba.print("ITEM: Spawner host not specified, aborting spawner creation...\n")
+		return
+	end
+	
+	if not mn.Ships[host]:isValid() then
+		ba.print("ITEM: Spawner host not present, aborting spawner creation...\n")
+		return
+	end
+	
+	if item then
+		if (not type(item) == "number") or (not type(item) == "table") then
+			item = self:NameLookup(item)
+		end
+	else
+		item = 1
+	end
+	
+	--respawn time is optional
+	respawntime = respawntime or 60
+	
+	--offsets are optional
+	x = x or 0
+	y = y or 0
+	z = z or 0
+	
+	--velocities are optional
+	vx = vx or 0
+	vy = vy or 0
+	vz = vz or 0
+		
+	local t = {}
+	local hostObj = mn.Ships[host]
+	
+	t.Sig = hostObj:getSignature()
+	t.Offset = ba.createVector(x,y,z)
+	t.Velocity = ba.createVector(vx,vy,vz)
+	t.Respawn = respawntime
+	t.Item = item
+	t.NextItemTime = 0
+	t.ItemPresent = -1
+	
+	self.Spawners[#self.Spawners+1] = t
+	
+	local debugString
+	
+	if type(item) == "table" then
+		debugString = "Random: "
+		for _,v in ipairs(item) do debugString = debugString .. v end
+	else
+		debugString = self.CurrentSet[item].Class
+	end
+	
+	ba.print("ITEM: Created spawner. Host: " .. hostObj.Name .. ", Offset: " .. x .. "," .. y .. "," .. z .. ", Item: " .. debugString .. ", Respawn Time: " .. respawntime .. "/n")
+
+end
+
+--Create an item container, item will spawn at the host when destroyed.
+function Items:CreateContainer(host, item, amountLo, amountHi)
+
+	if not host then
+		ba.print("ITEM: Container host not specified, aborting container creation...\n")
+		return
+	end
+	
+	if not mn.Ships[host]:isValid() then
+		ba.print("ITEM: Container host not present, aborting container creation...\n")
+		return
+	end
+	
+	if item then
+		if (not type(item) == "number") or (not type(item) == "table") then
+			item = self:NameLookup(item)
+		end
+	else
+		item = 1
+	end
+	
+	local t = {}
+	local hostObj = mn.Ships[host]
+	
+	t.Sig = hostObj:getSignature()
+	t.Item = item
+	t.Amount = 1
+	
+	if amountHi and amountLo then
+		t.Amount = math.random(amountLo, amountHi)
+	elseif amountLo and not amountHi then
+		t.Amount = amountLo
+	end
+	
+	self.Containers[#self.Containers+1] = t
+	
+	local debugString
+	
+	if type(item) == "table" then
+		debugString = "Random: "
+		for _,v in pairs(item) do debugString = debugString .. v end
+	else
+		debugString = self.CurrentSet[item].Class
+	end
+	
+	ba.print("ITEM: Created container. Host: " .. hostObj.Name .. ", Item: " .. debugString .. "\n")
+
+end
+
+function Items:CheckContainerDeath(ship)
+
+	local wasAContainer = false
+
+	for i=1, #self.Containers do
+		local thisContainer = self.Containers[i]
+		
+		if thisContainer and thisContainer.Sig == ship:getSignature() then
+			ba.print("ITEM: CONTAINER DEATH DETECTED!\n")
+			local flingSpeed = ship.Class.Model.Radius * 3
+			for j=1, thisContainer.Amount do
+				local velocity = ba.createVector(math.random(-flingSpeed,flingSpeed),math.random(-flingSpeed,flingSpeed),math.random(-flingSpeed,flingSpeed))
+				self:CreateItem(thisContainer.Item, ship.Position, velocity)
+				wasAContainer = true
+			end
+			
+			table.remove(self.Containers,i)
+		end
+			
+	end
+	
+	return wasAContainer
+
+end
+
+--Choose a rarity level based on the weighted probability defined in the config file
+function Items:ChooseRarity()
+
+	local totalWeight = 0
+	local rarity = self.Config.Rarity
+	
+	for _,value in pairs(rarity) do
+		totalWeight = totalWeight + value
+	end
+	
+	ba.print("ITEM: Total weight: " .. totalWeight .. "\n")
+	
+	local roll = math.random(totalWeight)
+	
+	ba.print("ITEM: Rarity roll: " .. roll .. "\n")
+	
+	local chanceSum = 0
+	
+	for rarityString,chance in pairs(rarity) do
+		chanceSum = chanceSum + chance
+		
+		--ba.print("ITEM: Rarity String: " .. rarityString .. ", Chance: " .. chance
+		
+		if roll < chanceSum then
+			ba.print("ITEM: Rarity chosen: " .. rarityString .. "\n")
+			return rarityString
+		end
+	end
+
+end
+
+--Choose an item within a rarity table
+function Items:ChooseRandomItem(rarity)
+
+	local itemSet
+	local raritySet
+
+	if self.Config.Global.PriorityHealthTrigger and self.PrioritySet and ((hv.Player.HitpointsLeft / hv.Player.HitpointsMax) < self.Config.Global.PriorityHealthTrigger) then
+		ba.print("ITEM: Health below critical trigger, using priority items!\n")
+		itemSet = self.PrioritySet
+		raritySet = self.PriorityRarity
+	else
+		ba.print("ITEM: Health ok, using normal items!\n")
+		itemSet = self.CurrentSet
+		raritySet = self.Rarity
+	end
+
+	local result
+
+	if not rarity then
+		result = math.random(#itemSet)
+	else
+		local rarityGroup = raritySet[rarity]
+		result = rarityGroup[math.random(#rarityGroup)] --This is a number
+	end
+	
+	local itemName = itemSet[result].Class
+	ba.print("ITEM: Chose a " .. itemName .. "\n")
+	
+	return result
+
+end
+
+--From the class type name, look it up in the DropRate table and figure if we should a) drop something and if so b) how many items to drop
+function Items:GetNumberOfDrops(class)
+
+	local result = 0
+	local maxItems = self.Config.Global.MaxItems
+	local dropRates = self.Config.Global.DropRate
+	
+	if #self.List < maxItems then
+		local dropData = dropRates[class]
+		local roll = math.random(100)
+		
+		if not dropData then dropData = dropRates["fighter"] end
+		
+		ba.print("ITEM: Determining number of drops for a " .. class .. "\n")
+		ba.print("ITEM: Rolled a " .. roll .. ", needed a " .. (100 - dropData.Chance) .. "...\n")
+
+		if (100 - dropData.Chance) <= roll then
+			result = math.random(dropData.Min, dropData.Max)
+			
+			if #self.List + result > maxItems then --Cap so we don't go over MaxItems
+				result = maxItems - #self.List
+			end
+			
+			ba.print("ITEM: SUCCESS! Will attempt to create " .. result .. " drops...\n")
+		else
+			ba.print("ITEM: Drop roll failed.\n")
+		end
+			
+	else
+		ba.print("ITEM: Too many items present, will not drop anything.\n")
+	end
+	
+	return result
+
+end
+
+--When a ship dies, we should maybe drop stuff. I dunno.
+function Items:DeathDropMaybe(ship)
+
+	if not self.Config.Global.DropOnDeath then
+		return
+	end
+
+	if ship:getBreedName() ~= "Ship" then
+		return
+	end
+
+	local rightTeam = false
+
+	for i,v in ipairs(self.Config.Global.DropTeams) do
+		if ship.Team.Name == v then
+			rightTeam = true
+		end
+	end
+
+	if rightTeam then
+		local drops = self:GetNumberOfDrops(string.lower(ship.Class.Type.Name))
+		
+		if drops > 0 then
+			local position = ship.Position
+			local flingSpeed = ship.Class.Model.Radius * 3 --Seems the best way for items to get cleared from the blast of larger ships
+			for i = 1, drops do
+				local itemType = self:ChooseRandomItem(self:ChooseRarity())
+				local randomVec = ba.createVector(math.random(-flingSpeed,flingSpeed),math.random(-flingSpeed,flingSpeed),math.random(-flingSpeed,flingSpeed))
+				self:CreateItem(itemType, position, randomVec)			
+
+			end
+		end
+	end
+
+end
+
+function Items:SpewRandomItems(host, lo, hi)
+
+	local numItems = math.random(lo, hi)
+	local flingSpeed = host.Class.Model.Radius * 3
+	
+	for i=1, numItems do
+		local itemType = self:ChooseRandomItem(self:ChooseRarity())
+		local randomVec = ba.createVector(math.random(-flingSpeed,flingSpeed),math.random(-flingSpeed,flingSpeed),math.random(-flingSpeed,flingSpeed))
+		self:CreateItem(itemType, host.Position, randomVec)	
+	end
+
+end
+
+--Create an item from a given index, position and InitialVelocity and add it to our List
+function Items:CreateItem(index, position, velocity)
+
+	if not index then
+		ba.print("ITEM: No index given to CreateItem. Aborting...\n")
+		return
+	end
+
+	if type(index) == "table" then
+		ba.print("TABLE DETECTED\n")
+		for i,v in pairs(index) do
+			ba.print(tostring(i) .. ":'" .. tostring(v) .."'\n")
+		end
+		local newRandom = math.random(#index)
+		ba.print("Random = " .. newRandom .. "\n")
+		index = index[newRandom]
+		ba.print("ITEM: Table given as index, selecting random entry " .. index .. "\n")
+	end
+	
+	if type(position) == "string" then
+		if mn.Ships[position]:isValid() then
+			local ship = mn.Ships[position]
+			position = ship.Position
+		end
+	elseif not type(position) == "table" then
+		ba.print("ITEM: Invalid position given, aborting!\n")
+		return
+	end
+
+	local class = self.CurrentSet[index].Class
+	local blankOrient = ba.createOrientation(0,0,0)
+	local name = "Item#" .. self.ItemCounter
+	self.ItemCounter = self.ItemCounter + 1
+	
+	local thisItem = mn.createShip(name,tb.ShipClasses[class],blankOrient,position)
+	
+	mn.runSEXP("( change-iff !PowerUp! !".. name .. "!)")
+	mn.runSEXP("( ship-invulnerable !".. name .. "!)")
+	mn.runSEXP("( protect-ship !".. name .. "!)")
+	mn.runSEXP("( beam-protect-ship !".. name .. "!)")
+	
+	if velocity then
+		ba.print("ITEM: Item Velocity: " .. tostring(velocity) .. "\n")
+		thisItem.Physics.Velocity = velocity
+	end
+	
+	local t = {}
+	t.Sig = thisItem:getSignature()
+	t.Type = index
+	t.Expiry = mn.getMissionTime() + self.CurrentSet[index].Expiry
+
+	local newItemIndex = #self.List+1
+	self.List[newItemIndex] = t
+	
+	ba.print("ITEM: Created a " .. class .. " item, Sig: ".. t.Sig .. ", Item Index: " .. newItemIndex .. "\n")
+	
+	return newItemIndex, t.Sig
+	
+end
+
+--Watch items and figure out if we should do something with them, such as remove due to expiry or being picked up
+function Items:Watch()
+
+
+	local mTime = mn.getMissionTime()
+	
+	if mTime > self.ExTimer then
+		--ba.print("ITEM: Time to check ExEffects...\n")
+		self.ExTimer = mTime + 1
+		self:WatchExEffects()
+		self:CheckSpawners()
+	end
+	
+	if mTime > self.ParticleTimer then
+		self.ParticleTimer = mTime + 0.5
+		self:ParticleExEffects()
+	end
+
+	if #self.List == 0 then
+		return
+	end
+	
+	local player = hv.Player
+	local playerPos = player.Position
+	
+	for i=1, #self.List do
+	
+		local listItem = self.List[i]
+		
+		if listItem then
+			local theItem = mn.getObjectFromSignature(listItem.Sig)
+
+			if theItem:isValid() then
+			
+				--Item is past its best before date
+				if (mTime > listItem.Expiry) and (listItem.Rarity ~= "Special") then
+					self:RemoveItem(i, theItem.Name)
+				end
+				
+				local itemRadius = theItem.Class.Model.Radius * 2
+				local distance = playerPos:getDistance(theItem.Position)
+				
+				--Player got too far away from an item, probably won't want it
+				if (distance > self.Config.Global.MaxDistance) and (listItem.Rarity ~= "Special") then
+					self:RemoveItem(i, theItem.Name)
+				end
+				
+				--Item picked up
+				if distance < itemRadius then
+					local itemData = self.CurrentSet[listItem.Type]
+					self:Effect(itemData.Effect, itemData.Particle)
+					self:AVFeedback(itemData)
+					self:RemoveItem(i, theItem.Name)
+				end
+			end
+		end
+
+	end
+
+end
+
+--Throw some feedback when the player gets an item.
+function Items:AVFeedback(data)
+
+	if data.Overlay and data.Overlay.File then
+		local duration = data.Overlay.Duration or 500
+		Overlays:Add(data.Overlay.File,duration/1000,0.2)
+		--mn.runSEXP("(show-subtitle-image !" .. data.Overlay.File .."! 0 0 (true) (true) 0 0 " .. duration .. " 200)")
+	end
+	
+	if data.Sound then
+		ad.playSound(ad.getSoundentry(data.Sound))
+	end
+
+end
+
+--Check to see if Spawners should create items or not
+function Items:CheckSpawners()
+
+	local currentTime = mn.getMissionTime()
+
+	local numSpawners = #self.Spawners
+	
+	for i=1, numSpawners do
+		local thisSpawner = self.Spawners[i]
+		if thisSpawner then
+			local thisObject = mn.getObjectFromSignature(thisSpawner.Sig)
+			
+			if thisObject:isValid() then
+			
+				if thisSpawner.ItemPresent ~= -1 and (not self:DoesItemExist(thisSpawner.ItemPresent)) then
+				
+					thisSpawner.ItemPresent = -1	
+					thisSpawner.NextItemTime = currentTime + thisSpawner.Respawn				
+					
+				elseif (thisSpawner.ItemPresent == -1) and (currentTime > thisSpawner.NextItemTime) then
+			
+				local itemPosition = thisObject.Position + thisObject.Orientation:unrotateVector(thisSpawner.Offset)
+				local itemVelocity = thisObject.Physics.Velocity + thisObject.Orientation:unrotateVector(thisSpawner.Velocity)
+				
+				_, thisSpawner.ItemPresent = self:CreateItem(thisSpawner.Item, itemPosition, itemVelocity)
+				ad.play3DSound(ad.getSoundentry(19), thisObject.Position)
+				--thisSpawner.NextItemTime = currentTime + thisSpawner.Respawn
+				
+				end
+			else
+				table.remove(self.Spawners,i)		
+			end
+		end
+		
+	end
+
+end
+
+function Items:DoesItemExist(itemObjSig)
+	
+	local result = false
+	
+	for i=1, #self.List do
+		local actualItem = self.List[i]
+		if actualItem.Sig == itemObjSig then result = true end
+	end
+	
+	return result
+
+end
+
+--Remove an item from the list and vanish it
+function Items:RemoveItem(index, name)
+	
+	if not name then
+		name = mn.getObjectFromSignature(self.List[index].Sig).Name
+	end
+	
+	mn.runSEXP("(ship-vanish !" .. name .. "!)")
+
+	table.remove(self.List,index)
+	
+end
+
+function Items:ClearAll()
+
+	for i = 1, #self.List do
+		local thisItem = self.List[i]
+		local name
+		local thisObj = mn.getObjectFromSignature(thisItem.Sig)
+		
+		if thisItem and thisObj:isValid() then
+			name = thisObj.Name
+		end
+		
+		if name then
+			mn.runSEXP("(ship-vanish !" .. name .. "!)")
+		end
+	end
+	
+	self.List = {}
+
+end
+
+ --Add And Cap, add a and b and make sure it stays within a min and a max
+function Items:AAC(a,b,minvalue,maxvalue)
+
+	if not (a and b) then
+		return
+	end
+	
+	minvalue = minvalue or -999999999
+	maxvalue = maxvalue or 999999999
+	
+	local result = a + b
+	
+	if (result <= maxvalue) and (result >= minvalue) then
+		return result
+	elseif result > maxvalue then
+		return maxvalue
+	elseif result < minvalue then
+		return minvalue
+	end
+
+end
+
+--Oooh boy, mega function. All the effects possible when the player picks up a power up
+function Items:Effect(effects, particle, target)
+
+	for i = 1, #effects do
+
+		local thisEffect = effects[i]
+		local targetObject = target or hv.Player
+		
+		if targetObject:isValid() then
+		
+			local targetObjectName = targetObject.Name
+			local thisType = string.lower(thisEffect.Type)
+			local value = thisEffect.Value
+			local duration = thisEffect.Duration
+			local variable = thisEffect.Variable
+			
+			if thisType == "priammo" then
+				for j = 1, #targetObject.PrimaryBanks do
+					local thisBank = targetObject.PrimaryBanks[j]
+					local before = thisBank.AmmoLeft
+					thisBank.AmmoLeft = self:AAC(thisBank.AmmoLeft, value, 0, thisBank.AmmoMax)
+					ba.print("ITEM: Refilled primary bank " .. j .. " by " .. thisBank.AmmoLeft - before .. "\n")
+				end
+			elseif thisType == "priammopct" then
+				for j = 1, #targetObject.PrimaryBanks do
+					local thisBank = targetObject.PrimaryBanks[j]
+					local before = thisBank.AmmoLeft
+					thisBank.AmmoLeft = self:AAC(thisBank.AmmoLeft, math.ceil(thisBank.AmmoMax * value), 0, thisBank.AmmoMax)
+					ba.print("ITEM: Refilled primary bank " .. j .. " by " .. thisBank.AmmoLeft - before .. "\n")
+				end
+			elseif thisType == "secammo" then
+				for j = 1, #targetObject.SecondaryBanks do
+					local thisBank = targetObject.SecondaryBanks[j]
+					local before = thisBank.AmmoLeft
+					thisBank.AmmoLeft = self:AAC(thisBank.AmmoLeft, value, 0, thisBank.AmmoMax)	
+					ba.print("ITEM: Refilled secondary bank " .. j .. " by " .. thisBank.AmmoLeft - before .. "\n")
+				end
+				targetObject.CountermeasuresLeft = self:AAC(targetObject.CountermeasuresLeft, value, 0, targetObject.Class.CountermeasuresMax)
+			elseif thisType == "secammopct" then
+				for j = 1, #targetObject.SecondaryBanks do
+					local thisBank = targetObject.SecondaryBanks[j]
+					local before = thisBank.AmmoLeft
+					thisBank.AmmoLeft = self:AAC(thisBank.AmmoLeft, math.ceil(thisBank.AmmoMax * value), 0, thisBank.AmmoMax)
+					ba.print("ITEM: Refilled secondary bank " .. j .. " by " .. thisBank.AmmoLeft - before .. "\n")
+				end
+				targetObject.CountermeasuresLeft = self:AAC(targetObject.CountermeasuresLeft, value * targetObject.Class.CountermeasuresMax, 0, targetObject.Class.CountermeasuresMax)
+			elseif thisType == "changepbank" then
+				for j = 1, #targetObject.PrimaryBanks do
+					local thisBank = targetObject.PrimaryBanks[j]
+					if thisBank.Armed and thisBank.WeaponClass.Name ~= value then
+						thisBank.WeaponClass = tb.WeaponClasses[value]
+						thisBank.AmmoLeft = thisBank.AmmoMax
+						ba.print("ITEM: Changed primary bank " .. j .. " to a " .. value .. "\n")
+						break
+					end
+				end
+			elseif thisType == "changesbank" then
+				for j = 1, #targetObject.SecondaryBanks do
+					local thisBank = targetObject.SecondaryBanks[j]
+					if thisBank.Armed and thisBank.WeaponClass.Name ~= value then
+						thisBank.WeaponClass = tb.WeaponClasses[value]
+						thisBank.AmmoLeft = thisBank.AmmoMax
+						ba.print("ITEM: Changed secondary bank " .. j .. " to a " .. value .. "\n")
+						break
+					end
+				end
+			elseif thisType == "healhp" then
+				local before = targetObject.HitpointsLeft
+				targetObject.HitpointsLeft = self:AAC(targetObject.HitpointsLeft, value, 0, targetObject.HitpointsMax)
+				ba.print("ITEM: Healed targetObject by " .. math.floor(targetObject.HitpointsLeft-before) .. "\n")
+				
+				for j = 1, #targetObject do
+					subsys = targetObject[j]
+					subsys.HitpointsLeft = self:AAC(subsys.HitpointsLeft, value, 0, subsys.HitpointsMax)
+				end
+				
+			elseif thisType == "healhppct" then
+				local before = targetObject.HitpointsLeft
+				targetObject.HitpointsLeft = self:AAC(targetObject.HitpointsLeft, value * targetObject.HitpointsMax, 0, targetObject.HitpointsMax)
+				ba.print("ITEM: Healed targetObject by " .. math.floor(targetObject.HitpointsLeft-before) .. "\n")
+				
+				for j = 1, #targetObject do
+					subsys = targetObject[j]
+					subsys.HitpointsLeft = self:AAC(subsys.HitpointsLeft, value * subsys.HitpointsMax, 0, subsys.HitpointsMax)
+				end
+			elseif thisType == "hppctregen" then
+				self:AddExEffect(thisType, value, duration, particle)
+			elseif thisType == "healshield" then
+				for j=1, #targetObject.Shields do
+					local shield = targetObject.Shields[j]
+					local before = shield
+					local maxShieldSeg = targetObject.Shields.CombinedMax / #targetObject.Shields
+					shield = self:AAC(shield, value, 0, maxShieldSeg)
+					targetObject.Shields[j] = shield
+					ba.print("ITEM: Healed shield seg " .. j .. " by " .. math.floor(shield-before) .. "\n")
+				end
+			elseif thisType == "healshieldpct" then
+				for j=1, #targetObject.Shields do
+					local shield = targetObject.Shields[j]
+					local before = shield
+					local maxShieldSeg = targetObject.Shields.CombinedMax / #targetObject.Shields
+					shield = self:AAC(shield, value*maxShieldSeg, 0, maxShieldSeg)
+					targetObject.Shields[j] = shield
+					ba.print("ITEM: Healed shield seg " .. j .. " by " .. math.floor(shield-before) .. "\n")
+				end
+			elseif thisType == "shieldpctregen" then
+				self:AddExEffect(thisType, value, duration, particle)
+			elseif thisType == "wepenergy" then
+				local before = targetObject.WeaponEnergyLeft
+				targetObject.WeaponEnergyLeft = self:AAC(targetObject.WeaponEnergyLeft, value, 0, targetObject.WeaponEnergyMax)
+				ba.print("ITEM: Refilled weapon energy by " .. math.floor(targetObject.WeaponEnergyLeft-before) .. "\n")
+			elseif thisType == "wepenergypct" then
+				local before = targetObject.WeaponEnergyLeft
+				targetObject.WeaponEnergyLeft = self:AAC(targetObject.WeaponEnergyLeft, value * targetObject.WeaponEnergyMax, 0, targetObject.WeaponEnergyMax)
+				ba.print("ITEM: Refilled weapon energy by " .. math.floor(targetObject.WeaponEnergyLeft-before) .. "\n")
+			elseif thisType == "wepenergypctregen" then
+				self:AddExEffect(thisType, value, duration, particle)
+			elseif thisType == "aburn" then
+				local before = targetObject.AfterburnerFuelLeft
+				targetObject.AfterburnerFuelLeft = self:AAC(targetObject.AfterburnerFuelLeft, value, 0, targetObject.AfterburnerFuelMax)
+				ba.print("ITEM: Refilled afterburner energy by " .. math.floor(targetObject.AfterburnerFuelLeft-before) .. "\n")
+			elseif thisType == "aburnpct" then
+				local before = targetObject.AfterburnerFuelLeft
+				targetObject.AfterburnerFuelLeft = self:AAC(targetObject.AfterburnerFuelLeft, value * targetObject.AfterburnerFuelMax, 0, targetObject.AfterburnerFuelMax)
+				ba.print("ITEM: Refilled afterburner energy by " .. math.floor(targetObject.AfterburnerFuelLeft-before) .. "\n")
+			elseif thisType == "aburnpctregen" then
+				self:AddExEffect(thisType, value, duration, particle)
+			elseif thisType == "invuln" then
+				self:AddExEffect(thisType, nil, duration, particle)
+			elseif thisType == "stealth" then
+				self:AddExEffect(thisType, nil, duration, particle)
+			elseif thisType == "sexpvaradd" then
+				if variable and mn.SEXPVariables[variable] and mn.SEXPVariables[variable]:isValid() then
+					local sexpvar = mn.SEXPVariables[variable]
+					sexpvar.Value = sexpvar.Value + value
+					ba.print("ITEM: Adjusted sexpvariable " .. variable .. " by " .. value .. ", new value: " .. sexpvar.Value .. "\n")
+				end
+			elseif thisType == "sexpvarset" then
+				if variable and mn.SEXPVariables[variable] and mn.SEXPVariables[variable]:isValid() then
+					local sexpvar = mn.SEXPVariables[variable]
+					sexpvar.Value = value
+					ba.print("ITEM: Adjusted sexpvariable " .. variable .. " to " .. value .. "\n")
+				end
+			elseif thisType == "disable" then
+				mn.runSEXP("(deactivate-glow-maps !"..targetObjectName.."!)")
+				mn.runSEXP("(deactivate-glow-points !"..targetObjectName.."!)")
+				mn.runSEXP("(set-thrusters-status (false) !"..targetObjectName.."!)")
+				mn.runSEXP("(shields-off !"..targetObjectName.."!)")
+				mn.runSEXP("(force-glide !"..targetObjectName.."! (true) )")
+				mn.runSEXP("(lock-primary-weapon !"..targetObjectName.."!)")
+				mn.runSEXP("(lock-secondary-weapon !"..targetObjectName.."!)")
+				mn.runSEXP("(lock-afterburner !"..targetObjectName.."!)")
+				self:AddExEffect(thisType, value, duration, particle, targetObject)
+				--ba.print("ITEM: Attempting to disable " .. targetObjectName .. "\n")
+			elseif thisType == "doomed" then
+				self:AddExEffect(thisType, value, duration, particle, targetObject)
+			elseif thisType == "lockturrets" then
+				local t = {}
+				
+				for i=1, #targetObject do
+					t[i] = targetObject[i].TurretLocked 
+				end
+				
+				mn.runSEXP("(turret-lock-all !"..targetObjectName.."!)")
+				mn.runSEXP("(beam-lock-all !"..targetObjectName.."!)")
+				
+				self:AddExEffect(thisType, t, duration, particle, targetObject)
+			elseif thisType == "scriptberserk" then
+				if Berserk and Berserk.Enabled then
+					berserkAddScore(value, userName)
+					ba.print("ITEM: Adjusted Berserk by " .. value .. "\n")
+				end
+			end
+		end
+
+	end
+
+end
+
+function Items:AddExEffect(effectType, value, expiry, particle, target)
+
+	--first check to see if this type is already on our list
+	--if it is, only change if its a better powerup
+	
+	local newEffect = true
+	
+	if target then
+		target = target:getSignature()
+	else	
+		target = hv.Player:getSignature()
+	end
+	
+	for i=1, #self.ExEffects do
+		local oldExEffect = self.ExEffects[i]
+		
+		if (oldExEffect) and (oldExEffect.Type == effectType) and (target == oldExEffect.Target) then
+			newEffect = false
+			
+			--ba.print("ITEM: value = " .. tostring(value) .. "oldExEffect.Value = " .. tostring(oldExEffect.Value) .. "\n")
+			if value and type(value) == "number" then
+				if value > oldExEffect.Value then
+					oldExEffect.Value = value
+					oldExEffect.Particle = particle
+				end
+			end
+			
+			if (mn.getMissionTime() + expiry) > oldExEffect.Expiry then
+				oldExEffect.Expiry = mn.getMissionTime() + expiry
+			end
+		end
+	end
+
+	if newEffect then
+		local t = {}
+		
+		t.Type = effectType
+		t.Value = value
+		t.Expiry = mn.getMissionTime() + expiry
+		t.Particle = particle
+		t.Target = target
+		
+		self.ExEffects[#self.ExEffects+1] = t
+	end
+
+end
+
+function Items:ParticleExEffects()
+
+	local numExEffects = #self.ExEffects
+
+	if numExEffects > 0 then
+
+		for i=1, numExEffects do
+			local thisEffect = self.ExEffects[i]
+			local targetObject = mn.getObjectFromSignature(thisEffect.Target)
+			if thisEffect.Particle then
+				local particle = thisEffect.Particle
+				local spawnRadius = targetObject.Class.Model.Radius * 1 
+				for j=1, particle.Count do
+					local randVec = ba.createVector(math.random(-spawnRadius,spawnRadius),math.random(-spawnRadius,spawnRadius),math.random(-spawnRadius,spawnRadius))
+					local position = targetObject.Position + randVec
+					position = position + targetObject.Orientation:unrotateVector(ba.createVector(0,0,targetObject.Physics:getForwardSpeed()/5))
+					local sexpString = "( explosion-effect " .. math.floor(position.x) .. " " .. math.floor(position.y) .. " " .. math.floor(position.z) .. " 1 1 " .. particle.Radius .. " 1 " .. particle.Radius .. " 0 " .. particle.Fireball .. " 99999 )"
+					--ba.print("ITEM: " .. sexpString .. "\n")
+					mn.runSEXP(sexpString) 
+				end
+			end
+		end
+	
+	end
+
+end
+
+function Items:WatchExEffects()
+
+	if #self.ExEffects > 0 then
+	
+		--ba.print("ITEM: Scanning through ExEffects...\n")
+					
+		for i=1, #self.ExEffects do
+			local thisExEffect = self.ExEffects[i]
+
+			if thisExEffect then
+			
+				local targetObject = mn.getObjectFromSignature(thisExEffect.Target)
+				
+				if targetObject:isValid() then
+
+					local thisEffect = thisExEffect.Type
+					local value = thisExEffect.Value
+				
+					if thisEffect == "hppctregen" then
+						local before = targetObject.HitpointsLeft
+						targetObject.HitpointsLeft = self:AAC(targetObject.HitpointsLeft, value * targetObject.HitpointsMax, 0, targetObject.HitpointsMax)
+						ba.print("ITEM: Healed targetObject by " .. math.floor(targetObject.HitpointsLeft-before) .. "\n")
+						for j = 1, #targetObject do
+							subsys = targetObject[j]
+							subsys.HitpointsLeft = self:AAC(subsys.HitpointsLeft, value * subsys.HitpointsMax, 0, subsys.HitpointsMax)
+						end
+					elseif thisEffect == "shieldpctregen" then
+						for j=1, #targetObject.Shields do
+							local shield = targetObject.Shields[j]
+							local before = shield
+							local maxShieldSeg = targetObject.Shields.CombinedMax / #targetObject.Shields
+							shield = self:AAC(shield, value*maxShieldSeg, 0, maxShieldSeg)
+							ba.print("ITEM: Healed shield seg " .. j .. " by " .. math.floor(shield-before) .. "\n")
+						end
+					elseif thisEffect == "wepenergypctregen" then
+						local before = targetObject.WeaponEnergyLeft
+						targetObject.WeaponEnergyLeft = self:AAC(targetObject.WeaponEnergyLeft, value * targetObject.WeaponEnergyMax, 0, targetObject.WeaponEnergyMax)
+						ba.print("ITEM: Refilled weapon energy by " .. math.floor(targetObject.WeaponEnergyLeft-before) .. "\n")
+					elseif thisEffect == "aburnpctregen" then
+						local before = targetObject.AfterburnerFuelLeft
+						targetObject.AfterburnerFuelLeft = self:AAC(targetObject.AfterburnerFuelLeft, value * targetObject.AfterburnerFuelMax, 0, targetObject.AfterburnerFuelMax)
+						ba.print("ITEM: Refilled afterburner energy by " .. math.floor(targetObject.AfterburnerFuelLeft-before) .. "\n")
+					elseif thisEffect == "invuln" then
+						if not mn.evaluateSEXP("(are-ship-flags-set !" .. targetObject.Name .. "! !invulnerable!)") then
+							mn.runSEXP("(alter-ship-flag !invulnerable! ( true ) ( false ) !" .. targetObject.Name .. "!)")
+							ba.print("ITEM: Giving targetObject invincibility!\n")
+						end
+					elseif thisEffect == "stealth" then
+						if not mn.evaluateSEXP("(are-ship-flags-set !" .. targetObject.Name .. "! !stealth!)") then
+							mn.runSEXP("(alter-ship-flag !stealth! ( true ) ( false ) !" .. targetObject.Name .. "!)")
+							mn.runSEXP("(ship-effect !Cloak! 1000 !" .. targetObject.Name .. "!)")
+							ba.print("ITEM: Giving targetObject stealth!\n")
+						end
+					end
+				
+				end
+			
+				if mn.getMissionTime() > thisExEffect.Expiry then
+				
+					local thisEffect = thisExEffect.Type
+					local value = thisExEffect.Value
+				
+					if targetObject:isValid() then
+						if thisEffect == "invuln" then
+							if mn.evaluateSEXP("(are-ship-flags-set !" .. targetObject.Name .. "! !invulnerable!)") then
+								mn.runSEXP("(alter-ship-flag !invulnerable! ( false ) ( false ) !" .. targetObject.Name .. "!)")
+								ba.print("ITEM: Taking targetObject invincibility!\n")
+							end
+						elseif thisEffect == "stealth" then
+							if mn.evaluateSEXP("(are-ship-flags-set !" .. targetObject.Name .. "! !stealth!)") then
+								mn.runSEXP("(alter-ship-flag !stealth! ( false ) ( false ) !" .. targetObject.Name .. "!)")
+								mn.runSEXP("(ship-effect !Uncloak! 1000 !" .. targetObject.Name .. "!)")
+								ba.print("ITEM: Taking targetObject stealth!\n")
+							end
+						elseif thisEffect == "disable" then
+							mn.runSEXP("(activate-glow-maps !"..targetObject.Name.."!)")
+							mn.runSEXP("(activate-glow-points !"..targetObject.Name.."!)")
+							mn.runSEXP("(set-thrusters-status (true) !"..targetObject.Name.."!)")
+							mn.runSEXP("(shields-on !"..targetObject.Name.."!)")
+							mn.runSEXP("(force-glide !"..targetObject.Name.."! (false) )")
+							mn.runSEXP("(unlock-primary-weapon !"..targetObject.Name.."!)")
+							mn.runSEXP("(unlock-secondary-weapon !"..targetObject.Name.."!)")
+							mn.runSEXP("(unlock-afterburner !"..targetObject.Name.."!)")
+						elseif thisEffect == "doomed" then
+							--mn.runSEXP("(self-destruct !"..targetObject.Name.."!)")
+							--targetObject.Team = mn.Teams["Hostile"]
+							ProxyKill(targetObject.Name)
+						elseif thisEffect == "lockturrets" then
+							for j=1, #value do
+								targetObject[j].TurretLocked = value[j]
+								value[j] = nil
+							end
+							value = nil
+						end
+					end
+					
+					table.remove(self.ExEffects, i)
+					
+				end
+				
+			end
+		end
+	end
+
+end
+
+function itemDropOn()
+	Items:Load()
+end
+
+function itemDropOff()
+	Items.Enabled = false
+end
+
+mn.LuaSEXPs["lua-item-drop-on"].Action = function(set) Items:Load(set) end
+
+mn.LuaSEXPs["lua-item-drop-off"].Action = function() Items.Enabled = false end
+
+mn.LuaSEXPs["lua-item-drop-clear-all"].Action = function() Items:ClearAll() end
+
+mn.LuaSEXPs["lua-item-create"].Action = function(itemName,x,y,z,vz,vy,vz)
+
+	if not Items.Enabled then return end
+
+	local item = Items:NameLookup(itemName)
+	
+	x = x or 0
+	y = y or 0
+	z = z or 0
+	
+	vx = vx or 0
+	vy = vy or 0
+	vz = vz or 0
+	
+	local pos = ba.createVector(x,y,z)
+	local vel = ba.createVector(vx,vy,vz)
+	
+	Items:CreateItem(item, pos, vel)
+
+end
+
+mn.LuaSEXPs["lua-item-create-container"].Action = function(host, lo, hi, ...)
+
+	if not Items.Enabled then return end
+
+	local itemTable = {}
+
+	for i, v in ipairs(arg) do
+		itemTable[i] = Items:NameLookup(v[1])
+	end
+	
+	Items:CreateContainer(host.Name, itemTable, lo, hi)
+
+end
+
+mn.LuaSEXPs["lua-item-create-spawner"].Action = function(host, respawntime, x, y, z, vx, vy, vz, ...)
+
+	if not Items.Enabled then return end
+
+	local itemTable = {}
+
+	for i, v in ipairs(arg) do
+		itemTable[i] = Items:NameLookup(v[1])
+	end
+	
+	Items:CreateSpawner(host.Name, itemTable, respawntime, x, y, z, vx, vy, vz)
+
+end
+
+mn.LuaSEXPs["lua-item-spew-random"].Action = function(host, lo, hi) 
+
+	if not Items.Enabled then return end
+	
+	Items:SpewRandomItems(host, lo, hi)
+	
+end
+
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	Items:Init()
+]
+
+$On State End:
+[
+	Items.Enabled = false
+]
+
+$On Frame:
+[
+	if Items.Enabled then
+		Items:Watch()
+	end
+]
+
+$On Death:
+[
+	if Items.Enabled then
+		if not Items:CheckContainerDeath(hv.Self) then
+			Items:DeathDropMaybe(hv.Self)
+		end
+	end
+]
+
+#End

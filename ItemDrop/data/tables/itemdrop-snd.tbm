@@ -1,0 +1,23 @@
+#Game Sounds Start
+	
+$Name:	PowerupHP ;was 293
+	+Filename: 	powerup1.ogg
+	+Preload: 	no
+	+Volume:	1.00
+	
+$Name:	PowerupWep ;was 294
+	+Filename: 	powerup2.ogg
+	+Preload: 	no
+	+Volume:	1.00
+	
+$Name:	PowerupAburn ;was 293
+	+Filename: 	aburnboost.ogg
+	+Preload: 	no
+	+Volume:	1.00
+	
+$Name:	PowerupInvuln ;was 294
+	+Filename: 	invuln-start.ogg
+	+Preload: 	no
+	+Volume:	1.00
+	
+#Game Sounds End

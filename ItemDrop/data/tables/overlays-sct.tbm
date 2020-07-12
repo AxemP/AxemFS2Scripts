@@ -1,0 +1,97 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+Overlays = {}
+
+function Overlays:Init()
+
+	self.Enabled = false
+	self.Easing = require "easing.lua"
+	self.Items = {}	
+
+end
+
+function Overlays:Add(filename, drawtime, fadetime)
+
+	self.Enabled = true
+
+	local t = {}
+	
+	t.Graphic = filename
+	t.Start = mn.getMissionTime()
+	t.Duration = drawtime or 1
+	t.FadeTime = fadetime or (t.Duration/2)
+	t.Stage = 1
+	t.Alpha = 0
+	t.Localtime = -1
+	t.Function = func or linear
+	
+	self.Items[#self.Items+1] = t
+
+end
+
+function Overlays:Draw()
+
+	local numItems = #self.Items
+	local mTime = mn.getMissionTime()
+	
+	for i=1, numItems do
+		local item = self.Items[i]
+		
+		if item then
+		item.Localtime = mTime - item.Start
+		
+			if item.Stage == 1 then
+				item.Alpha = self.Easing.outQuad(item.Localtime, 0, 1, item.FadeTime)
+				if item.Localtime >= item.FadeTime then item.Stage = 2 end
+			elseif item.Stage == 2 then
+				item.Alpha = 1
+				if item.Localtime >= (item.Duration - item.FadeTime) then item.Stage = 3 end
+			elseif item.Stage == 3 then
+				item.Alpha = self.Easing.outQuad(item.Localtime-(item.Duration-item.FadeTime), 1, -1, item.FadeTime)
+				if item.Localtime >= item.Duration then item.Stage = 4 end
+			elseif item.Stage == 4 then
+				item.Alpha = 0
+				item.Finished = true
+			end
+			
+			gr.drawImage(item.Graphic,0,0,gr.getScreenWidth(),gr.getScreenHeight(),0,0,1,1,item.Alpha)
+		
+		end
+			
+	end
+	
+	for i=1, numItems do
+		local item = self.Items[i]
+		
+		if item and item.Finished then
+			table.remove(self.Items,i)
+		end
+	end
+	
+	if #self.Items == 0 then
+		self.Enabled = false
+	end
+
+end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	Overlays:Init()
+]
+
+$On Frame:
+[
+	if Overlays.Enabled then
+		--PrintDebug(Overlays)
+		Overlays:Draw()	
+	end
+]
+
+#End

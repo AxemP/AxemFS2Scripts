@@ -1,0 +1,135 @@
+#Lua SEXPs
+
+$Operator: lua-item-drop-on
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Activates item drop system
+$Parameter:
+	+Description: Item drop set to use
+	+Type: string
+
+
+$Operator: lua-item-drop-off
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Deactivates item drop system
+
+	
+$Operator: lua-item-drop-clear-all
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Removes all items
+
+$Operator: lua-item-create
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 4
+$Maximum Arguments: 7
+$Return Type: Nothing
+$Description: Creates an item at given position with optional velocity.
+$Parameter:
+	+Description: Item to create
+	+Type: string
+$Parameter:
+	+Description: x coordinate to place item
+	+Type: number
+$Parameter:
+	+Description: y coordinate to place item
+	+Type: number
+$Parameter:
+	+Description: z coordinate to place item
+	+Type: number
+$Parameter:
+	+Description: x velocity to give item
+	+Type: number
+$Parameter:
+	+Description: y velocity to give item
+	+Type: number
+$Parameter:
+	+Description: z velocity to give item
+	+Type: number
+
+$Operator: lua-item-create-container
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 4
+$Return Type: Nothing
+$Description: Creates an "item container", on destruction this container will give out items as specified by a list of random items. This overrides any default behavior.
+$Parameter:
+	+Description: Ship to make into an item container
+	+Type: ship
+$Parameter:
+	+Description: Minimum number of items
+	+Type: number
+$Parameter:
+	+Description: Maximum number of items
+	+Type: number
+$Repeat
+$Parameter:
+	+Description: Possible item that could be spawned
+	+Type: string
+	
+$Operator: lua-item-create-spawner
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 9
+$Return Type: Nothing
+$Description: Creates an item at given position with optional velocity.
+$Parameter:
+	+Description: Ship to make into the spawn host
+	+Type: ship
+$Parameter:
+	+Description: Time it will take to spawn a new item
+	+Type: number
+$Parameter:
+	+Description: x coordinate to place item
+	+Type: number
+$Parameter:
+	+Description: y coordinate to place item
+	+Type: number
+$Parameter:
+	+Description: z coordinate to place item
+	+Type: number
+$Parameter:
+	+Description: x velocity to give item
+	+Type: number
+$Parameter:
+	+Description: y velocity to give item
+	+Type: number
+$Parameter:
+	+Description: z velocity to give item
+	+Type: number
+$Repeat
+$Parameter:
+	+Description: Possible item that could be spawned
+	+Type: string
+	
+$Operator: lua-item-spew-random
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 3
+$Maximum Arguments: 3
+$Return Type: Nothing
+$Description: Causes items to be spawned as if the host ship was destroyed. Use for if you are faking something dying or give out items before a ship dies.
+$Parameter:
+	+Description: Ship to be the host
+	+Type: ship
+$Parameter:
+	+Description: Minimum number of items
+	+Type: number
+$Parameter:
+	+Description: Maximum number of items
+	+Type: number
+
+
+
+#End
