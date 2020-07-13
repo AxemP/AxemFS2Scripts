@@ -41,12 +41,18 @@ function BossBar:Init()
 	--If you want a frame (instead of an automatically drawn border), uncomment the line above and fill in file, x and y.
 	--You can make self.Box's position get tied to the Frame's position by using self.Frame.x and self.Frame.y adding or subtracting a few pixels
 	
-	self.Box={x1 = self.ScreenWidth*0.05, x2 = self.ScreenWidth*0.95, y1 = 20, y2 = 30}
-	self.FullBarWidth = self.Box.x2 - self.Box.x1
+	self.Box={x1 = self.ScreenWidth*0.05, x2 = self.ScreenWidth*0.95, y1 = 20, y2 = 30} --This is a horizontal preset
+	--self.Box={y1 = self.ScreenHeight*0.05, y2 = self.ScreenHeight*0.95, x1 = 20, x2 = 30} --This is a vertical preset
 	
 	--self.BarGraphic = "healthbar"		--Uncomment this is you want a graphical bar
-	self.Vertical = false				--Make this true if you want a vertical bar
+	self.Vertical = true				--Make this true if you want a vertical bar
 	self.ShowBossName = true			--If you want to see the boss's name near the boss bar
+	
+	if self.Vertical then
+		self.FullBarWidth = self.Box.y2 - self.Box.y1
+	else
+		self.FullBarWidth = self.Box.x2 - self.Box.x1
+	end
 	
 	ba.print("INITIALIZING: Boss Bar Script!\n")
 
@@ -80,13 +86,13 @@ function BossBar:DrawBar(CurrentTime)
 		if drawBarWidth > 0.001 then
 			if not self.BarGraphic then
 				if self.Vertical then
-					gr.drawRectangle(self.Box.x1, self.Box.y1, self.Box.x1, self.Box.y2 + (self.FullBarWidth * drawBarWidth))
+					gr.drawRectangle(self.Box.x1, self.Box.y1, self.Box.x2, self.Box.y1 + (self.FullBarWidth * drawBarWidth))
 				else
 					gr.drawRectangle(self.Box.x1, self.Box.y1, self.Box.x1 + (self.FullBarWidth * drawBarWidth), self.Box.y2)
 				end
 			else
 				if self.Vertical then
-					gr.drawImage("healthbar", self.Box.x1, self.Box.y1, self.Box.x1, self.Box.y2 + (self.FullBarWidth * drawBarWidth) , 0, 0, 1, drawBarWidth, 0.8)
+					gr.drawImage("healthbar", self.Box.x1, self.Box.y1, self.Box.x2, self.Box.y1 + (self.FullBarWidth * drawBarWidth) , 0, 0, 1, drawBarWidth, 0.8)
 				else
 					gr.drawImage("healthbar", self.Box.x1, self.Box.y1, self.Box.x1 + (self.FullBarWidth * drawBarWidth), self.Box.y2, 0, 0, drawBarWidth, 1, 0.8)
 				end
