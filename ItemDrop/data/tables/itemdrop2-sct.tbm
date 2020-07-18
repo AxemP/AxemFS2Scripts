@@ -414,7 +414,7 @@ function Items:CreateItem(index, position, velocity)
 	
 	local thisItem = mn.createShip(name,tb.ShipClasses[class],blankOrient,position)
 	
-	mn.runSEXP("( change-iff !PowerUp! !".. name .. "!)")
+	mn.runSEXP("( change-iff !" .. self.Config.Global.ItemIFF .. "! !".. name .. "!)")
 	mn.runSEXP("( ship-invulnerable !".. name .. "!)")
 	mn.runSEXP("( protect-ship !".. name .. "!)")
 	mn.runSEXP("( beam-protect-ship !".. name .. "!)")
