@@ -1,0 +1,79 @@
+#General Settings
+
+$Auto Guardian:	true				;;If you don't want to worry about subsystem damage, this is for you
+	;+Excluded Subsys: WingR,WingL	;;But if you do want to worry about some subsystems...
+$Show Damage Gauge:	false			;;Turns off the damage gauge at mission start
+$Low Health Alerts: true			;;Will cause audio alerts (using sound entries "LowHealth1" & "LowHealth2") to play at 33% and 15% hull integrity.
+$Scaling:	true
+	+Base Resolution: 1920,1080		;;Technically just the first value is what we look at for scaling...
+$Color Style: 0						;;0 = Monochrome Images Colored (note scaling will be turned off with this option), 1 = Full Color Image with alpha filtering (see-through, no transparency needed in image), 2 = Full Color Image with transparency required
+
+;;Note about directions
+;;direction is the direction it would go from empty to full
+;;right 0 => 100 (default)
+
+;;left  100 <= 0 (note: doesnt work with monochrome images)
+
+;;up (note: doesnt work with monochrome images)
+;;100
+;;^
+;;|
+;;0
+
+;;down
+;;0
+;;|
+;;v
+;;100
+
+#End
+
+#Health Bar Settings
+
+$Frame:		csa_healthframe
+	+Origin:	0.5, 0.5
+	+Offset:	-152, -220
+$Hull Bar:	csa_healthhull
+	+Alt Image:	csa_healthhull_b	;;Graphic used at 15% and below
+	+Offset:	42,0
+	;+Color Good: 90,200,0,192		;;100 - 66%
+	;+Color Okay: 255,212,0,192		;;66% - 33%
+	;+Color Bad: 192,0,0,192		;;33% - 15%
+	;+Color Danger: 255,0,0,225		;;15% - 0%
+	+Low Hull Text: true
+	+Direction:		right
+$Shield Bar:	csa_healthshield
+	+Alt Image:	csa_healthshield_b	;;Graphic used when there is a low quad
+	+Offset:	2,0
+	+Color:		0,128,255,255
+	+Direction:		right
+
+#End
+
+#Boost Bar Settings
+
+$Frame: energy_frame
+	+Origin: 0.95, 0.1
+	+Offset: -300, 0
+$Bar: energy_bar
+	+Alt Image: energy_bar_b	;Less than 25%
+	+Offset: 0,0
+	;+Color: 0,128,255,255
+	;+Color Low: 255,212,0,192	;Less than 25%
+	+Direction: right
+	
+#End
+
+#Weapon Bar Settings
+
+$Frame: energy_frame
+	+Origin: 0.95, 0.1
+	+Offset: -300, 60
+$Bar: energy_bar
+	+Alt Image: energy_bar_b	;Less than 25%
+	+Offset: 0,0
+	;+Color: 90,200,0,192
+	;+Color Low: 255,212,0,192	;Less than 25%
+	+Direction: right
+
+#End

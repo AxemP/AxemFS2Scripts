@@ -38,7 +38,9 @@ function BossBar:Init()
 		
 	--Boss Bar coordinates, the border will draw a bit bigger than this though
 	--self.Frame={File=filename,X=number,Y=number,Alpha=192}
-	--If you want a frame (instead of an automatically drawn border), uncomment the line above and fill in file, x and y.
+	--self.Frame.Width = gr.getImageWidth(self.Frame.File)
+	--self.Frame.Height = gr.getImageHeight(self.Frame.File)
+	--If you want a frame (instead of an automatically drawn border), uncomment the 3 lines above and fill in file, x and y.
 	--You can make self.Box's position get tied to the Frame's position by using self.Frame.x and self.Frame.y adding or subtracting a few pixels
 	
 	self.Box={x1 = self.ScreenWidth*0.05, x2 = self.ScreenWidth*0.95, y1 = 20, y2 = 30} --This is a horizontal preset
@@ -70,7 +72,7 @@ function BossBar:DrawBar(CurrentTime)
 	local name = self.Boss.Name
 	
 		if self.Frame then
-			gr.drawImage(self.Frame.File, self.Frame.X, self.Frame.Y,0,0,1,1,self.Frame.Alpha)
+			gr.drawImage(self.Frame.File, self.Frame.X, self.Frame.Y, self.Frame.X+self.Frame.Width, self.Frame.Y+self.Frame.Height, 0, 0, 1, 1, self.Frame.Alpha)
 		else
 			--Drawing the border
 			gr.setColor(192,192,192,192)
@@ -181,7 +183,7 @@ function BossBar:Exit()
 	self.Changed = nil
 	self.ScreenWidth = nil
 	self.ScreenHeight = nil
-	self.Ease = nil
+	--self.Ease = nil
 	self.Box = nil
 	self.FullBarWidth = nil
 

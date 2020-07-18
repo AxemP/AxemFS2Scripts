@@ -11,54 +11,418 @@ function AxHUD:Init()
 	if not AxEase then
 		ba.error("AxEase not detected! Please have axease-sct.tbm in your tables folder (check https://github.com/AxemP/AxemFS2Scripts/tree/master/BaseFiles/data/tables")
 	end
-
-	--Don't touch these two
+	
+	self.Active = {} --Keeps track of active elements
+	
+	self:ParseConfig("lua-axhud.tbl")
+	
+	if self.Active.HealthBar then
+		self:SetupHealthBar()
+	end
+	
+	if self.Active.BoostBar then
+		self:SetupBoostBar()
+	end
+	
+	if self.Active.WeaponBar then
+		self:SetupWeaponBar()
+	end
+	
 	self.Enabled = false
 	self.Visible = false
-	
-	self.AutoGuardian = false --Makes all subsystems (except the excluded ones) be guardianed at 100% so you don't need to worry about them taking damage at all
-	self.ExcludeSubsys = {} --If you do want destructable subsystems and have auto guardian on, set up this line with subsystem names like this... self.ExcludeSubsys = {"WingL", "WingR"}
-	self.ShowShields = true --If you want to show shields as another health bar. This would probably work best if your ship just has a single shield segment since it won't show you specific shield quad info, just combined shield strength. 
-	self.ShowSubsystemDamage = true --If you want to show the subsystem damage gauge (doesn't make sense to have it on if you have auto guardian on)
-	self.LowHealthAlerts = true --If you want beeps if your health gets low
-	self.LowHealthText = true	--Draws the hull% when you are really low health
-	self.ColorStyle = 1			--0 = use full color bitmap (bitmap MUST have tranparency to work right), 1 = use grayscale bitmap colored by health level (green/yellow/red/deep red), 2 = use IFF color
-	
-	self.Alpha = 0.75		--Transparency of the bars (only affects full color bitmaps)
-	
-	self.PlrHealth = self:SetupPlayerHealth()
-	
+		
 end
 
-function AxHUD:SetupPlayerHealth()
+
+function AxHUD:ParseConfig(file)
+
+	if not parse.readFileText(file, "data/tables") then
+		return
+	end
+	
+	 if parse.optionalString("#General Settings") then
+				
+		if parse.optionalString("$Auto Guardian:") then
+			self.AutoGuardian = parse.getBoolean()
+			
+			if parse.optionalString("+Excluded Subsys:") then
+				self.ExcludeSubsys = self:GetCSV(parse.getString())
+			else
+				self.ExcludeSubsys = {}
+			end
+			
+		else
+			self.AutoGuardian = false
+		end
+				
+		if parse.optionalString("$Show Damage Gauge:") then
+			self.ShowSubsystemDamage = parse.getBoolean()
+		else
+			self.ShowSubsystemDamage = true
+		end
+		
+		if parse.optionalString("$Low Health Alerts:") then
+			self.LowHealthAlerts = parse.getBoolean()
+		else
+			self.LowHealthAlerts = false
+		end
+		
+		if parse.optionalString("$Scaling:") then
+			self.Scaling = parse.getBoolean()
+			
+			if parse.optionalString("+Base Resolution:") then
+				self.ScalingBase = self:GetCSV(parse.getString())
+			else
+				self.ScalingBase = {1024,768}
+			end
+			
+			if self.Scaling then
+				self.ScaleFactor = self:CalculateScaleFactor(self.ScalingBase[1])
+			else
+				self.ScaleFactor = 1
+			end
+			
+		else
+			self.Scaling = nil
+			self.ScaleFactor = 1
+		end
+		
+		if parse.optionalString("$Color Style:") then
+			self.ColorStyle = parse.getInt()
+		else
+			self.ColorStyle = 0
+		end
+		
+		if (self.ColorStyle == 0) and self.Scaling then
+			ba.print("AXHUD: Monochrome images can't scale properly, disabling scaling...\n")
+			self.Scaling = nil
+			self.ScaleFactor = 1
+		end
+
+		parse.requiredString("#End")
+		
+	end
+		
+	 if parse.optionalString("#Health Bar Settings") then
+	 
+	 self.Active.HealthBar = true
+	 
+	 local t = {}
+	 				
+		if parse.requiredString("$Frame:") then
+			
+			local filename = parse.getString()
+			
+			t.Graphic = {}
+			t.Graphic.Frame = {File = filename}
+			t.Graphic.Frame.Width = gr.getImageWidth(filename) * self.ScaleFactor
+			t.Graphic.Frame.Height = gr.getImageHeight(filename) * self.ScaleFactor
+						
+			if parse.optionalString("+Origin:") then
+				t.Graphic.Frame.Origin = self:GetCSV(parse.getString())
+			else
+				t.Graphic.Frame.Origin = {0,0}
+			end
+			
+			if parse.optionalString("+Offset:") then
+				t.Graphic.Frame.Offset = self:GetCSV(parse.getString())
+				t.Graphic.Frame.Offset[1] = t.Graphic.Frame.Offset[1] * self.ScaleFactor
+				t.Graphic.Frame.Offset[2] = t.Graphic.Frame.Offset[2] * self.ScaleFactor
+			else
+				t.Graphic.Frame.Offset = {0,0}
+			end
+						
+			local gx = (gr.getScreenWidth() * t.Graphic.Frame.Origin[1]) + t.Graphic.Frame.Offset[1]
+			local gy = (gr.getScreenHeight() * t.Graphic.Frame.Origin[2]) + t.Graphic.Frame.Offset[2]
+			
+			t.Graphic.Position = {x=gx, y=gy}
+
+		end
+		
+		if parse.optionalString("$Hull Bar:") then
+		
+			t.Graphic.Bar = {}
+			t.Graphic.Bar.aImage = parse.getString()
+			t.Graphic.Bar.Width = gr.getImageWidth(t.Graphic.Bar.aImage) * self.ScaleFactor
+			t.Graphic.Bar.Height = gr.getImageHeight(t.Graphic.Bar.aImage) * self.ScaleFactor
+			
+			if parse.optionalString("+Alt Image:") then
+				t.Graphic.Bar.bImage = parse.getString()
+			end
+			
+			if parse.optionalString("+Offset:") then
+				t.Graphic.Bar.Offset = self:GetCSV(parse.getString())
+				t.Graphic.Bar.Offset[1] = t.Graphic.Bar.Offset[1] * self.ScaleFactor
+				t.Graphic.Bar.Offset[2] = t.Graphic.Bar.Offset[2] * self.ScaleFactor
+			else
+				t.Graphic.Bar.Offset = {0,0}
+			end
+						
+			t.Colors = {}
+			
+			if parse.optionalString("+Color Good:") then
+				local rgba = self:GetCSV(parse.getString())
+				t.Colors.Good = {rgba[1],rgba[2],rgba[3],rgba[4] or 255}
+			else
+				t.Colors.Good = {90,200,0,192}
+			end
+			
+			if parse.optionalString("+Color Okay:") then
+				local rgba = self:GetCSV(parse.getString())
+				t.Colors.OK = {rgba[1],rgba[2],rgba[3],rgba[4] or 255}
+			else
+				t.Colors.OK = {255,212,0,192}
+			end
+			
+			if parse.optionalString("+Color Bad:") then
+				local rgba = self:GetCSV(parse.getString())
+				t.Colors.Bad = {rgba[1],rgba[2],rgba[3],rgba[4] or 255}
+			else
+				t.Colors.Bad = {192,0,0,192}
+			end
+			
+			if parse.optionalString("+Color Danger:") then
+				local rgba = self:GetCSV(parse.getString())
+				t.Colors.Danger = {rgba[1],rgba[2],rgba[3],rgba[4] or 255}
+			else
+				t.Colors.Danger = {255,0,0,225}
+			end
+			
+			if parse.optionalString("+Low Hull Text:") then
+				self.LowHealthText = parse.getBoolean()
+			else
+				self.LowHealthText = false
+			end
+			
+			if parse.optionalString("+Direction:") then
+				t.HullDirection = self:GetDirection(parse.getString())
+			else
+				t.HullDirection = 0
+			end
+
+		end
+		
+		if parse.optionalString("$Shield Bar:") then
+			self.ShowShields = true
+			t.Graphic.ShieldBar = {}
+			t.Graphic.ShieldBar.aImage = parse.getString()
+			t.Graphic.ShieldBar.Width = gr.getImageWidth(t.Graphic.ShieldBar.aImage) * self.ScaleFactor
+			t.Graphic.ShieldBar.Height = gr.getImageHeight(t.Graphic.ShieldBar.aImage) * self.ScaleFactor
+			
+			if parse.optionalString("+Alt Image:") then
+				t.Graphic.ShieldBar.bImage = parse.getString()
+			end
+			
+			if parse.optionalString("+Offset:") then
+				t.Graphic.ShieldBar.Offset = self:GetCSV(parse.getString())
+				t.Graphic.ShieldBar.Offset[1] = t.Graphic.ShieldBar.Offset[1] * self.ScaleFactor
+				t.Graphic.ShieldBar.Offset[2] = t.Graphic.ShieldBar.Offset[2] * self.ScaleFactor
+			else
+				t.Graphic.ShieldBar.Offset = {0,0}
+			end
+						
+			if parse.optionalString("+Color:") then
+				local rgba = self:GetCSV(parse.getString())
+				t.Colors.Shield = {rgba[1],rgba[2],rgba[3],rgba[4] or 255}
+			else
+				t.Colors.Shield = {90,200,0,192}
+			end
+			
+			if parse.optionalString("+Direction:") then
+				t.ShieldDirection = self:GetDirection(parse.getString())
+			else
+				t.ShieldDirection = 0
+			end
+			
+		else
+			self.ShowShields = false
+		end
+		
+		parse.requiredString("#End")
+		
+		self.HealthBar = t
+		
+	end
+		
+	if parse.optionalString("#Boost Bar Settings") then
+	
+		self.Active.BoostBar = true
+		
+		local t = {}
+		
+		if parse.requiredString("$Frame:") then
+			
+			local filename = parse.getString()
+			
+			t.Graphic = {}
+			t.Graphic.Frame = {File = filename}
+			t.Graphic.Frame.Width = gr.getImageWidth(filename) * self.ScaleFactor
+			t.Graphic.Frame.Height = gr.getImageHeight(filename) * self.ScaleFactor
+						
+			if parse.optionalString("+Origin:") then
+				t.Graphic.Frame.Origin = self:GetCSV(parse.getString())
+			else
+				t.Graphic.Frame.Origin = {0,0}
+			end
+			
+			if parse.optionalString("+Offset:") then
+				t.Graphic.Frame.Offset = self:GetCSV(parse.getString())
+				t.Graphic.Frame.Offset[1] = t.Graphic.Frame.Offset[1] * self.ScaleFactor
+				t.Graphic.Frame.Offset[2] = t.Graphic.Frame.Offset[2] * self.ScaleFactor
+			else
+				t.Graphic.Frame.Offset = {0,0}
+			end
+						
+			local gx = (gr.getScreenWidth() * t.Graphic.Frame.Origin[1]) + t.Graphic.Frame.Offset[1]
+			local gy = (gr.getScreenHeight() * t.Graphic.Frame.Origin[2]) + t.Graphic.Frame.Offset[2]
+			
+			t.Graphic.Position = {x=gx, y=gy}
+
+		end
+		
+		if parse.optionalString("$Bar:") then
+		
+			t.Graphic.Bar = {}
+			t.Graphic.Bar.aImage = parse.getString()
+			t.Graphic.Bar.Width = gr.getImageWidth(t.Graphic.Bar.aImage) * self.ScaleFactor
+			t.Graphic.Bar.Height = gr.getImageHeight(t.Graphic.Bar.aImage) * self.ScaleFactor
+			
+			if parse.optionalString("+Alt Image:") then
+				t.Graphic.Bar.bImage = parse.getString()
+			end
+						
+			if parse.optionalString("+Offset:") then
+				t.Graphic.Bar.Offset = self:GetCSV(parse.getString())
+				t.Graphic.Bar.Offset[1] = t.Graphic.Bar.Offset[1] * self.ScaleFactor
+				t.Graphic.Bar.Offset[2] = t.Graphic.Bar.Offset[2] * self.ScaleFactor
+			else
+				t.Graphic.Bar.Offset = {0,0}
+			end
+						
+			t.Colors = {}
+			
+			if parse.optionalString("+Color:") then
+				local rgba = self:GetCSV(parse.getString())
+				t.Colors.Good = {rgba[1],rgba[2],rgba[3],rgba[4] or 255}
+			else
+				t.Colors.Good = {0,128,255,255}
+			end
+			
+			if parse.optionalString("+Color Low:") then
+				local rgba = self:GetCSV(parse.getString())
+				t.Colors.Low = {rgba[1],rgba[2],rgba[3],rgba[4] or 255}
+			else
+				t.Colors.Low = {255,212,0,192}
+			end
+			
+			if parse.optionalString("+Direction:") then
+				t.Direction = self:GetDirection(parse.getString())
+			else
+				t.Direction = 0
+			end
+
+		end
+							
+		parse.requiredString("#End")
+		
+		self.BoostBar = t
+	
+	end
+	
+	if parse.optionalString("#Weapon Bar Settings") then
+	
+		self.Active.WeaponBar = true
+		
+		local t = {}
+		
+		if parse.requiredString("$Frame:") then
+			
+			local filename = parse.getString()
+			
+			t.Graphic = {}
+			t.Graphic.Frame = {File = filename}
+			t.Graphic.Frame.Width = gr.getImageWidth(filename) * self.ScaleFactor
+			t.Graphic.Frame.Height = gr.getImageHeight(filename) * self.ScaleFactor
+						
+			if parse.optionalString("+Origin:") then
+				t.Graphic.Frame.Origin = self:GetCSV(parse.getString())
+			else
+				t.Graphic.Frame.Origin = {0,0}
+			end
+			
+			if parse.optionalString("+Offset:") then
+				t.Graphic.Frame.Offset = self:GetCSV(parse.getString())
+				t.Graphic.Frame.Offset[1] = t.Graphic.Frame.Offset[1] * self.ScaleFactor
+				t.Graphic.Frame.Offset[2] = t.Graphic.Frame.Offset[2] * self.ScaleFactor
+			else
+				t.Graphic.Frame.Offset = {0,0}
+			end
+						
+			local gx = (gr.getScreenWidth() * t.Graphic.Frame.Origin[1]) + t.Graphic.Frame.Offset[1]
+			local gy = (gr.getScreenHeight() * t.Graphic.Frame.Origin[2]) + t.Graphic.Frame.Offset[2]
+			
+			t.Graphic.Position = {x=gx, y=gy}
+
+		end
+		
+		if parse.optionalString("$Bar:") then
+		
+			t.Graphic.Bar = {}
+			t.Graphic.Bar.aImage = parse.getString()
+			t.Graphic.Bar.Width = gr.getImageWidth(t.Graphic.Bar.aImage) * self.ScaleFactor
+			t.Graphic.Bar.Height = gr.getImageHeight(t.Graphic.Bar.aImage) * self.ScaleFactor
+			
+			if parse.optionalString("+Alt Image:") then
+				t.Graphic.Bar.bImage = parse.getString()
+			end
+						
+			if parse.optionalString("+Offset:") then
+				t.Graphic.Bar.Offset = self:GetCSV(parse.getString())
+				t.Graphic.Bar.Offset[1] = t.Graphic.Bar.Offset[1] * self.ScaleFactor
+				t.Graphic.Bar.Offset[2] = t.Graphic.Bar.Offset[2] * self.ScaleFactor
+			else
+				t.Graphic.Bar.Offset = {0,0}
+			end
+						
+			t.Colors = {}
+			
+			if parse.optionalString("+Color:") then
+				local rgba = self:GetCSV(parse.getString())
+				t.Colors.Good = {rgba[1],rgba[2],rgba[3],rgba[4] or 255}
+			else
+				t.Colors.Good = {90,200,0,192}
+			end
+			
+			if parse.optionalString("+Color Low:") then
+				local rgba = self:GetCSV(parse.getString())
+				t.Colors.Low = {rgba[1],rgba[2],rgba[3],rgba[4] or 255}
+			else
+				t.Colors.Low = {255,212,0,192}
+			end
+			
+			if parse.optionalString("+Direction:") then
+				t.Direction = self:GetDirection(parse.getString())
+			else
+				t.Direction = 0
+			end
+
+		end
+							
+		parse.requiredString("#End")
+		
+		self.WeaponBar = t
+	
+	end
+
+end
+
+function AxHUD:SetupHealthBar()
 
 	if not self.ShowSubsystemDamage then
 		mn.runSEXP("(hud-set-retail-gauge-active (false) !Damage!)")
 	end
-
-	local t = {}
 	
-	t.Graphic = {}
-	t.Graphic.Position = {x = (gr.getScreenWidth() * 0.5) - 152, y = (gr.getScreenHeight() * 0.5) - 220} --This is where the frame gets placed
-	t.Graphic.Frame = "csa_healthframe"
-	
-	t.Graphic.Bar =	{aImage = "csa_healthhull", bImage = "csa_healthhull_b", Offset = {42,0}} --Offset is the health bar offset from the frame placement (x.y)
-	t.Graphic.Bar.Width = gr.getImageWidth("csa_healthhull")
-	t.Graphic.Bar.Height = gr.getImageHeight("csa_healthhull")
-	
-	if self.ShowShields then
-		t.Graphic.ShieldBar = {aImage = "csa_healthshield", bImage = "csa_healthshield_b", Offset = {2,0}} --Offset is the shield bar offset from the frame placement (x,y)
-		t.Graphic.ShieldBar.Width = gr.getImageWidth("csa_healthshield")
-		t.Graphic.ShieldBar.Height = gr.getImageHeight("csa_healthshield")
-	end
-	
-	t.ColorStyle = self.ColorStyle
-	t.Colors = {}
-	t.Colors.Good = {90,200,0,192}
-	t.Colors.OK = {255,212,0,192}
-	t.Colors.Bad = {192,0,0,192}
-	t.Colors.Danger = {255,0,0,225}
-	t.Colors.Shield = {0,128,255,255}
+	local t = self.HealthBar
 	
 	t.Colors.Frame = {}
 	t.Colors.Frame[1], t.Colors.Frame[2], t.Colors.Frame[3], t.Colors.Frame[4] = hu.getHUDGaugeColor(6)
@@ -94,14 +458,40 @@ function AxHUD:SetupPlayerHealth()
 		t.LowHealthTimer = -1
 	end
 	
-	t.Draw = AxHUD.DrawBar
+	t.Draw = AxHUD.DrawHealthBars
 	t.DrawHullBar = AxHUD.DrawHullBar
 	t.DrawShieldBar = AxHUD.DrawShieldBar
 
 	self.ShieldUpdateTime = mn.getMissionTime()
 	self.ShieldUpdateRate = 1
+
+end
+
+function AxHUD:SetupBoostBar()
+
+	mn.runSEXP("(hud-set-retail-gauge-active (false) !Afterburner energy!)")
 	
-	return t
+	local t = self.BoostBar
+	
+	t.Colors.Frame = {}
+	t.Colors.Frame[1], t.Colors.Frame[2], t.Colors.Frame[3], t.Colors.Frame[4] = hu.getHUDGaugeColor(20)
+	t.Colors.Frame[4] = 200
+		
+	t.Draw = AxHUD.DrawBoostBar
+
+end
+
+function AxHUD:SetupWeaponBar()
+
+	mn.runSEXP("(hud-set-retail-gauge-active (false) !Weapon energy!)")
+	
+	local t = self.WeaponBar
+	
+	t.Colors.Frame = {}
+	t.Colors.Frame[1], t.Colors.Frame[2], t.Colors.Frame[3], t.Colors.Frame[4] = hu.getHUDGaugeColor(16)
+	t.Colors.Frame[4] = 200
+		
+	t.Draw = AxHUD.DrawWeaponBar
 
 end
 
@@ -122,41 +512,41 @@ end
 
 function AxHUD:CheckSubsys(subsys)
 
-	for i=1, #self.ExcludeSubsys do
-		local entry = self.ExcludeSubsys[i]
+	if self.ExcludeSubsys then
+		for i=1, #self.ExcludeSubsys do
+			local entry = self.ExcludeSubsys[i]
+			
+			if entry == subsys then return true end
+			
+		end
 		
-		if entry == subsys then return true end
-		
+		return false
 	end
-	
-	return false
 
 end
 
-function AxHUD:DrawBar()
-
-	local mTime = mn.getMissionTime()
-	local object = nil
-	
-	object = hv.Player
+function AxHUD:DrawHealthBars()
 
 	local barInfo = self.Graphic
 	local frameColor = self.Colors.Frame
 	
-	gr.setColor(frameColor[1]*1.5, frameColor[2]*1.5, frameColor[3]*1.5, frameColor[4])
-	--gr.setColor(128,128,128,192)
-	gr.drawMonochromeImage(barInfo.Frame, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+425,barInfo.Position.y+50,0.5)
+	if AxHUD.ColorStyle == 0 then
+		gr.setColor(frameColor[1]*1.5, frameColor[2]*1.5, frameColor[3]*1.5, frameColor[4])
+		gr.drawMonochromeImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height,0.5)
+	else
+		gr.drawImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height)
+	end
 	
-	self:DrawHullBar(object, mTime)
+	self:DrawHullBar()
 	
 	if AxHUD.ShowShields then
-		self:DrawShieldBar(object,mTime)
+		self:DrawShieldBar()
 	end
 	
 		
 end
 	
-function AxHUD:DrawHullBar(object, mTime)
+function AxHUD:DrawHullBar()
 
 	local drawText = false
 	local object = hv.Player
@@ -181,22 +571,26 @@ function AxHUD:DrawHullBar(object, mTime)
 	local barColor
 	local barImage = barInfo.Bar.aImage
 		
-	if self.ColorStyle == 1 then
+	if AxHUD.ColorStyle == 0 then
 		if self.DisplayedHull > 0.66 then
 			barColor = self.Colors.Good
 		elseif self.DisplayedHull > 0.33 and self.DisplayedHull <= 0.66 then
 			barColor = self.Colors.OK
 		elseif self.DisplayedHull > 0.15 and self.DisplayedHull <= 0.33 then
 			barColor = self.Colors.Bad
-			drawText = true			
 		elseif self.DisplayedHull <= 0.15 then
 			barColor = self.Colors.Danger
-			barImage = barInfo.Bar.bImage
-			drawText = true			
 		end
 	elseif self.ColorStyle == 2 then
 		local r,g,b = object.Team:getColor()
 		barColor = {r, g, b, 192}
+	end
+	
+	if self.DisplayedHull > 0.15 and self.DisplayedHull <= 0.33 then
+		drawText = true	
+	elseif self.DisplayedHull <= 0.15 then
+		barImage = barInfo.Bar.bImage
+		drawText = true	
 	end
 	
 	if barColor then
@@ -217,12 +611,22 @@ function AxHUD:DrawHullBar(object, mTime)
 		end
 	end
 	
-	local barWidth = self.DisplayedHull * barInfo.Bar.Width
+	local barWidth
+	local x1, x2, y1, y2
+	local uvx1, uvx2, uvy1, uvy2
 	
-	if self.ColorStyle == 0 then
-		gr.drawImage(barImage, barInfo.Position.x + barInfo.Bar.Offset[1], barInfo.Position.y, barInfo.Position.x + barInfo.Bar.Offset[1]+barWidth, barInfo.Position.y+barInfo.Bar.Height,0,0,self.DisplayedHull,1,AxHUD.Alpha)
+	if (self.HullDirection == 0) or (self.HullDirection == 1) then
+		barWidth = self.DisplayedHull * barInfo.Bar.Width
+		x1, y1, x2, y2, uvx1, uvy1, uvx2, uvy2 = AxHUD:GetBarCoords(barInfo, self.DisplayedHull, barInfo.Bar.Width, self.HullDirection, barInfo.Bar.Offset)
 	else
-		gr.drawMonochromeImage(barImage, barInfo.Position.x + barInfo.Bar.Offset[1], barInfo.Position.y, barInfo.Position.x + barInfo.Bar.Offset[1]+barWidth, barInfo.Position.y+barInfo.Bar.Height,AxHUD.Alpha)
+		barWidth = self.DisplayedHull * barInfo.Bar.Height
+		x1, y1, x2, y2, uvx1, uvy1, uvx2, uvy2 = AxHUD:GetBarCoords(barInfo, self.DisplayedHull, barInfo.Bar.Height, self.HullDirection, barInfo.Bar.Offset)
+	end
+
+	if AxHUD.ColorStyle == 0 then
+		gr.drawMonochromeImage(barImage, x1, y1, x2 ,y2 , barColor[4]/255)
+	else
+		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, 1)
 	end
 	
 	if AxHUD.LowHealthText and drawText then
@@ -238,9 +642,10 @@ function AxHUD:DrawHullBar(object, mTime)
 
 end
 
-function AxHUD:DrawShieldBar(object, mTime)
+function AxHUD:DrawShieldBar()
 
 	local drawText = false
+	local object = hv.Player
 	
 	self.CurrentShield = object.Shields.CombinedLeft / object.Shields.CombinedMax
 		
@@ -253,10 +658,8 @@ function AxHUD:DrawShieldBar(object, mTime)
 	end
 	
 	self.DisplayedShield = AxEase:Process("shield", self.LastShield, self.CurrentShield, 0.5, "linear", 0.01) or self.DisplayedShield
-	
-	--Draw frame first
-	
-	local barInfo = self.Graphic	
+		
+	local barInfo = self.Graphic
 	local barColor = self.Colors.Shield
 	local barImage
 
@@ -267,15 +670,25 @@ function AxHUD:DrawShieldBar(object, mTime)
 	end
 			
 	gr.setColor(barColor[1], barColor[2], barColor[3], barColor[4])
-	
-	local barWidth = self.DisplayedShield * barInfo.ShieldBar.Width
-	
-	if self.ColorStyle == 0 then
-		gr.drawImage(barImage, barInfo.Position.x + barInfo.ShieldBar.Offset[1], barInfo.Position.y, barInfo.Position.x + barInfo.ShieldBar.Offset[1]+barWidth, barInfo.Position.y+barInfo.ShieldBar.Height,0,0,self.DisplayedShield,1,AxHUD.Alpha)
-	else
-		gr.drawMonochromeImage(barImage, barInfo.Position.x + barInfo.ShieldBar.Offset[1], barInfo.Position.y, barInfo.Position.x + barInfo.ShieldBar.Offset[1]+barWidth, barInfo.Position.y+barInfo.ShieldBar.Height,AxHUD.Alpha)
-	end
 		
+	local barWidth
+	local x1, x2, y1, y2
+	local uvx1, uvx2, uvy1, uvy2
+	
+	if (self.ShieldDirection == 0) or (self.ShieldDirection == 1) then
+		barWidth = self.DisplayedShield * barInfo.ShieldBar.Width
+		x1, y1, x2, y2, uvx1, uvy1, uvx2, uvy2 = AxHUD:GetBarCoords(barInfo, self.DisplayedShield, barInfo.ShieldBar.Width, self.ShieldDirection, barInfo.ShieldBar.Offset)
+	else
+		barWidth = self.DisplayedShield * barInfo.ShieldBar.Height
+		x1, y1, x2, y2, uvx1, uvy1, uvx2, uvy2 = AxHUD:GetBarCoords(barInfo, self.DisplayedShield, barInfo.ShieldBar.Height, self.ShieldDirection, barInfo.ShieldBar.Offset)
+	end
+
+	if AxHUD.ColorStyle == 0 then
+		gr.drawMonochromeImage(barImage, x1, y1, x2 ,y2 ,barColor[4]/255)
+	else
+		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, 1)
+	end
+			
 	--[[if drawText then
 		gr.setColor(255,255,255,192)
 		gr.CurrentFont = gr.Fonts[3]
@@ -289,10 +702,118 @@ function AxHUD:DrawShieldBar(object, mTime)
 
 end
 
+function AxHUD:DrawBoostBar()
+
+	local drawText = false
+	local object = hv.Player
+		
+	self.DisplayedLevel = object.AfterburnerFuelLeft / object.AfterburnerFuelMax
+		
+	local barInfo = self.Graphic
+	local frameColor = self.Colors.Frame	
+	local barColor
+	local barImage = barInfo.Bar.aImage
+	
+	if AxHUD.ColorStyle == 0 then
+		gr.setColor(frameColor[1]*1.5, frameColor[2]*1.5, frameColor[3]*1.5, frameColor[4])
+		gr.drawMonochromeImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height,0.5)
+	else
+		gr.drawImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height)
+	end
+		
+	if self.DisplayedLevel >= 0.25 then
+			if AxHUD.ColorStyle == 0 then barColor = self.Colors.Good end
+		else
+			if AxHUD.ColorStyle == 0 then barColor = self.Colors.Low end
+			if barInfo.Bar.bImage then barImage = barInfo.Bar.bImage end
+	end
+	
+	if barColor then
+		gr.setColor(barColor[1], barColor[2], barColor[3], barColor[4])
+	end
+		
+	local barWidth
+	local x1, x2, y1, y2
+	local uvx1, uvx2, uvy1, uvy2
+	
+	if (self.Direction == 0) or (self.Direction == 1) then
+		barWidth = self.DisplayedLevel * barInfo.Bar.Width
+		x1, y1, x2, y2, uvx1, uvy1, uvx2, uvy2 = AxHUD:GetBarCoords(barInfo, self.DisplayedLevel, barInfo.Bar.Width, self.Direction, barInfo.Bar.Offset)
+	else
+		barWidth = self.DisplayedLevel * barInfo.Bar.Height
+		x1, y1, x2, y2, uvx1, uvy1, uvx2, uvy2 = AxHUD:GetBarCoords(barInfo, self.DisplayedLevel, barInfo.Bar.Height, self.Direction, barInfo.Bar.Offset)
+	end
+
+	if AxHUD.ColorStyle == 0 then
+		gr.drawMonochromeImage(barImage, x1, y1, x2 ,y2 , barColor[4]/255)
+	else
+		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, 1)
+	end
+	
+end
+
+function AxHUD:DrawWeaponBar()
+
+	local drawText = false
+	local object = hv.Player
+		
+	self.DisplayedLevel = object.WeaponEnergyLeft / object.WeaponEnergyMax
+	
+	local barInfo = self.Graphic
+	local frameColor = self.Colors.Frame	
+	local barColor
+	local barImage = barInfo.Bar.aImage
+	
+	if AxHUD.ColorStyle == 0 then
+		gr.setColor(frameColor[1]*1.5, frameColor[2]*1.5, frameColor[3]*1.5, frameColor[4])
+		gr.drawMonochromeImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height,0.5)
+	else
+		gr.drawImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height)
+	end
+		
+	if self.DisplayedLevel >= 0.25 then
+			if AxHUD.ColorStyle == 0 then barColor = self.Colors.Good end
+		else
+			if AxHUD.ColorStyle == 0 then barColor = self.Colors.Low end
+			if barInfo.Bar.bImage then barImage = barInfo.Bar.bImage end
+	end
+	
+	if barColor then
+		gr.setColor(barColor[1], barColor[2], barColor[3], barColor[4])
+	end
+		
+	local barWidth
+	local x1, x2, y1, y2
+	local uvx1, uvx2, uvy1, uvy2
+	
+	if (self.Direction == 0) or (self.Direction == 1) then
+		barWidth = self.DisplayedLevel * barInfo.Bar.Width
+		x1, y1, x2, y2, uvx1, uvy1, uvx2, uvy2 = AxHUD:GetBarCoords(barInfo, self.DisplayedLevel, barInfo.Bar.Width, self.Direction, barInfo.Bar.Offset)
+	else
+		barWidth = self.DisplayedLevel * barInfo.Bar.Height
+		x1, y1, x2, y2, uvx1, uvy1, uvx2, uvy2 = AxHUD:GetBarCoords(barInfo, self.DisplayedLevel, barInfo.Bar.Height, self.Direction, barInfo.Bar.Offset)
+	end
+
+	if AxHUD.ColorStyle == 0 then
+		gr.drawMonochromeImage(barImage, x1, y1, x2 ,y2 , barColor[4]/255)
+	else
+		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, 1)
+	end
+	
+end
+
 function AxHUD:Draw()
 
+	if self.ColorStyle == 1 then
+		gr.CurrentOpacityType = ALPHABLEND_FILTER
+	else
+		gr.CurrentOpacityType = ALPHABLEND_NONE
+	end
+
 	if hv.Player.HitpointsLeft > 0 then
-		self.PlrHealth:Draw()
+		if self.Active.HealthBar then self.HealthBar:Draw() end
+		if self.Active.BoostBar then self.BoostBar:Draw() end
+		if self.Active.WeaponBar then self.WeaponBar:Draw() end
 	end
 
 end
@@ -300,6 +821,133 @@ end
 function AxHUD:Ease(t,b,c,d)
   t = t / d
   return -c * t * (t - 2) + b
+end
+
+--http://lua-users.org/wiki/LuaCsv
+function AxHUD:GetCSV(line,sep)
+
+	local res = {}
+	local pos = 1
+	sep = sep or ','
+	while true do 
+		local c = string.sub(line,pos,pos)
+		if (c == "") then break end
+		if (c == '"') then
+			-- quoted value (ignore separator within)
+			local txt = ""
+			repeat
+				local startp,endp = string.find(line,'^%b""',pos)
+				txt = txt..string.sub(line,startp+1,endp-1)
+				pos = endp + 1
+				c = string.sub(line,pos,pos) 
+				if (c == '"') then txt = txt..'"' end 
+				-- check first char AFTER quoted string, if it is another
+				-- quoted string without separator, then append it
+				-- this is the way to "escape" the quote char in a quote. example:
+				--   value1,"blub""blip""boing",value3  will result in blub"blip"boing  for the middle
+			until (c ~= '"')
+			table.insert(res,txt)
+			assert(c == sep or c == "")
+			pos = pos + 1
+		else	
+			-- no quotes used, just look for the first separator
+			local startp,endp = string.find(line,sep,pos)
+			if (startp) then 
+				table.insert(res,string.sub(line,pos,startp-1))
+				pos = endp + 1
+			else
+				-- no separator found -> use rest of string and terminate
+				table.insert(res,string.sub(line,pos))
+				break
+			end 
+		end
+	end
+	
+	return res
+	
+end
+
+function AxHUD:CalculateScaleFactor(base)
+
+	local scalingFactor = 1
+
+	scalingFactor = gr.getScreenWidth() / base
+	
+	return scalingFactor
+
+end
+
+function AxHUD:GetDirection(s)
+
+	if string.lower(s) == "right" then
+		return 0
+	elseif string.lower(s) == "left" then
+		return 1
+	elseif string.lower(s) == "up" then
+		return 2
+	elseif string.lower(s) == "down" then
+		return 3
+	end
+
+end
+
+function AxHUD:GetBarCoords(barInfo, factor, fullWidth, direction,offset,debugme)
+
+	local x1, x2, y1, y2
+	local uvx1, uvx2, uvy1, uvy2
+	
+	if (not direction) or (direction == 0) then --right
+	
+		x1 = barInfo.Position.x + offset[1]
+		x2 = x1 + (factor * fullWidth)
+		y1 = barInfo.Position.y + offset[2]
+		y2 = y1 + barInfo.Bar.Height
+		
+		uvx1 = 0
+		uvy1 = 0
+		uvx2 = factor
+		uvy2 = 1
+		
+	elseif direction == 1 then --left
+	
+		x2 = barInfo.Position.x + offset[1] + fullWidth
+		x1 = x2 - (factor * fullWidth)
+		y1 = barInfo.Position.y + offset[2]
+		y2 = y1 + barInfo.Bar.Height
+		
+		uvx1 = 1 - factor
+		uvy1 = 0
+		uvx2 = 1
+		uvy2 = 1
+	
+	elseif direction == 2 then --up
+	
+		x1 = barInfo.Position.x + offset[1]
+		x2 = x1 + barInfo.Bar.Width
+		y1 = barInfo.Position.y + offset[2]
+		y2 = y1 + (factor * fullWidth)
+		
+		uvx1 = 0
+		uvy1 = 0
+		uvx2 = 1
+		uvy2 = factor
+	
+	elseif direction == 3 then --down
+	
+		x1 = barInfo.Position.x + offset[1]
+		x2 = x1 + barInfo.Bar.Width
+		y2 = barInfo.Position.y + offset[2] + fullWidth
+		y1 = y2 - (factor * fullWidth)
+		
+		uvx1 = 0
+		uvy1 = 1 - factor
+		uvx2 = 1
+		uvy2 = 1
+
+	end
+	
+	return x1,y1,x2,y2,uvx1,uvy1,uvx2,uvy2
+
 end
 
 ]
