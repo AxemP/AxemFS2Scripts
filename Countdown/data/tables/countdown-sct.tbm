@@ -373,6 +373,10 @@ end
 ]
 
 $State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	Countdown:Exit()
+]
 $On State End:
 [
 	if Countdown.Enabled then
