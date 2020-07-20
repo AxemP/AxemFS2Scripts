@@ -243,10 +243,12 @@ end
 
 function cdStop() --Stop the countdown and makes the counter vanish
 
-	Countdown.Enabled = false
-	Countdown.Status = 0
-	if Countdown.SoundOn > 0 then
-		ad.playSound(Countdown.DeactivateSound)
+	if Countdown.Enabled then
+		Countdown.Enabled = false
+		Countdown.Status = 0
+		if Countdown.SoundOn > 0 then
+			ad.playSound(Countdown.DeactivateSound)
+		end
 	end
 	
 end
