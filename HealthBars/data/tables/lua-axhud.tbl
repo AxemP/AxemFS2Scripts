@@ -42,11 +42,13 @@ $Hull Bar:	csa_healthhull
 	;+Color Danger: 255,0,0,225		;;15% - 0%
 	+Low Hull Text: true
 	+Direction:		right
+	;+Invert:		false
 $Shield Bar:	csa_healthshield
 	+Alt Image:	csa_healthshield_b	;;Graphic used when there is a low quad
 	+Offset:	2,0
 	+Color:		0,128,255,255
 	+Direction:		right
+	;+Invert:		false
 
 #End
 
@@ -61,6 +63,7 @@ $Bar: energy_bar
 	;+Color: 0,128,255,255
 	;+Color Low: 255,212,0,192	;Less than 25%
 	+Direction: right
+	;+Invert:	false
 	
 #End
 
@@ -75,5 +78,6 @@ $Bar: energy_bar
 	;+Color: 90,200,0,192
 	;+Color Low: 255,212,0,192	;Less than 25%
 	+Direction: right
+	;+Invert:	false
 
 #End

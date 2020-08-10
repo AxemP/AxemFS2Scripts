@@ -199,6 +199,12 @@ function AxHUD:ParseConfig(file)
 			else
 				t.HullDirection = 0
 			end
+			
+			if parse.optionalString("+Invert:") then
+				t.Invert = parse.getBoolean()
+			else
+				t.Invert = false
+			end
 
 		end
 		
@@ -232,6 +238,12 @@ function AxHUD:ParseConfig(file)
 				t.ShieldDirection = self:GetDirection(parse.getString())
 			else
 				t.ShieldDirection = 0
+			end
+			
+			if parse.optionalString("+Invert:") then
+				t.Invert = parse.getBoolean()
+			else
+				t.Invert = false
 			end
 			
 		else
@@ -320,6 +332,12 @@ function AxHUD:ParseConfig(file)
 			else
 				t.Direction = 0
 			end
+			
+			if parse.optionalString("+Invert:") then
+				t.Invert = parse.getBoolean()
+			else
+				t.Invert = false
+			end
 
 		end
 							
@@ -404,6 +422,12 @@ function AxHUD:ParseConfig(file)
 				t.Direction = self:GetDirection(parse.getString())
 			else
 				t.Direction = 0
+			end
+			
+			if parse.optionalString("+Invert:") then
+				t.Invert = parse.getBoolean()
+			else
+				t.Invert = false
 			end
 
 		end
@@ -563,7 +587,7 @@ function AxHUD:DrawHullBar()
 	local diff = self.CurrentHull - self.LastHull
 		
 	self.DisplayedHull = AxEase:Process("hull", self.LastHull, self.CurrentHull, 0.5, "linear", 0.01) or self.DisplayedHull
-
+	
 	--Draw frame first
 	
 	local barInfo = self.Graphic
@@ -592,6 +616,8 @@ function AxHUD:DrawHullBar()
 		barImage = barInfo.Bar.bImage
 		drawText = true	
 	end
+	
+	if self.Invert then self.DisplayedHull = 1 - self.DisplayedHull end
 	
 	if barColor then
 		gr.setColor(barColor[1], barColor[2], barColor[3], barColor[4])
@@ -668,6 +694,8 @@ function AxHUD:DrawShieldBar()
 	else
 		barImage = barInfo.ShieldBar.aImage
 	end
+	
+	if self.Invert then self.DisplayedShield = 1 - self.DisplayedShield end
 			
 	gr.setColor(barColor[1], barColor[2], barColor[3], barColor[4])
 		
@@ -728,6 +756,8 @@ function AxHUD:DrawBoostBar()
 			if barInfo.Bar.bImage then barImage = barInfo.Bar.bImage end
 	end
 	
+	if self.Invert then self.DisplayedLevel = 1 - self.DisplayedLevel end
+	
 	if barColor then
 		gr.setColor(barColor[1], barColor[2], barColor[3], barColor[4])
 	end
@@ -777,6 +807,8 @@ function AxHUD:DrawWeaponBar()
 			if AxHUD.ColorStyle == 0 then barColor = self.Colors.Low end
 			if barInfo.Bar.bImage then barImage = barInfo.Bar.bImage end
 	end
+	
+	if self.Invert then self.DisplayedLevel = 1 - self.DisplayedLevel end
 	
 	if barColor then
 		gr.setColor(barColor[1], barColor[2], barColor[3], barColor[4])
