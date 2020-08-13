@@ -349,7 +349,7 @@ function MarkBox:DrawSubsystemBracket(subsys, data)
 		gr.setColor(255,255,255,128)
 	end
 	
-	if focus then gr.drawString("GOT FOCUS!",100,0) end
+	--if focus then gr.drawString("GOT FOCUS!",100,0) end
 	
 	local x1,y1,x2,y2 = gr.drawSubsystemTargetingBrackets(subsys, false)
 	
@@ -562,7 +562,7 @@ $On HUD Draw:
 [
 	if MarkBox.Enabled and hu.HUDDrawn and not hu.HUDDisabledExceptMessages and (gr.hasViewmode(VM_INTERNAL) or gr.hasViewmode(VM_CHASE)) then
 		if mn.getMissionTime() > 1 then
-			PrintDebug(MarkBox)
+			--PrintDebug(MarkBox)
 			MarkBox:Draw()
 		end
 	end
