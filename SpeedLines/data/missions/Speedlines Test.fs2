@@ -4,7 +4,7 @@ $Version: 0.10
 $Name:  XSTR("Untitled", -1)
 $Author: Joel Reimer
 $Created: 08/13/20 at 17:06:24
-$Modified: 08/13/20 at 17:10:48
+$Modified: 08/13/20 at 17:12:25
 $Notes:
 This is a FRED2_OPEN created mission.
 $End Notes:
@@ -177,7 +177,7 @@ $Ships: (		;! 1 total
 $Formula: ( when 
    ( true ) 
    ( lua-speedlines-load ) 
-   ( lua-speedlines-set 1 ) 
+   ( lua-speedlines-set 2 ) 
 )
 +Name: Speedlines Load and Set
 +Repeat Count: 1
