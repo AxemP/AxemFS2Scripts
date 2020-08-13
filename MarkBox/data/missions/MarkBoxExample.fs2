@@ -4,7 +4,7 @@ $Version: 0.10
 $Name:  XSTR("Mark Box Example", -1)
 $Author: Axem
 $Created: 01/01/18 at 13:20:27
-$Modified: 08/24/19 at 17:54:19
+$Modified: 08/13/20 at 11:45:05
 $Notes:
 This is a FRED2_OPEN created mission.
 $End Notes:
@@ -23,11 +23,11 @@ $end_multi_text
 +Hull Repair Ceiling: 0.000000
 +Subsystem Repair Ceiling: 100.000000
 
-+Viewer pos: -1213.471313, 3.683666, -749.961731
++Viewer pos: -2326.896240, 4217.233887, -3432.312012
 +Viewer orient:
-	0.923593, 0.000001, -0.383375,
-	0.017518, 0.998955, 0.042205,
-	0.382974, -0.045696, 0.922628
+	0.923593, 0.000001, -0.383374,
+	0.234044, 0.792027, 0.563841,
+	0.303643, -0.610486, 0.731511
 
 
 $AI Profile: FS2 RETAIL
@@ -129,7 +129,7 @@ $Ship Choices: (
 	"EMP Adv.#Shivan"	500
 )
 
-#Objects		;! 7 total
+#Objects		;! 8 total
 
 $Name: Alpha 1		;! Object #0
 $Class: GTF Erinyes
@@ -159,42 +159,42 @@ $Class: GTD Hecate
 $Team: Friendly
 $Location: 2124.315430, 0.000244, 1396.604004
 $Orientation:
-	-0.848100, 0.000000, -0.529836,
+	-0.612487, 0.000000, 0.790480,
 	0.000000, 1.000000, 0.000000,
-	0.529836, 0.000000, -0.848100
+	-0.790480, 0.000000, -0.612487
 $AI Behavior: None
 $Cargo 1:  XSTR("Nothing", -1)
 +Initial Velocity: 33
 +Initial Hull: 100
 +Initial Shields: 100
 +Subsystem: Pilot
-+Subsystem: turret01
-+Subsystem: turret02
-+Subsystem: turret03
-+Subsystem: turret04
-+Subsystem: turret05
-+Subsystem: turret06
-+Subsystem: turret07
-+Subsystem: turret08
-+Subsystem: turret09
-+Subsystem: turret10
-+Subsystem: turret11
-+Subsystem: turret12
-+Subsystem: turret13
-+Subsystem: turret14
-+Subsystem: turret15
-+Subsystem: turret16
-+Subsystem: turret17
-+Subsystem: turret18
-+Subsystem: turret19
-+Subsystem: turret20
-+Subsystem: turret21
-+Subsystem: turret22
-+Subsystem: turret23
-+Subsystem: turret24
-+Subsystem: turret25
-+Subsystem: turret26
-+Subsystem: turret27
++Subsystem: Turret01
++Subsystem: Turret02
++Subsystem: Turret03
++Subsystem: Turret04
++Subsystem: Turret05
++Subsystem: Turret06
++Subsystem: Turret07
++Subsystem: Turret08
++Subsystem: Turret09
++Subsystem: Turret10
++Subsystem: Turret11
++Subsystem: Turret12
++Subsystem: Turret13
++Subsystem: Turret14
++Subsystem: Turret15
++Subsystem: Turret16
++Subsystem: Turret17
++Subsystem: Turret18
++Subsystem: Turret19
++Subsystem: Turret20
++Subsystem: Turret21
++Subsystem: Turret22
++Subsystem: Turret23
++Subsystem: Turret24
++Subsystem: Turret25
++Subsystem: Turret26
++Subsystem: Turret27
 $Arrival Location: Hyperspace
 $Arrival Cue: ( true ) 
 $Departure Location: Hyperspace
@@ -329,8 +329,66 @@ $Determination: 10
 +Flags: ( "cargo-known" )
 +Flags2: ( )
 +Respawn priority: 0
++Group: 0
 +Use Table Score:
 +Score: 10
+
+$Name: Vephar		;! Object #7
+$Class: SD Ravana
+$Team: Hostile
+$Location: 105.849365, 0.000977, 2458.375000
+$Orientation:
+	0.907634, 0.000000, 0.419765,
+	0.000000, 1.000000, 0.000000,
+	-0.419765, 0.000000, 0.907634
+$AI Behavior: None
+$Cargo 1:  XSTR("Nothing", -1)
++Initial Velocity: 33
++Initial Hull: 100
++Initial Shields: 100
++Subsystem: Pilot
++Subsystem: turret01
++Subsystem: turret02
++Subsystem: turret03
++Subsystem: turret04
++Subsystem: turret05
++Subsystem: turret06
++Subsystem: turret07
++Subsystem: turret08
++Subsystem: turret09
++Subsystem: turret10
++Subsystem: turret11
++Subsystem: turret12
++Subsystem: turret13
++Subsystem: turret14
++Subsystem: turret15
++Subsystem: turret16
++Subsystem: turret17
++Subsystem: turret18
++Subsystem: turret19
++Subsystem: turret20
++Subsystem: turret21
++Subsystem: turret22
++Subsystem: turret23
++Subsystem: turret24
++Subsystem: turret25
++Subsystem: turret26
++Subsystem: turret27
++Subsystem: turret28
++Subsystem: turret29
++Subsystem: turret30
+$Arrival Location: Hyperspace
+$Arrival Cue: ( true ) 
+$Departure Location: Hyperspace
+$Departure Cue: ( false ) 
+$Determination: 10
++Flags: ( "no-shields" )
++Flags2: ( )
++Respawn priority: 0
++Orders Accepted: 0		;! note that this is a bitfield!!!
++Group: 0
++Use Table Score:
++Score: 670
 
 #Wings		;! 3 total
 
@@ -396,6 +454,14 @@ $Formula: ( when
       "Midon" 
       "Myr 1" 
       "Myr 2" 
+   )
+   ( lua-mark-subsystem 
+      "Vephar" 
+      "Turret" 
+      "turret01" 
+      "turret02" 
+      "turret03" 
+      "turret04" 
    )
 )
 +Name: Mark some boxes

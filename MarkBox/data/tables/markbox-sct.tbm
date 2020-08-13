@@ -332,22 +332,24 @@ function MarkBox:DrawSubsystemBracket(subsys, data)
 
 	local player = hv.Player
 	
-	--[[gr.setColor(255,255,255,255)
-	gr.CurrentFont = self.DefaultFont
-	gr.drawString("Target Data:",100*i,100)
-	gr.drawString("Ship: " .. player.Target.Name)
-	gr.drawString("Actual: " .. player.TargetSubsystem:getModelName())
-	gr.drawString("Entry: " .. data.Target)]]--
+	--gr.setColor(255,255,255,255)
+	--gr.CurrentFont = self.DefaultFont
+	--gr.drawString("Target Data:",100,100)
+	--gr.drawString("Ship: " .. player.Target.Name)
+	--gr.drawString("Actual: " .. player.TargetSubsystem:getModelName())
+	--gr.drawString("Entry: " .. data.Target)
 	
 	local focus
 	
-	if data.Target == player.TargetSubsystem:getModelName() then
+	if string.lower(data.Target) == string.lower(player.TargetSubsystem:getModelName()) then
 		local r,g,b = player.Target.Team:getColor()
 		gr.setColor(r,g,b,192)
 		focus = true
 	else
 		gr.setColor(255,255,255,128)
 	end
+	
+	if focus then gr.drawString("GOT FOCUS!",100,0) end
 	
 	local x1,y1,x2,y2 = gr.drawSubsystemTargetingBrackets(subsys, false)
 	
@@ -406,8 +408,8 @@ function MarkBox:DrawSubsystemBracket(subsys, data)
 
 			gr.setLineWidth(1)
 	
-	else
-		gr.drawSubsystemTargetingBrackets(subsys)
+	else		
+		if not focus then gr.drawSubsystemTargetingBrackets(subsys) end
     end
 
 end
@@ -560,7 +562,7 @@ $On HUD Draw:
 [
 	if MarkBox.Enabled and hu.HUDDrawn and not hu.HUDDisabledExceptMessages and (gr.hasViewmode(VM_INTERNAL) or gr.hasViewmode(VM_CHASE)) then
 		if mn.getMissionTime() > 1 then
-			--PrintDebug(MarkBox)
+			PrintDebug(MarkBox)
 			MarkBox:Draw()
 		end
 	end
