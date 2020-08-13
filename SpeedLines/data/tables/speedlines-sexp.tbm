@@ -1,0 +1,30 @@
+#Lua SEXPs
+
+$Operator: lua-speedlines-load
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 0
+$Maximum Arguments: 0
+$Return Type: Nothing
+$Description: Loads the speedlines animated texture. Probably should do this when the mission starts so you don't get a long loading pause.
+
+$Operator: lua-speedlines-set
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 3
+$Return Type: Nothing
+$Description: Sets the options for the speedlines. 0 = Always off (default), 1 = Always on, 2 = Fades in intensity depending on a low (default 100) and high speed (default 120).
+$Parameter:
+	+Description: Mode
+	+Type: number
+$Parameter:
+	+Description: Low speed (speed when speedlines begin to fade in)
+	+Type: number
+$Parameter:
+	+Description: High speed (speed when speedlines are fully visible)
+	+Type: number
+
+
+
+#End

@@ -1,0 +1,102 @@
+#Conditional Hooks
+$Application: FS2_Open
+
+$On Game Init:
+[
+
+Speedlines = {}
+
+function Speedlines:Load()
+
+	self.Effect = gr.loadTexture("speedlines", true)
+	self.Enabled = true
+	
+	self.NumFrames = self.Effect:getFramesLeft()
+	self.FPS = self.Effect:getFPS() 	
+	
+	self.Draw = nil
+	
+	self.Mode = 0 --0 = always off, 1 = always on, 2 = speed based with the alpha being based on a lerp between SpeedLow and SpeedHigh
+	self.SpeedLow = 100
+	self.SpeedHigh = 120
+	
+end
+
+function Speedlines:Unload()
+
+	if self.Enabled then self.Effect:unload() end
+	self.Enabled = nil
+
+end
+
+function Speedlines:DrawLines(mode)
+
+	if mode > 0 then
+	
+		local alpha = 0
+		
+		if mode == 1 then
+			alpha = 1
+		elseif mode == 2 then
+			if hv.Player and hv.Player:isValid() and hv.Player.HitpointsLeft > 0 then
+				alpha = (hv.Player.Physics:getForwardSpeed() - self.SpeedLow) / (self.SpeedHigh - self.SpeedLow)
+				if alpha < 0 then alpha = 0 end
+				if alpha > 1 then alpha = 1 end
+			end
+		end
+	
+		local w, h = gr.getScreenWidth(), gr.getScreenHeight()
+		local missiontime = mn.getMissionTime()
+		local i = (missiontime * self.FPS) % self.NumFrames
+	
+		gr.drawImage(self.Effect[i], 0, 0, w, h, 0, 0, 1, 1, alpha)
+	
+	end
+
+end
+
+function Speedlines:SetOptions(mode,low,high)
+
+	if not self.Enabled then
+		Speedlines:Load()
+	end
+
+	self.Mode = mode
+	
+	self.SpeedLow = low or 100
+	self.SpeedHigh = high or 120
+	
+	if self.SpeedHigh < self.SpeedLow then
+		ba.warning("Speedlines Script: High Speed is lower than Low Speed. FIX IT!\n")
+	end
+
+end
+
+mn.LuaSEXPs["lua-speedlines-load"].Action = function() Speedlines:Load() end
+mn.LuaSEXPs["lua-speedlines-set"].Action = function(mode, low, high) Speedlines:SetOptions(mode,low,high) end
+
+]
+
+$State: GS_STATE_GAME_PLAY
+$On Gameplay Start:
+[
+	Speedlines:Unload()
+]
+
+$On State End:
+[
+	Speedlines:Unload()
+]
+
+$On Frame:
+[
+
+if Speedlines.Enabled and Speedlines.Mode > 0 then
+	
+	Speedlines:DrawLines(Speedlines.Mode)
+	
+end
+
+]
+
+#End
