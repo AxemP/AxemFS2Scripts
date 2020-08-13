@@ -201,7 +201,7 @@ end
 function CutsceneKeyLock()
 
 mn.runSEXP("( ignore-key !-1! !T! !Shift-T! !H! !Shift-H! !Alt-H! !F! !Shift-F! !Y! !G! !Alt-Y! !Alt-T! !V! !S! !Shift-S! !Alt-S! !M! !Alt-M! !Left Ctrl! !.! !,! !/! !Shift-/! !X! !A! !Z! !Pad 7! )")
-mn.runSEXP("( ignore-key !-1! !Pad 9! !Pad 8! !Pad 2! !Pad 4! !Pad 6! !Backspace! !\! ![! !]! !=! !-! !Shift-A! !Shift-Z! !Shift-D! !Shift-V! !Shift-X! !Shift-E! !Shift-W! !Shift-I! !Shift-P! !Shift-C! !Shift-J! !Shift-R! !R! !Pad *! !Pad .! !Pad Enter! !Pad 0! !Pad /! !Pad +! )")
+mn.runSEXP("( ignore-key !-1! !Pad 9! !Pad 8! !Pad 2! !Pad 4! !Pad 6! !Backspace! !\\! ![! !]! !=! !-! !Shift-A! !Shift-Z! !Shift-D! !Shift-V! !Shift-X! !Shift-E! !Shift-W! !Shift-I! !Shift-P! !Shift-C! !Shift-J! !Shift-R! !R! !Pad *! !Pad .! !Pad Enter! !Pad 0! !Pad /! !Pad +! )")
 mn.runSEXP("( ignore-key !-1! !Pad -! !Pad 5! !'! !C! !Alt-J! !J! !Tab! !Insert! !Delete! !Home! !End! !Page Up! !Page Down! !Alt-D! !Q! !Up Arrow! !Down Arrow! !Left Arrow! !Right Arrow! !Scroll Lock! !Shift-Scroll Lock! !Alt-E! !Alt-Shift-E! !E! !Alt-R! !U! !Shift-U! !N! !K! !Shift-K! )")
 mn.runSEXP("( ignore-key !-1! !B! !Shift-B! !1! !2! !3! !4! !Alt-X! !Shift-.! !Shift-,! !L! !Shift-N! !Shift-End! !Shift-O! !Shift-3! !Shift-1! !Shift-Pad +! !Shift-Pad Enter! !Alt-Shift-Q! !Alt-A! !Alt-N! !Alt-G! !O! )")
 
@@ -210,7 +210,7 @@ end
 function CutsceneKeyUnLock()
 
 mn.runSEXP("( ignore-key !0! !T! !Shift-T! !H! !Shift-H! !Alt-H! !F! !Shift-F! !Y! !G! !Alt-Y! !Alt-T! !V! !S! !Shift-S! !Alt-S! !M! !Alt-M! !Left Ctrl! !.! !,! !/! !Shift-/! !X! !A! !Z! !Pad 7! )")
-mn.runSEXP("( ignore-key !0! !Pad 9! !Pad 8! !Pad 2! !Pad 4! !Pad 6! !Backspace! !\! ![! !]! !=! !-! !Shift-A! !Shift-Z! !Shift-D! !Shift-V! !Shift-X! !Shift-E! !Shift-W! !Shift-I! !Shift-P! !Shift-C! !Shift-J! !Shift-R! !R! !Pad *! !Pad .! !Pad Enter! !Pad 0! !Pad /! !Pad +! )")
+mn.runSEXP("( ignore-key !0! !Pad 9! !Pad 8! !Pad 2! !Pad 4! !Pad 6! !Backspace! !\\! ![! !]! !=! !-! !Shift-A! !Shift-Z! !Shift-D! !Shift-V! !Shift-X! !Shift-E! !Shift-W! !Shift-I! !Shift-P! !Shift-C! !Shift-J! !Shift-R! !R! !Pad *! !Pad .! !Pad Enter! !Pad 0! !Pad /! !Pad +! )")
 mn.runSEXP("( ignore-key !0! !Pad -! !Pad 5! !'! !C! !Alt-J! !J! !Tab! !Insert! !Delete! !Home! !End! !Page Up! !Page Down! !Alt-D! !Q! !Up Arrow! !Down Arrow! !Left Arrow! !Right Arrow! !Scroll Lock! !Shift-Scroll Lock! !Alt-E! !Alt-Shift-E! !E! !Alt-R! !U! !Shift-U! !N! !K! !Shift-K! )")
 mn.runSEXP("( ignore-key !0! !B! !Shift-B! !1! !2! !3! !4! !Alt-X! !Shift-.! !Shift-,! !L! !Shift-N! !Shift-End! !Shift-O! !Shift-3! !Shift-1! !Shift-Pad +! !Shift-Pad Enter! !Alt-Shift-Q! !Alt-A! !Alt-N! !Alt-G! !O! )")
 
