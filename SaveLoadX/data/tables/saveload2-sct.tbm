@@ -408,16 +408,7 @@ function SaveState:LoadAll(index)
 		local data = thisloadeddata[thisShip.Name]
 		
 		if data then
-			if data.IsInMission then
-				self:ApplyParseData(thisShip,data)
-				for i=1, #self.ShipFlags do
-					if data.Flags[i] then
-						local sexpstring = "(alter-ship-flag !" .. self.ShipFlags[i] .. "! true true !" .. thisShip.Name .. "! )"
-						ba.print(sexpstring .. "\n")
-						mn.runSEXP(sexpstring)
-					end
-				end
-			end
+			if data.IsInMission then self:ApplyParseData(thisShip,data) end
 			self.CuedList[#self.CuedList+1] = thisShip.Name
 		end
 		
@@ -759,14 +750,14 @@ function SaveState:ApplyLateData(ship,data)
 	self:GiveOrders(ship, data)
 	
 	--Apply Ship Flags
-	--[[ba.print("   Running SEXPs for ship flags...\n")
+	ba.print("   Running SEXPs for ship flags...\n")
 	for i=1, #self.ShipFlags do
 		if data.Flags[i] then
 			local sexpstring = "(alter-ship-flag !" .. self.ShipFlags[i] .. "! true true !" .. ship.Name .. "! )"
 			ba.print(sexpstring .. "\n")
 			mn.runSEXP(sexpstring)
 		end
-	end]]--
+	end
 
 	--Apply Turret Lock Status
 	
