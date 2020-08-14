@@ -10,7 +10,7 @@ function Scroll:Init()
 	self.Enabled = false
 	self.Lines = {}
 	self.InterfaceSound = 20
-	self.LoopingSound = ad.getSoundentry(10)
+	self.GameSound = ad.getSoundentry(10)
 
 end
 
@@ -19,7 +19,7 @@ function Scroll:Clear()
 	self.Enabled = false
 	self.Lines = {}
 	self.InterfaceSound = nil
-	self.LoopingSound = nil
+	self.GameSound = nil
 
 end
 
@@ -102,7 +102,7 @@ function Scroll:Draw()
 				if mTime < (line.Timestamp + line.Time + line.FadeOut) then
 					if line.Sound then
 						if line.Loop then
-							line.Handle = ad.playLoopingSound(self.LoopingSound)
+							line.Handle = ad.playLoopingSound(self.GameSound)
 						else
 							ad.playInterfaceSound(self.InterfaceSound)
 						end
@@ -157,6 +157,24 @@ function Scroll:Ease(t,b,c,d)
   return -c * t * (t - 2) + b
 end
 
+function Scroll:SetInterfaceSound(idx)
+	if idx then
+		self.InterfaceSound = idx
+	end
+end
+
+-- this function accepts strings or soundentry types
+function Scroll:SetGameSound(entry)
+	if entry then
+		if type(entry) == "string" then
+			entry = ad.getSoundentry(entry)
+		end
+		if entry:isValid() then
+			self.GameSound = entry
+		end
+	end
+end
+
 mn.LuaSEXPs["lua-scroll-write"].Action = function(text, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
   Scroll:Write(text, x, y, speed/1000, visibletime/1000, fadeout/1000, sound, font, center, r, g, b, loop)
 end
@@ -165,6 +183,12 @@ mn.LuaSEXPs["lua-scroll-write-file"].Action = function(file, x, y, speed, visibl
 end
 mn.LuaSEXPs["lua-scroll-write-clear"].Action = function()
   Scroll:Clear()
+end
+mn.LuaSEXPs["lua-scroll-write-set-iface-snd"].Action = function(idx)
+  Scroll:SetInterfaceSound(idx)
+end
+mn.LuaSEXPs["lua-scroll-write-set-game-snd"].Action = function(entry)
+  Scroll:SetGameSound(entry)
 end
 
 ]

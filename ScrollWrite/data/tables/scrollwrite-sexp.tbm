@@ -44,7 +44,7 @@ $Parameter:
 	+Description: Text Color - Blue (0-255) Defaults to 255.
 	+Type: number
 $Parameter:
-	+Description: Should the text drawing sound be a continuous loop? If so, the sound is looped for as long as the text is scrolled. Defaults to false.
+	+Description: Should the text drawing sound be a continuous loop? If so, the sound is looped for as long as the text is scrolled. Defaults to false. Note: Only game sounds (not interface sounds) can be looped.
 	+Type: boolean
 
 $Operator: lua-scroll-write-file
@@ -91,7 +91,7 @@ $Parameter:
 	+Description: Text Color - Blue (0-255) Defaults to 255.
 	+Type: number
 $Parameter:
-	+Description: Should the text drawing sound be a continuous loop? If so, the sound is looped for as long as the text is scrolled. Defaults to false.
+	+Description: Should the text drawing sound be a continuous loop? If so, the sound is looped for as long as the text is scrolled. Defaults to false. Note: Only game sounds (not interface sounds) can be looped.
 	+Type: boolean
 
 $Operator: lua-scroll-write-clear
@@ -102,5 +102,29 @@ $Maximum Arguments: 0
 $Return Type: Nothing
 $Description: Clears all lines!
 
+$Operator: lua-scroll-write-set-iface-snd
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Sets the interface sound to be played during the scroll write if the sound does not loop.
+$Parameter:
+	+Description: Index into the Interface Sounds section
+	+Type: number
+
+$Operator: lua-scroll-write-set-game-snd
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Sets the game sound to be played during the scroll write if the sound loops.
+$Parameter:
+	+Description: A sound entry in the Game Sounds section
+;;FSO 20.1.0;; 	+Type: soundentry
+;;FSO 20.1.0;; !*
+	+Type: string
+;;FSO 20.1.0;; *!
 
 #End
