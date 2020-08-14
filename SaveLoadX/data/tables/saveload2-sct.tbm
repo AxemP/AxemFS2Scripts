@@ -175,9 +175,9 @@ function SaveState:GetShipData(shipname)
 				tt.Priority = order.Priority
 				tt.Type = self:GetAIOrderFromEnum(order:getType())
 				if (order:getType() == ORDER_WAYPOINTS) or (order:getType() == ORDER_WAYPOINTS_ONCE) then
-					tt.Target = order.Target:getList().Name
+					--tt.Target = order.Target:getList().Name
 				else
-					tt.Target = order.Target.Name
+					--tt.Target = order.Target.Name
 				end
 				tt.Subsystem = order.TargetSubsystem.Name
 				
@@ -425,7 +425,12 @@ function SaveState:GiveOrders(ship,data)
 	
 		local thisOrder = data.Orders[i]
 		local order = self:GetAIOrderFromString(thisOrder.Type)
-		local targetShip = mn.Ships[thisOrder.Target]
+		local targetShip
+		
+		if thisOrder.Target then
+			targetShip = mn.Ships[thisOrder.Target]
+		end
+		
 		local targetSubsystem = thisOrder.Subsystem
 		
 		ba.print(tostring(order) .. " Target: " .. tostring(targetShip) .. " Target Subsystem: " .. tostring(targetSubsystem) .. "\n")
@@ -481,7 +486,7 @@ function SaveState:ApplyData(ship,data,external)
 	ba.print("     Applying Ship Flags...\n")
 	for i=1, #self.ShipFlags do
 		if data.Flags[i] then
-			local sexpstring = "(alter-ship-flag !" .. self.ShipFlags[i] .. "! true true !" .. ship.Name .. "! )"
+			local sexpstring = "(alter-ship-flag !" .. self.ShipFlags[i] .. "! (true) (true) !" .. ship.Name .. "! )"
 			ba.print(sexpstring .. "\n")
 			mn.runSEXP(sexpstring)
 		end
@@ -634,12 +639,12 @@ function SaveState:ApplyParseData(ship,data)
 	end
 	
 	if ship.MainStatus.PrimaryBanks then
-		ba.print("    Beginning Primary Bank Setup...\n       (number of primary banks in save data: " .. #data.PBanks .. ")\n       (number of actual primary banks: " .. #ship.MainStatus.PrimaryBanks.." )\n")
+		ba.print("    Beginning Primary Bank Setup...\n       (number of primary banks in save data: " .. #data.PBanks .. ")\n       (number of actual primary banks: " .. #ship.MainStatus.PrimaryBanks .." )\n")
 		for i, pbank in ipairs(data.PBanks) do
 			ba.print("         Bank : " .. i .. ":")
 			if ship.MainStatus.PrimaryBanks[i] then
 				ba.print(tostring(pbank.Class) .. "\n")
-				ship.MainStatus.PrimaryBanks[i].Class = tb.WeaponClasses[pbank.Class]
+				ship.MainStatus.PrimaryBanks[i] = tb.WeaponClasses[pbank.Class]
 				if pbank.AmmoLeft then
 					ship.MainStatus.PrimaryAmmo[i] = self:GetAmmo(pbank.AmmoLeft,data.Name)
 					ba.print("           Ammo Left: " .. tostring(ship.MainStatus.PrimaryAmmo[i]) .. "\n")
@@ -651,15 +656,15 @@ function SaveState:ApplyParseData(ship,data)
 	end
 	
 	if ship.MainStatus.SecondaryBanks then
-		ba.print("    Beginning Primary Bank Setup...\n       (number of primary banks in save data: " .. #data.PBanks .. ")\n       (number of actual primary banks: " .. #ship.MainStatus.PrimaryBanks.." )\n")
+		ba.print("    Beginning Secondary Bank Setup...\n       (number of Secondary banks in save data: " .. #data.SBanks .. ")\n       (number of actual Secondary banks: " .. #ship.MainStatus.SecondaryBanks .." )\n")
 		for i, sbank in ipairs(data.SBanks) do
 			ba.print("         Bank : " .. i .. ":")
 			if ship.MainStatus.SecondaryBanks[i] then
 				ba.print(tostring(sbank.Class) .. "\n")
-				ship.MainStatus.SecondaryBanks[i].Class = tb.WeaponClasses[sbank.Class]
+				ship.MainStatus.SecondaryBanks[i] = tb.WeaponClasses[sbank.Class]
 				if sbank.AmmoLeft then
 					ship.MainStatus.SecondaryAmmo[i] = self:GetAmmo(sbank.AmmoLeft,data.Name)
-					ba.print("           Ammo Left: " .. tostring(ship.MainStatus.PrimaryAmmo[i]) .. "\n")
+					ba.print("           Ammo Left: " .. tostring(ship.MainStatus.SecondaryAmmo[i]) .. "\n")
 				end
 			else
 				ba.print("Something went very wrong!\n")
@@ -753,7 +758,7 @@ function SaveState:ApplyLateData(ship,data)
 	ba.print("   Running SEXPs for ship flags...\n")
 	for i=1, #self.ShipFlags do
 		if data.Flags[i] then
-			local sexpstring = "(alter-ship-flag !" .. self.ShipFlags[i] .. "! true true !" .. ship.Name .. "! )"
+			local sexpstring = "(alter-ship-flag !" .. self.ShipFlags[i] .. "! (true) (true) !" .. ship.Name .. "! )"
 			ba.print(sexpstring .. "\n")
 			mn.runSEXP(sexpstring)
 		end
