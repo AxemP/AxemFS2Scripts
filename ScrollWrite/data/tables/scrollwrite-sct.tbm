@@ -9,7 +9,8 @@ function Scroll:Init()
 
 	self.Enabled = false
 	self.Lines = {}
-	self.SoundEntry = ad.getSoundentry(10)
+	self.InterfaceSound = 20
+	self.LoopingSound = ad.getSoundentry(10)
 
 end
 
@@ -17,11 +18,12 @@ function Scroll:Clear()
 
 	self.Enabled = false
 	self.Lines = {}
-	self.SoundEntry = nil
+	self.InterfaceSound = nil
+	self.LoopingSound = nil
 
 end
 
-function Scroll:WriteFromFile(file, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b)
+function Scroll:WriteFromFile(file, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
 
 	local pos = file:find(".txt", -4, true)
 
@@ -32,13 +34,13 @@ function Scroll:WriteFromFile(file, x, y, speed, visibletime, fadeout, sound, fo
 	if cf.fileExists(file, "data/fiction", true) then
 		local f = cf.openFile(file,"rb","data/fiction")
 		local data = f:read("*a")
-		self:Write(data, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b)
+		self:Write(data, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
 		f:close()
 	end
 
 end
 
-function Scroll:Write(text, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b)
+function Scroll:Write(text, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
 
 	if not self.Enabled then
 		self.Enabled = true
@@ -78,6 +80,11 @@ function Scroll:Write(text, x, y, speed, visibletime, fadeout, sound, font, cent
 	end
 	t.Color = {r or 255, g or 255, b or 255}
 	t.Alpha = 255
+	if loop == true then
+		t.Loop = true
+	else
+		t.Loop = false
+	end
 
 	self.Lines[#self.Lines+1] = t
 
@@ -94,7 +101,11 @@ function Scroll:Draw()
 				local line = self.Lines[i]
 				if mTime < (line.Timestamp + line.Time + line.FadeOut) then
 					if line.Sound then
-						line.Handle = ad.playLoopingSound(self.SoundEntry)
+						if line.Loop then
+							line.Handle = ad.playLoopingSound(self.LoopingSound)
+						else
+							ad.playInterfaceSound(self.InterfaceSound)
+						end
 						line.Sound = nil
 					end
 					local toDraw = (mTime - line.Timestamp) / line.Speed
@@ -105,11 +116,9 @@ function Scroll:Draw()
 
 						gr.CurrentFont = gr.Fonts[line.Font]
 
-						if mTime > (line.Timestamp + line.SoundDuration) then
-							if line.Handle then
-								line.Handle:stop()
-								line.Handle = nil
-							end
+						if line.Handle and mTime > (line.Timestamp + line.SoundDuration) then
+							line.Handle:stop()
+							line.Handle = nil
 						end
 						if mTime > (line.Timestamp + line.Time) then
 							local t = mn.getMissionTime() - (line.Timestamp + line.Time)
@@ -148,9 +157,15 @@ function Scroll:Ease(t,b,c,d)
   return -c * t * (t - 2) + b
 end
 
-mn.LuaSEXPs["lua-scroll-write"].Action = function(text, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b) Scroll:Write(text, x, y, speed/1000, visibletime/1000, fadeout/1000, sound, font, center, r, g, b) end
-mn.LuaSEXPs["lua-scroll-write-file"].Action = function(file, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b) Scroll:WriteFromFile(file, x, y, speed/1000, visibletime/1000, fadeout/1000, sound, font, center, r, g, b) end
-mn.LuaSEXPs["lua-scroll-write-clear"].Action = function() Scroll:Clear() end
+mn.LuaSEXPs["lua-scroll-write"].Action = function(text, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
+  Scroll:Write(text, x, y, speed/1000, visibletime/1000, fadeout/1000, sound, font, center, r, g, b, loop)
+end
+mn.LuaSEXPs["lua-scroll-write-file"].Action = function(file, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
+  Scroll:WriteFromFile(file, x, y, speed/1000, visibletime/1000, fadeout/1000, sound, font, center, r, g, b, loop)
+end
+mn.LuaSEXPs["lua-scroll-write-clear"].Action = function()
+  Scroll:Clear()
+end
 
 ]
 
