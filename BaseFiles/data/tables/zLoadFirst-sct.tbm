@@ -18,9 +18,7 @@ function print(str)
 end
 
 function println(str)
-    if (str) then
-        ba.print(str)
-    end
+    ba.print(str)
     ba.print("\n")
 end
 
