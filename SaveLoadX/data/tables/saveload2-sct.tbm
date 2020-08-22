@@ -128,11 +128,16 @@ function SaveState:GetShipData(shipname)
 	local t = {}
 	
 	t.Name = shipname
+	ba.print("Name: " .. tostring(t.Name) .. "\n")
 		
 	t.IsInMission = mn.evaluateSEXP("(is-in-mission !" .. t.Name .. "!)")
+	ba.print("   Is In Mission: " .. tostring(t.IsInMission) .. "\n")
 	t.HasArrived = mn.evaluateSEXP("(has-arrived-delay 0 !" .. t.Name .. "!)")
+	ba.print("   Has Arrived: " .. tostring(t.HasArrived) .. "\n")
 	t.HasBeenDestroyed = mn.evaluateSEXP("(is-destroyed-delay 0 !" .. t.Name .."!)")
+	ba.print("   Has Been Destroyed: " .. tostring(t.HasBeenDestroyed) .. "\n")
 	t.HasDeparted = mn.evaluateSEXP("(has-departed-delay 0 !" .. t.Name .."!)")
+	ba.print("   Has Departed: " .. tostring(t.HasDeparted) .. "\n")
 		
 	if t.IsInMission then
 	
@@ -142,44 +147,60 @@ function SaveState:GetShipData(shipname)
 		
 			--Get Class
 			t.Class = ship.Class.Name
+			ba.print("   Class: " .. tostring(t.Class) .. "\n")
 			
 			--Is this part of a wing?
 			if ship:getWing() and ship:getWing():isValid() then
 				t.Wing = ship:getWing().Name
+				ba.print("   Wing: " .. tostring(t.Wing) .. "\n")
 			end
 			
 			--Get HP
 			t.HP = math.floor((ship.HitpointsLeft / ship.HitpointsMax) * 100)
+			ba.print("   HP: " .. tostring(t.HP) .. "\n")
 		
 			--Get Shields
 			if ship.Shields and ship.Shields:isValid() then
 				t.Shields = math.floor((ship.Shields.CombinedLeft / ship.Shields.CombinedMax) * 100)
+				ba.print("   Shields: " .. tostring(t.Shields) .. "\n")
 			end
 			
 			--Get Armor (LateData)
 			t.HullArmor = ship.ArmorClass 
+			ba.print("   Hull Armor: " .. tostring(t.HullArmor) .. "\n")
 			t.ShieldArmor = ship.ShieldArmorClass
+			ba.print("   Shield Armor: " .. tostring(t.ShieldArmor) .. "\n")
 			
 			--Get Team (LateData)
 			t.Team = ship.Team.Name
+			ba.print("   Team: " .. tostring(t.Team) .. "\n")
 						
 			--Get Countermeasures (LateData)
 			t.Countermeasures = ship.CountermeasuresLeft
+			ba.print("   Countermeasures: " .. tostring(t.Countermeasures) .. "\n")
 			
 			--Get Orders (LateData)
+			ba.print("   Orders:\n")
 			t.Orders = {}
 			for i=1, #ship.Orders do
 				local order = ship.Orders[i]
+				ba.print("     Number: " .. i .. "\n")
 				
 				tt = {}
 				tt.Priority = order.Priority
+				ba.print("     Priority: " .. tostring(tt.Priority) .. "\n")
 				tt.Type = self:GetAIOrderFromEnum(order:getType())
+				ba.print("     Type: " .. tostring(tt.Type) .. "\n")
 				if (order:getType() == ORDER_WAYPOINTS) or (order:getType() == ORDER_WAYPOINTS_ONCE) then
 					--tt.Target = order.Target:getList().Name
 				else
-					--tt.Target = order.Target.Name
+					if order.Target and order.Target:isValid() then
+						tt.Target = order.Target.Name
+						ba.print("     Target: " .. tostring(tt.Target) .. "\n")
+					end
 				end
 				tt.Subsystem = order.TargetSubsystem.Name
+				ba.print("     Subsystem: " .. tostring(tt.Subsystem) .. "\n")
 				
 				t.Orders[i] = tt
 				
@@ -195,6 +216,15 @@ function SaveState:GetShipData(shipname)
 				end
 			end
 			
+			ba.print("   Flags:\n")
+			for i=1, #self.ShipFlags do
+				if t.Flags[i] then
+					ba.print("       Index " .. i .. ": " .. tostring(self.ShipFlags[i]) .. "\n")		
+				end
+			end
+			
+			ba.print("   Subsystems:\n")
+			
 			--Subsystem craziness
 			local numSubsys = #ship
 			
@@ -202,34 +232,53 @@ function SaveState:GetShipData(shipname)
 				t.Subsystems = {}
 				
 				for i=1, numSubsys do
+				
+					ba.print("      Subsystem " .. i .. "\n")
+				
 					local thisSubsys = ship[i]
 					local ss = {}
 					
+					ba.print("        Subsystem Name: " .. tostring(thisSubsys:getModelName()) .. "\n")
+					
 					ss.HP = math.floor((thisSubsys.HitpointsLeft / thisSubsys.HitpointsMax) * 100)
+					ba.print("        HP: " .. tostring(ss.HP) .. "\n")
 					ss.Armor = thisSubsys.ArmorClass
+					ba.print("        Armor: " .. tostring(ss.Armor) .. "\n")
 					
 					if thisSubsys:isTurret() then
 					
+						ba.print("        Is a turret!\n")
+					
 						ss.TurretLocked = thisSubsys.TurretLocked -- (LateData)
+						
+						ba.print("        Locked: " .. tostring(ss.TurretLocked) .. "\n")
 					
 						if thisSubsys.PrimaryBanks and thisSubsys.PrimaryBanks:isValid() then
+							ba.print("        Primary Banks:\n")
 							ss.PBanks = {}
 							for j=1, #thisSubsys.PrimaryBanks do
 								if thisSubsys.PrimaryBanks[j] and thisSubsys.PrimaryBanks[j]:isValid() then
+									ba.print("          Bank: " .. j .. "\n")
 									ss.PBanks[j] = {}
 									ss.PBanks[j].Class = thisSubsys.PrimaryBanks[j].WeaponClass.Name
+									ba.print("          Class: " .. tostring(ss.PBanks[j].Class) .. "\n")
 									ss.PBanks[j].AmmoLeft = math.floor((thisSubsys.PrimaryBanks[j].AmmoLeft / thisSubsys.PrimaryBanks[j].AmmoMax) * 100)
+									ba.print("          AmmoLeft: " .. tostring(ss.PBanks[j].AmmoLeft) .. "\n")
 								end
 							end
 						end
 						
 						if thisSubsys.SecondaryBanks and thisSubsys.SecondaryBanks:isValid() then
+							ba.print("        Secondary Banks:\n")
 							ss.SBanks = {}
 							for j=1, #thisSubsys.SecondaryBanks do
 								if thisSubsys.SecondaryBanks[j] and thisSubsys.SecondaryBanks[j]:isValid() then
+									ba.print("          Bank: " .. j .. "\n")
 									ss.SBanks[j] = {}
 									ss.SBanks[j].Class = thisSubsys.SecondaryBanks[j].WeaponClass.Name
+									ba.print("          Class: " .. tostring(ss.SBanks[j].Class) .. "\n")
 									ss.SBanks[j].AmmoLeft = math.floor((thisSubsys.SecondaryBanks[j].AmmoLeft / thisSubsys.SecondaryBanks[j].AmmoMax) * 100)
+									ba.print("          AmmoLeft: " .. tostring(ss.SBanks[j].AmmoLeft) .. "\n")
 								end
 							end
 						end
@@ -241,27 +290,37 @@ function SaveState:GetShipData(shipname)
 			end
 				
 			if ship.PrimaryBanks and ship.PrimaryBanks:isValid() then
+			ba.print("   Ship Primary Banks:\n")
 				t.PBanks = {}
 				for i=1, #ship.PrimaryBanks do
+					ba.print("     Bank: " .. i .. "\n")
 					t.PBanks[i] = {}
 					t.PBanks[i].Class = ship.PrimaryBanks[i].WeaponClass.Name
+					ba.print("     Class: " .. tostring(t.PBanks[i].Class) .. "\n")
 					t.PBanks[i].AmmoLeft = math.floor((ship.PrimaryBanks[i].AmmoLeft / ship.PrimaryBanks[i].AmmoMax) * 100)
+					ba.print("     AmmoLeft: " .. tostring(t.PBanks[i].AmmoLeft) .. "\n")
 				end
 			end
 			
 			if ship.SecondaryBanks and ship.SecondaryBanks:isValid() then
+			ba.print("   Ship Secondary Banks:\n")
 				t.SBanks = {}
 				for i=1, #ship.SecondaryBanks do
+					ba.print("     Bank: " .. i .. "\n")
 					t.SBanks[i] = {}
 					t.SBanks[i].Class = ship.SecondaryBanks[i].WeaponClass.Name
+					ba.print("     Class: " .. tostring(t.SBanks[i].Class) .. "\n")
 					t.SBanks[i].AmmoLeft = math.floor((ship.SecondaryBanks[i].AmmoLeft / ship.SecondaryBanks[i].AmmoMax) * 100)
+					ba.print("     AmmoLeft: " .. tostring(t.SBanks[i].AmmoLeft) .. "\n")
 				end
 			end
 			
 			if ship == hv.Player then
 			
 				t.AfterburnerFuelLeft = ship.AfterburnerFuelLeft 
+				ba.print("   Afterburner: " .. tostring(t.AfterburnerFuelLeft) .. "\n")
 				t.WeaponEnergyLeft = ship.WeaponEnergyLeft
+				ba.print("   Afterburner: " .. tostring(t.WeaponEnergyLeft) .. "\n")
 			
 			end
 			
@@ -269,16 +328,19 @@ function SaveState:GetShipData(shipname)
 			t.Position.x = ship.Position.x
 			t.Position.y = ship.Position.y
 			t.Position.z = ship.Position.z
+			ba.print("   Position: " .. tostring(ship.Position) .. "\n")
 			
 			t.Orientation = {}
 			t.Orientation.p = ship.Orientation.p
 			t.Orientation.b = ship.Orientation.b
 			t.Orientation.h = ship.Orientation.h
+			ba.print("   Orientation: " .. tostring(ship.Orientation) .. "\n")
 
 			t.Velocity = {}
 			t.Velocity.x = ship.Physics.Velocity.x
 			t.Velocity.y = ship.Physics.Velocity.y
 			t.Velocity.z = ship.Physics.Velocity.z
+			ba.print("   Velocity: " .. tostring(ship.Physics.Velocity) .. "\n")
 		
 		end
 		
