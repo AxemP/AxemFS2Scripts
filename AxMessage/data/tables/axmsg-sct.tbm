@@ -51,6 +51,10 @@ function AXMessage:Init()
 			ba.warning("AXMESSAGE: Can't find a good resolution entry to load data. Aborting script initialization!\n")
 			return
 		end
+		
+		if self.LoadedData.Disabled then
+			return
+		end
 	
 	end
 	
