@@ -395,7 +395,7 @@ function SaveState:SaveAll(index, ...)
 	end
 		
 	for i, entry in ipairs(self.List) do
-		if not self:CheckList(exclusionList,entry) then 
+		if (not self:CheckList(exclusionList,entry)) and (not self:IsSupportShip(entry)) then 
 			shipdata,key = self:GetShipData(entry)
 			data[key] = shipdata
 		end
@@ -935,7 +935,8 @@ function SaveState:GetAIOrderFromString(order)
 	elseif order == "Play Dead" then
 		orderEnum = ORDER_PLAY_DEAD
 	elseif order == "Rearm" then
-		orderEnum = ORDER_REARM
+		orderEnum = nil
+		--orderEnum = ORDER_REARM
 	elseif order == "Stay Near" then
 		orderEnum = ORDER_STAY_NEAR
 	elseif order == "Stay Still" then
@@ -1134,6 +1135,12 @@ function SaveState:StripFS2(s)
 	end
 		
 	return s
+
+end
+
+function SaveState:IsSupportShip(entry)
+
+	return entry:sub(1, #"Support") == "Support"
 
 end
 
