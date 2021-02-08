@@ -117,7 +117,7 @@ function Countdown:DrawTime(currentTime)
 			drawChar = self.Digits[self.brokenTime[i]]	
 		end
 		
-		gr.drawMonochromeImage(drawChar, thisX, thisY)
+		gr.drawImage(drawChar, thisX, thisY, thisX+self.DigitSize.x, thisY+self.DigitSize.y, 0,0,1,1,1, true)
 	
 	end	
 

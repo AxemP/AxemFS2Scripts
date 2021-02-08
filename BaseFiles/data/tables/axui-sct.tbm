@@ -1125,7 +1125,8 @@ function AXUI:Draw()
 	if bitmap ~= nil then
 		if self.Monochrome then
 			AXUI:SetColor(color)
-			gr.drawMonochromeImage(bitmap, self.BitmapX, self.BitmapY, self.BitmapX + self.BitmapWidth, self.BitmapY + self.BitmapHeight)
+			--gr.drawMonochromeImage(bitmap, self.BitmapX, self.BitmapY, self.BitmapX + self.BitmapWidth, self.BitmapY + self.BitmapHeight)
+			gr.drawImage(bitmap, self.BitmapX, self.BitmapY, self.BitmapX + self.BitmapWidth, self.BitmapY + self.BitmapHeight,0,0,1,1,1,true)
 		else
 			gr.drawImage(bitmap, self.BitmapX, self.BitmapY, self.BitmapX + self.BitmapWidth, self.BitmapY + self.BitmapHeight) --Image gets drawn here
 		end

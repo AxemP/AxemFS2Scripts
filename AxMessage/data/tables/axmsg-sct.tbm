@@ -15,7 +15,7 @@ AXMessage = {}
 
 function AXMessage:Init()
 
-	self.Version = 1.3
+	self.Version = 1.31
 
 	ba.print("Initializing AXMessage...\n")
 
@@ -361,6 +361,7 @@ function AXMessage:DrawMessageBox()
 		end
 		gr.setColor(self.Color.HUD[1], self.Color.HUD[2], self.Color.HUD[3], self.Color.HUD[4])
 		--gr.drawMonochromeImage(self.Image.file, self.Position.x, self.Position.y)
+		gr.drawImage(self.Image.file, self.Position.x, self.Position.y, self.Position.x + self.Image.w, self.Position.y + self.Image.h, 0, 0, 1, 1, 0.5, true)
 	else
 		gr.drawImage(self.Image.file, self.Position.x, self.Position.y)
 	end
@@ -521,7 +522,7 @@ $State: GS_STATE_GAME_PAUSED
 $On Frame:
 [
 	if AXMessage.Timer then
-		AXMessage.Timer = AXMessage.Timer + ba.getFrametime()
+		AXMessage.Timer = AXMessage.Timer + ba.getRealFrametime()
 	end
 ]
 #End

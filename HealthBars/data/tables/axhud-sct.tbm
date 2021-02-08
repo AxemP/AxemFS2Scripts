@@ -556,7 +556,7 @@ function AxHUD:DrawHealthBars()
 	
 	if AxHUD.ColorStyle == 0 then
 		gr.setColor(frameColor[1]*1.5, frameColor[2]*1.5, frameColor[3]*1.5, frameColor[4])
-		gr.drawMonochromeImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height,0.5)
+		gr.drawImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height,0,0,1,1,0.5, true)
 	else
 		gr.drawImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height)
 	end
@@ -650,7 +650,7 @@ function AxHUD:DrawHullBar()
 	end
 
 	if AxHUD.ColorStyle == 0 then
-		gr.drawMonochromeImage(barImage, x1, y1, x2 ,y2 , barColor[4]/255)
+		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, barColor[4]/255, true)
 	else
 		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, 1)
 	end
@@ -712,7 +712,7 @@ function AxHUD:DrawShieldBar()
 	end
 
 	if AxHUD.ColorStyle == 0 then
-		gr.drawMonochromeImage(barImage, x1, y1, x2 ,y2 ,barColor[4]/255)
+		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, barColor[4]/255, true)
 	else
 		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, 1)
 	end
@@ -744,7 +744,7 @@ function AxHUD:DrawBoostBar()
 	
 	if AxHUD.ColorStyle == 0 then
 		gr.setColor(frameColor[1]*1.5, frameColor[2]*1.5, frameColor[3]*1.5, frameColor[4])
-		gr.drawMonochromeImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height,0.5)
+		gr.drawImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height,0,0,1,1,0.5, true)
 	else
 		gr.drawImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height)
 	end
@@ -775,7 +775,7 @@ function AxHUD:DrawBoostBar()
 	end
 
 	if AxHUD.ColorStyle == 0 then
-		gr.drawMonochromeImage(barImage, x1, y1, x2 ,y2 , barColor[4]/255)
+		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, barColor[4]/255, true)
 	else
 		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, 1)
 	end
@@ -796,7 +796,7 @@ function AxHUD:DrawWeaponBar()
 	
 	if AxHUD.ColorStyle == 0 then
 		gr.setColor(frameColor[1]*1.5, frameColor[2]*1.5, frameColor[3]*1.5, frameColor[4])
-		gr.drawMonochromeImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height,0.5)
+		gr.drawImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height,0,0,1,1,0.5, true)
 	else
 		gr.drawImage(barInfo.Frame.File, barInfo.Position.x, barInfo.Position.y, barInfo.Position.x+barInfo.Frame.Width,barInfo.Position.y+barInfo.Frame.Height)
 	end
@@ -827,7 +827,7 @@ function AxHUD:DrawWeaponBar()
 	end
 
 	if AxHUD.ColorStyle == 0 then
-		gr.drawMonochromeImage(barImage, x1, y1, x2 ,y2 , barColor[4]/255)
+		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, barColor[4]/255, true)
 	else
 		gr.drawImage(barImage, x1, y1, x2 ,y2 , uvx1, uvy1, uvx2, uvy2, 1)
 	end

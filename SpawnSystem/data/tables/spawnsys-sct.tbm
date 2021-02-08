@@ -154,7 +154,7 @@ function SpawnSystem:ActuallySpawn(anchorShip, classoverride)
 		newship:warpIn()
 	end
 		
-	if spawnattribs.ExpEffect > 0 then
+	if spawnattribs.ExpEffect and spawnattribs.ExpEffect > 0 then
 		mn.runSEXP("(explosion-effect " .. spawnedOrigin.x .. " " .. spawnedOrigin.y .. " " .. spawnedOrigin.z .. " 10 10 " .. newship.Class.Model.Radius * 1.5 .. " 1 10 0 " .. spawnattribs.ExpEffect .. " 1)")
 	end
 	
