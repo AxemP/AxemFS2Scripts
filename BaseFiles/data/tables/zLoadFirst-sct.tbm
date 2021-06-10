@@ -17,6 +17,11 @@ function print(str)
     ba.print(str)
 end
 
+function println(str)
+    ba.print(str)
+    ba.print("\n")
+end
+
 function stackError(str, level)
     if (level == nil) then
         level = 2
