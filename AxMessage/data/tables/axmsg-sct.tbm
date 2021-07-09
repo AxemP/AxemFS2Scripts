@@ -27,7 +27,7 @@ function AXMessage:Init()
 		return
 	end
 	
-	if not self.Config.MinVersion or self.Config.MinVersion < self.Version then
+	if not self.Config.MinVersion or self.Version < self.Config.MinVersion then
 		ba.warning("AXMESSAGE: Config file found is for an obsolete version. If you are upgrading, please use a brand new axmessage.cfg as a template and move your settings over. More details found in axmsg-sct.tbm.\nAborting script initialization!\n")
 		return
 	end
@@ -357,7 +357,7 @@ function AXMessage:DrawMessageBox()
 
 	if self.Monochrome then
 		if self.Image.file2:isValid() then
-			gr.drawImage(self.Image.file2, self.Position.x, self.Position.y, self.Position.x + self.Image.w, self.Position.y + self.Image.h, 0, 0, 1, 1, 0.5 )
+			gr.drawImage(self.Image.file2, self.Position.x, self.Position.y, self.Position.x + self.Image.w, self.Position.y + self.Image.h, 0, 0, 1, 1, 0.5, true)
 		end
 		gr.setColor(self.Color.HUD[1], self.Color.HUD[2], self.Color.HUD[3], self.Color.HUD[4])
 		--gr.drawMonochromeImage(self.Image.file, self.Position.x, self.Position.y)
