@@ -752,7 +752,7 @@ function SaveState:ApplyParseData(ship,data)
 			for i, pbank in ipairs(data.Subsystems[i].PBanks) do
 				ba.print("         Bank: " .. i .. "\n")
 				if subsys.PrimaryBanks[i] then
-					subsys.PrimaryBanks[i].Class = tb.WeaponClasses[pbank.Class]
+					subsys.PrimaryBanks[i] = tb.WeaponClasses[pbank.Class]
 					ba.print("         Class: " .. pbank.Class .. "\n")
 					if pbank.AmmoLeft then subsys.PrimaryAmmo[i] = self:GetAmmo(pbank.AmmoLeft,data.Name) end
 				end
@@ -764,7 +764,7 @@ function SaveState:ApplyParseData(ship,data)
 			for i, sbank in ipairs(data.Subsystems[i].SBanks) do
 				ba.print("         Bank: " .. i .. "\n")
 				if subsys.SecondaryBanks[i] then
-					subsys.SecondaryBanks[i].Class = tb.WeaponClasses[sbank.Class]
+					subsys.SecondaryBanks[i] = tb.WeaponClasses[sbank.Class]
 					ba.print("         Class: " .. sbank.Class .. "\n")
 					if sbank.AmmoLeft then subsys.SecondaryAmmo[i] = self:GetAmmo(sbank.AmmoLeft,data.Name) end
 				end
