@@ -67,7 +67,7 @@ $Category: Change
 $Subcategory: Scripted
 $Minimum Arguments: 1
 $Return Type: Nothing
-$Description: Clears any flag that may prevent a ship to be targetted. (Invisible, stealthy, friendly-stealthy)
+$Description: Clears any flag that may prevent a ship to be targeted. (Invisible, stealthy, friendly-stealthy)
 $Repeat
 $Parameter:
 	+Description: Ships to become targetable
@@ -78,7 +78,7 @@ $Category: Change
 $Subcategory: Scripted
 $Minimum Arguments: 1
 $Return Type: Nothing
-$Description: Sets any flag that causes a ship to be targetted. (Invisible, stealthy, friendly-stealthy)
+$Description: Sets any flag that causes a ship to be targeted. (Invisible, stealthy, friendly-stealthy)
 $Repeat
 $Parameter:
 	+Description: Ships to become untargetable
