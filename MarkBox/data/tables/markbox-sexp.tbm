@@ -6,7 +6,7 @@ $Subcategory: Scripted
 $Minimum Arguments: 2
 ; No maximum arguments means that it accepts a variable number of arguments
 $Return Type: Nothing
-$Description: Highlights a ship to draw player attention to it. Text will be displayed by the ship when targetted.
+$Description: Highlights a ship to draw player attention to it. Text will be displayed by the ship when targeted.
 $Parameter:
 	+Description: Text to display
 	+Type: string
@@ -21,7 +21,7 @@ $Subcategory: Scripted
 $Minimum Arguments: 2
 ; No maximum arguments means that it accepts a variable number of arguments
 $Return Type: Nothing
-$Description: Highlights all ships in a wing to draw player attention to them. Text will be displayed by a ship when targetted.
+$Description: Highlights all ships in a wing to draw player attention to them. Text will be displayed by a ship when targeted.
 $Parameter:
 	+Description: Text to display
 	+Type: string
@@ -36,7 +36,7 @@ $Subcategory: Scripted
 $Minimum Arguments: 3
 ; No maximum arguments means that it accepts a variable number of arguments
 $Return Type: Nothing
-$Description: Highlights subsystems on a ship to assist the player in targetting specific subsystems. Text will be displayed by the subsystem when targetted.
+$Description: Highlights subsystems on a ship to assist the player in targeting specific subsystems. Text will be displayed by the subsystem when targeted.
 $Parameter:
 	+Description: Ship that has the subsystem to highlight
 	+Type: Ship
@@ -54,7 +54,7 @@ $Subcategory: Scripted
 $Minimum Arguments: 1
 $Maximum Arguments: 2
 $Return Type: Nothing
-$Description: Highlights weapons to help player identify important targets. Text will be displayed by the weapon when targetted. You can also specify a ship to tie distance calculations with the "lua-get-weapon-distance" sexp. The ship is pre-defined here for consideration of how much computing time calculating distances for tons of weapons can have on your poor CPU.
+$Description: Highlights weapons to help player identify important targets. Text will be displayed by the weapon when targeted. You can also specify a ship to tie distance calculations with the "lua-get-weapon-distance" sexp. The ship is pre-defined here for consideration of how much computing time calculating distances for tons of weapons can have on your poor CPU.
 $Parameter:
 	+Description: Weapon to highlight
 	+Type: string

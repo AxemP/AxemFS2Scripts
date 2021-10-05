@@ -67,7 +67,7 @@ $Subcategory: Player
 $Minimum Arguments: 1
 $Maximum Arguments: 1
 $Return Type: number
-$Description: Highlights all ships in a wing to draw player attention to them. Text will be displayed by a ship when targetted. This will return 0 when uninitialized or waiting for a response, or 1-5 based on the last response.
+$Description: This will return 0 when uninitialized or waiting for a response, or 1-5 based on the last response.
 $Parameter:
 	+Description: Prompt Reference to use
 	+Type: string
