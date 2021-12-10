@@ -160,7 +160,7 @@ function SaveState:GetShipData(shipname)
 			ba.print("   HP: " .. tostring(t.HP) .. "\n")
 		
 			--Get Shields
-			if ship.Shields and ship.Shields:isValid() then
+			if ship.Shields and ship.Shields:isValid() and ship.Shields.CombinedMax > 0 then
 				t.Shields = math.floor((ship.Shields.CombinedLeft / ship.Shields.CombinedMax) * 100)
 				ba.print("   Shields: " .. tostring(t.Shields) .. "\n")
 			end
@@ -240,7 +240,11 @@ function SaveState:GetShipData(shipname)
 					
 					ba.print("        Subsystem Name: " .. tostring(thisSubsys:getModelName()) .. "\n")
 					
-					ss.HP = math.floor((thisSubsys.HitpointsLeft / thisSubsys.HitpointsMax) * 100)
+					if thisSubsys.HitpointsMax > 0 then
+						ss.HP = math.floor((thisSubsys.HitpointsLeft / thisSubsys.HitpointsMax) * 100)
+					else
+						ss.HP = 0
+					end
 					ba.print("        HP: " .. tostring(ss.HP) .. "\n")
 					ss.Armor = thisSubsys.ArmorClass
 					ba.print("        Armor: " .. tostring(ss.Armor) .. "\n")
@@ -257,7 +261,7 @@ function SaveState:GetShipData(shipname)
 							ba.print("        Primary Banks:\n")
 							ss.PBanks = {}
 							for j=1, #thisSubsys.PrimaryBanks do
-								if thisSubsys.PrimaryBanks[j] and thisSubsys.PrimaryBanks[j]:isValid() then
+								if thisSubsys.PrimaryBanks[j] and thisSubsys.PrimaryBanks[j]:isValid() and thisSubsys.PrimaryBanks[j].AmmoMax > 0 then
 									ba.print("          Bank: " .. j .. "\n")
 									ss.PBanks[j] = {}
 									ss.PBanks[j].Class = thisSubsys.PrimaryBanks[j].WeaponClass.Name
@@ -272,7 +276,7 @@ function SaveState:GetShipData(shipname)
 							ba.print("        Secondary Banks:\n")
 							ss.SBanks = {}
 							for j=1, #thisSubsys.SecondaryBanks do
-								if thisSubsys.SecondaryBanks[j] and thisSubsys.SecondaryBanks[j]:isValid() then
+								if thisSubsys.SecondaryBanks[j] and thisSubsys.SecondaryBanks[j]:isValid() and thisSubsys.SecondaryBanks[j].AmmoMax > 0 then
 									ba.print("          Bank: " .. j .. "\n")
 									ss.SBanks[j] = {}
 									ss.SBanks[j].Class = thisSubsys.SecondaryBanks[j].WeaponClass.Name
