@@ -194,7 +194,7 @@ function SaveState:GetShipData(shipname)
 				if (order:getType() == ORDER_WAYPOINTS) or (order:getType() == ORDER_WAYPOINTS_ONCE) then
 					--tt.Target = order.Target:getList().Name
 				else
-					if order.Target and order.Target:isValid() then
+					if order.Target and order.Target:isValid() and order.Target:getBreedName() == "Ship" then
 						tt.Target = order.Target.Name
 						ba.print("     Target: " .. tostring(tt.Target) .. "\n")
 					end
@@ -853,7 +853,7 @@ function SaveState:GetAIOrderFromEnum(orderEnum)
 	
 	if orderEnum == ORDER_ATTACK then
 		order = "Attack"
-	elseif orderEnum == ORDER_ATTACK then
+	elseif orderEnum == ORDER_ATTACK_ANY then
 		order = "Attack Any"
 	elseif orderEnum == ORDER_DEPART then
 		order = "Depart"
@@ -911,7 +911,7 @@ function SaveState:GetAIOrderFromString(order)
 	if order == "Attack" then
 		orderEnum = ORDER_ATTACK
 	elseif order == "Attack Any" then
-		orderEnum = ORDER_ATTACK
+		orderEnum = ORDER_ATTACK_ANY
 	elseif order == "Depart" then
 		orderEnum = ORDER_DEPART
 	elseif order == "Disable" then
