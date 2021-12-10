@@ -194,7 +194,7 @@ function SaveState:GetShipData(shipname)
 				if (order:getType() == ORDER_WAYPOINTS) or (order:getType() == ORDER_WAYPOINTS_ONCE) then
 					--tt.Target = order.Target:getList().Name
 				else
-					if order.Target and order.Target:isValid() then
+					if order.Target and order.Target:isValid() and order.Target:getBreedName() == "Ship" then
 						tt.Target = order.Target.Name
 						ba.print("     Target: " .. tostring(tt.Target) .. "\n")
 					end
