@@ -9,20 +9,22 @@ function Scroll:Init()
 
 	self.Enabled = false
 	self.Lines = {}
+	self.InterfaceSound = 20
+	self.GameSound = ad.getSoundentry(10)
 
 end
 
 function Scroll:Clear()
 
-	self.Lines = {}
 	self.Enabled = false
+	self.Lines = {}
 
 end
 
-function Scroll:WriteFromFile(file, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b)
+function Scroll:WriteFromFile(file, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
 
 	local pos = file:find(".txt", -4, true)
-	
+
 	if not pos then
 		file = file .. ".txt"
 	end
@@ -30,35 +32,36 @@ function Scroll:WriteFromFile(file, x, y, speed, visibletime, fadeout, sound, fo
 	if cf.fileExists(file, "data/fiction", true) then
 		local f = cf.openFile(file,"rb","data/fiction")
 		local data = f:read("*a")
-		self:Write(data, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b)
+		self:Write(data, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
 		f:close()
 	end
 
 end
 
-function Scroll:Write(text, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b)
+function Scroll:Write(text, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
 
 	if not self.Enabled then
 		self.Enabled = true
 	end
 
 	local t = {}
-	
+
 	if not text then
 		return
 	end
-		
+
 	if mn.Messages[text]:isValid() then
 		t.Text = mn.Messages[text]:getMessage(true)
 	else
 		t.Text = text
 	end
-	
+
 	t.X = x or 50
 	t.X = gr.getScreenWidth() * (t.X/100)
 	t.Y = y or 50
 	t.Y = gr.getScreenHeight() * (t.Y/100)
 	t.Speed = speed or 0.03
+	t.SoundDuration = #t.Text * t.Speed
 	t.Timestamp = mn.getMissionTime()
 	t.Time = visibletime or 5
 	t.FadeOut = fadeout or 0
@@ -75,63 +78,72 @@ function Scroll:Write(text, x, y, speed, visibletime, fadeout, sound, font, cent
 	end
 	t.Color = {r or 255, g or 255, b or 255}
 	t.Alpha = 255
-	
-	self.Lines[#self.Lines+1] = t	
+	if loop == true then
+		t.Loop = true
+	else
+		t.Loop = false
+	end
+
+	self.Lines[#self.Lines+1] = t
 
 end
 
 function Scroll:Draw()
 
 	local mTime = mn.getMissionTime()
-	
+
 	if #self.Lines > 0 then
 		local numLines = #self.Lines
 		for i = 1, numLines do
 			if self.Lines[i] then
-			local line = self.Lines[i]
-			if mTime < (line.Timestamp + line.Time + line.FadeOut) then
-				if line.Sound then
-					ad.playInterfaceSound(20)
-					line.Sound = nil
-				end
-				local toDraw = (mTime - line.Timestamp) / line.Speed
-				if toDraw > 0 then
-					local displayString = line.Text:sub(1, toDraw)
-					local lastChar = line.Text:sub(-1)					
-					local x, y = line.X, line.Y
-					
-					gr.CurrentFont = gr.Fonts[line.Font]
-					
-					if mTime > (line.Timestamp + line.Time) then
-						local t = mn.getMissionTime() - (line.Timestamp + line.Time)				
-						line.Alpha = self:Ease(t,255,-255,line.FadeOut)
+				local line = self.Lines[i]
+				if mTime < (line.Timestamp + line.Time + line.FadeOut) then
+					if line.Sound then
+						if line.Loop then
+							line.Handle = ad.playLoopingSound(self.GameSound)
+						else
+							ad.playInterfaceSound(self.InterfaceSound)
+						end
+						line.Sound = nil
 					end
-					
-					if lastChar == ">" then
-						line.Speed = 0.05
-					elseif lastChar == "\\n" then
-						line.Speed = 0.02
-					end
-					
-					gr.setColor(line.Color[1], line.Color[2], line.Color[3], line.Alpha)
-					
-					if line.Center then
-						x = line.X - (gr.getStringWidth(line.Text)/2)
-					end
+					local toDraw = (mTime - line.Timestamp) / line.Speed
+					if toDraw > 0 then
+						local displayString = line.Text:sub(1, toDraw)
+						local lastChar = line.Text:sub(-1)
+						local x, y = line.X, line.Y
 
-					finalString = displayString
+						gr.CurrentFont = gr.Fonts[line.Font]
 
-					
-					gr.drawString(finalString,x,y)
-					
+						if line.Handle and mTime > (line.Timestamp + line.SoundDuration) then
+							line.Handle:stop()
+							line.Handle = nil
+						end
+						if mTime > (line.Timestamp + line.Time) then
+							local t = mn.getMissionTime() - (line.Timestamp + line.Time)
+							line.Alpha = self:Ease(t,255,-255,line.FadeOut)
+						end
+
+						if lastChar == ">" then
+							line.Speed = 0.05
+						elseif lastChar == "\\n" then
+							line.Speed = 0.02
+						end
+
+						gr.setColor(line.Color[1], line.Color[2], line.Color[3], line.Alpha)
+
+						if line.Center then
+							x = line.X - (gr.getStringWidth(line.Text)/2)
+						end
+
+						gr.drawString(displayString,x,y)
+					end
 				end
-			end
 			else
 				table.remove(self.Lines,i)
 				numLines = numLines - 1
-				
+
 				if numLines == 0 then self.Enabled = false end
-				
+
 			end
 		end
 	end
@@ -143,9 +155,39 @@ function Scroll:Ease(t,b,c,d)
   return -c * t * (t - 2) + b
 end
 
-mn.LuaSEXPs["lua-scroll-write"].Action = function(text, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b) Scroll:Write(text, x, y, speed/1000, visibletime/1000, fadeout/1000, sound, font, center, r, g, b) end
-mn.LuaSEXPs["lua-scroll-write-file"].Action = function(file, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b) Scroll:WriteFromFile(file, x, y, speed/1000, visibletime/1000, fadeout/1000, sound, font, center, r, g, b) end
-mn.LuaSEXPs["lua-scroll-write-clear"].Action = function() Scroll:Clear() end
+function Scroll:SetInterfaceSound(idx)
+	if idx then
+		self.InterfaceSound = idx
+	end
+end
+
+-- this function accepts strings or soundentry types
+function Scroll:SetGameSound(entry)
+	if entry then
+		if type(entry) == "string" then
+			entry = ad.getSoundentry(entry)
+		end
+		if entry:isValid() then
+			self.GameSound = entry
+		end
+	end
+end
+
+mn.LuaSEXPs["lua-scroll-write"].Action = function(text, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
+  Scroll:Write(text, x, y, speed/1000, visibletime/1000, fadeout/1000, sound, font, center, r, g, b, loop)
+end
+mn.LuaSEXPs["lua-scroll-write-file"].Action = function(file, x, y, speed, visibletime, fadeout, sound, font, center, r, g, b, loop)
+  Scroll:WriteFromFile(file, x, y, speed/1000, visibletime/1000, fadeout/1000, sound, font, center, r, g, b, loop)
+end
+mn.LuaSEXPs["lua-scroll-write-clear"].Action = function()
+  Scroll:Clear()
+end
+mn.LuaSEXPs["lua-scroll-write-set-iface-snd"].Action = function(idx)
+  Scroll:SetInterfaceSound(idx)
+end
+mn.LuaSEXPs["lua-scroll-write-set-game-snd"].Action = function(entry)
+  Scroll:SetGameSound(entry)
+end
 
 ]
 

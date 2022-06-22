@@ -4,11 +4,11 @@ $Operator: lua-scroll-write
 $Category: Change
 $Subcategory: Scripted
 $Minimum Arguments: 1
-$Maximum Arguments: 12
+$Maximum Arguments: 13
 $Return Type: Nothing
 $Description: Writes a subtitle-esque string of text but one character at a time. Use this to spruce up your cutscenes!
 $Parameter:
-	+Description: Text to write
+	+Description: Text to write, or name of a message containing text
 	+Type: string
 $Parameter:
 	+Description: X coordinate to begin drawing at (based on percent of the screen width, 0-100). Default is 50
@@ -26,8 +26,8 @@ $Parameter:
 	+Description: Time it takes to fade everything out in milliseconds. Default is 0 ms.
 	+Type: number
 $Parameter:
-	+Description: Should the text drawing sound be played when drawing a new line? Defaults to true.
-	+Type: boolean	
+	+Description: Should the text drawing sound be played? Defaults to true.
+	+Type: boolean
 $Parameter:
 	+Description: Font to use for the text. Default is Font '1'.
 	+Type: string
@@ -43,12 +43,15 @@ $Parameter:
 $Parameter:
 	+Description: Text Color - Blue (0-255) Defaults to 255.
 	+Type: number
+$Parameter:
+	+Description: Should the text drawing sound be a continuous loop? If so, the sound is looped for as long as the text is scrolled. Defaults to false. Note: Only game sounds (not interface sounds) can be looped.
+	+Type: boolean
 
 $Operator: lua-scroll-write-file
 $Category: Change
 $Subcategory: Scripted
 $Minimum Arguments: 1
-$Maximum Arguments: 12
+$Maximum Arguments: 13
 $Return Type: Nothing
 $Description: Writes a subtitle-esque wall of text from a file but one character at a time. Use this to really spruce up your cutscenes! File must be a '.txt' in the fiction directory. Use '\n' for line breaks in the text file.
 $Parameter:
@@ -70,8 +73,8 @@ $Parameter:
 	+Description: Time it takes to fade everything out in milliseconds. Default is 0 ms.
 	+Type: number
 $Parameter:
-	+Description: Should the text drawing sound be played when drawing a new line? Defaults to true.
-	+Type: boolean	
+	+Description: Should the text drawing sound be played? Defaults to true.
+	+Type: boolean
 $Parameter:
 	+Description: Font to use for the text. Default is Font '1'.
 	+Type: string
@@ -87,6 +90,9 @@ $Parameter:
 $Parameter:
 	+Description: Text Color - Blue (0-255) Defaults to 255.
 	+Type: number
+$Parameter:
+	+Description: Should the text drawing sound be a continuous loop? If so, the sound is looped for as long as the text is scrolled. Defaults to false. Note: Only game sounds (not interface sounds) can be looped.
+	+Type: boolean
 
 $Operator: lua-scroll-write-clear
 $Category: Change
@@ -96,5 +102,29 @@ $Maximum Arguments: 0
 $Return Type: Nothing
 $Description: Clears all lines!
 
+$Operator: lua-scroll-write-set-iface-snd
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Sets the interface sound to be played during the scroll write if the sound does not loop.
+$Parameter:
+	+Description: Index into the Interface Sounds section
+	+Type: number
+
+$Operator: lua-scroll-write-set-game-snd
+$Category: Change
+$Subcategory: Scripted
+$Minimum Arguments: 1
+$Maximum Arguments: 1
+$Return Type: Nothing
+$Description: Sets the game sound to be played during the scroll write if the sound loops.
+$Parameter:
+	+Description: A sound entry in the Game Sounds section
+;;FSO 20.1.0;; 	+Type: soundentry
+;;FSO 20.1.0;; !*
+	+Type: string
+;;FSO 20.1.0;; *!
 
 #End
